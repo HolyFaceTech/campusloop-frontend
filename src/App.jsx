@@ -18,9 +18,9 @@ import Subjects from "./pages/Admin/Subjects";
 import Announcements from "./pages/Admin/Announcements";
 import AdminCalendar from "./pages/Admin/Calendar";
 import AdminELibrary from "./pages/Admin/AdminELibrary";
+import AdminStudentGrades from "./pages/Admin/AdminStudentGrades";
 import {
   Dashboard,
-  StudentGrades,
   ClassroomsAdmin,
   FormsAdmin,
   FilesAdmin,
@@ -100,7 +100,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserRecords />} />
-          <Route path="grades" element={<StudentGrades />} />
+          <Route path="student-grades" element={<AdminStudentGrades />} />
           <Route path="strands" element={<Strands />} />
           <Route path="subjects" element={<Subjects />} />
           <Route path="classrooms" element={<ClassroomsAdmin />} />
