@@ -48,6 +48,16 @@ import TeacherFiles from "./pages/Teacher/TeacherFiles";
 import TeacherELibrary from "./pages/Teacher/TeacherELibrary";
 import TeacherRecycleBin from "./pages/Teacher/TeacherRecycleBin";
 
+// Student Components
+import StudentLayout from "./components/Layouts/StudentLayout";
+import StudentHome from "./pages/Student/StudentHome";
+import StudentClassrooms from "./pages/Student/StudentClassrooms";
+import StudentFiles from "./pages/Student/StudentFiles";
+import StudentELibrary from "./pages/Student/StudentELibrary";
+import StudentGrades from "./pages/Student/StudentGrades";
+import StudentCalendar from "./pages/Student/StudentCalendar";
+import StudentNotifications from "./pages/Student/StudentNotifications";
+
 // Taga-test kung valid pa ang session
 const DashboardPlaceholder = ({ title }) => {
   const testSession = async () => {
@@ -148,10 +158,20 @@ function App() {
             }
           />
         </Route>
-        <Route
-          path="/student/home"
-          element={<DashboardPlaceholder title="Student Home" />}
-        />
+        {/* STUDENT PROTECTED ROUTES */}
+        <Route path="/student" element={<StudentLayout />}>
+          {/* Redirects /student to /student/home automatically */}
+          <Route index element={<Navigate to="home" replace />} />
+
+          {/* Relative paths na lang dapat */}
+          <Route path="home" element={<StudentHome />} />
+          <Route path="classrooms" element={<StudentClassrooms />} />
+          <Route path="files" element={<StudentFiles />} />
+          <Route path="e-library" element={<StudentELibrary />} />
+          <Route path="grades" element={<StudentGrades />} />
+          <Route path="calendar" element={<StudentCalendar />} />
+          <Route path="notifications" element={<StudentNotifications />} />
+        </Route>
 
         <Route
           path="*"
