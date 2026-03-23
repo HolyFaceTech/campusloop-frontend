@@ -352,6 +352,27 @@ const TeacherClassrooms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
+                {/* Decorative Circles */}
+                <div
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    top: "-20px",
+                    right: "-20px",
+                  }}
+                ></div>
+                <div
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    bottom: "-10px",
+                    left: "20%",
+                  }}
+                ></div>
                 <div
                   className="dropdown position-absolute top-0 end-0 mt-3 me-3"
                   onClick={(e) => e.stopPropagation()}
@@ -546,10 +567,10 @@ const TeacherClassrooms = () => {
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-inbox text-muted d-block mb-3"
+                className="bi bi-easel text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
-              <h5 className="fw-bold text-dark">No records found.</h5>
+              <h5 className="fw-bold text-dark">No classrooms found.</h5>
               <p className="text-muted small mb-0">
                 {searchQuery
                   ? "No matching classrooms for your search."
