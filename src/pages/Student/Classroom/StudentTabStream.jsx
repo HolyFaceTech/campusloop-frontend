@@ -60,9 +60,18 @@ const StudentTabStream = () => {
     }
   };
 
+  // STANDARD ASYNC SUBMIT (TO PREVENT DUPLICATION)
   const handleCommentSubmit = async (classworkId, parentId = null) => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
+
+    // Clear text field instantly for responsive feel and to prevent double clicks
+    if (parentId) {
+      setReplyText((prev) => ({ ...prev, [parentId]: "" }));
+      setActiveReplyBox(null);
+    } else {
+      setCommentText((prev) => ({ ...prev, [classworkId]: "" }));
+    }
 
     try {
       await axios.post(
@@ -74,16 +83,9 @@ const StudentTabStream = () => {
           },
         },
       );
-
-      if (parentId) {
-        setReplyText({ ...replyText, [parentId]: "" });
-        setActiveReplyBox(null);
-      } else {
-        setCommentText({ ...commentText, [classworkId]: "" });
-      }
-
-      fetchStream();
+      fetchStream(); // Fetch real data directly from DB
     } catch (error) {
+      console.error(error);
       sileo.error({
         title: "Failed",
         description: "Could not post comment.",
@@ -704,6 +706,7 @@ const StudentTabStream = () => {
                           })}
                       </div>
 
+                      {/* STATUS AND POINTS */}
                       {!isMaterial && (
                         <div className="d-flex align-items-center justify-content-between mt-2 mb-4 px-1">
                           <div className="d-flex align-items-center gap-2">
@@ -738,6 +741,7 @@ const StudentTabStream = () => {
                         </div>
                       )}
 
+                      {/* FB-STYLE COMMENTS THREAD */}
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">
