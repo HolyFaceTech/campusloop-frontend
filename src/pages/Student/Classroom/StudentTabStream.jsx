@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useOutletContext, Link } from "react-router-dom";
+import { useParams, useOutletContext, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
-import { Offcanvas, Modal } from "bootstrap";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
-import ClassworkFormDrawer from "./ClassworkFormDrawer";
-import RespondentsModal from "./RespondentsModal";
 
 const darkToast = {
   fill: "#242424",
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
-const TabStream = () => {
+const StudentTabStream = () => {
+  const { id } = useParams();
   const { classroom } = useOutletContext();
-  const [classworks, setClassworks] = useState([]);
+  const [stream, setStream] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [drawerMode, setDrawerMode] = useState("");
-  const [selectedItem, setSelectedItem] = useState(null);
 
   const currentUser = JSON.parse(
     localStorage.getItem("campusloop_user") ||
@@ -27,35 +22,17 @@ const TabStream = () => {
   );
   const userInitial = currentUser.first_name
     ? currentUser.first_name.charAt(0).toUpperCase()
-    : "U";
-
-  const [openDropdownId, setOpenDropdownId] = useState(null);
+    : "S";
 
   // MGA STATES PARA SA COMMENTS AT REPLIES
   const [commentText, setCommentText] = useState({});
   const [replyText, setReplyText] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
 
-  // STATES FOR DYNAMIC FILE HANDLING
-  const [includeLink, setIncludeLink] = useState(false);
-  const [includeFiles, setIncludeFiles] = useState(false);
-  const [includeForm, setIncludeForm] = useState(false);
-  const [newFiles, setNewFiles] = useState([]);
-  const [existingFiles, setExistingFiles] = useState([]);
-  const [deletedFileIds, setDeletedFileIds] = useState([]);
-
-  const [formData, setFormData] = useState({
-    title: "",
-    type: "",
-    instruction: "",
-    points: "",
-    deadline: "",
-    link: "",
-    form_id: "",
-  });
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   useEffect(() => {
-    if (classroom) fetchClassworks();
+    fetchStream();
     const closeDropdown = (e) => {
       if (!e.target.closest(".classwork-card-dropdown")) {
         setOpenDropdownId(null);
@@ -63,19 +40,19 @@ const TabStream = () => {
     };
     document.addEventListener("click", closeDropdown);
     return () => document.removeEventListener("click", closeDropdown);
-  }, [classroom]);
+  }, [id]);
 
-  const fetchClassworks = async () => {
+  const fetchStream = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/classworks`,
+        `${import.meta.env.VITE_API_BASE_URL}/student/classrooms/${id}/stream`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
         },
       );
-      setClassworks(res.data);
+      setStream(res.data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -105,7 +82,7 @@ const TabStream = () => {
         setCommentText({ ...commentText, [classworkId]: "" });
       }
 
-      fetchClassworks();
+      fetchStream();
     } catch (error) {
       sileo.error({
         title: "Failed",
@@ -115,167 +92,44 @@ const TabStream = () => {
     }
   };
 
-  const handleInputChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const openCreateDrawer = () => {
-    setDrawerMode("create");
-    setSelectedItem(null);
-    setFormData({
-      title: "",
-      type: "",
-      instruction: "",
-      points: "",
-      deadline: "",
-      link: "",
-      form_id: "",
-    });
-    setNewFiles([]);
-    setExistingFiles([]);
-    setDeletedFileIds([]);
-    setIncludeLink(false);
-    setIncludeFiles(false);
-    setIncludeForm(false);
-    new Offcanvas(document.getElementById("classworkDrawer")).show();
-  };
-
-  const handleConfirmUpdateClick = (cw) => {
-    setOpenDropdownId(null);
-    setSelectedItem(cw);
-    const modalElement = document.getElementById("updateConfirmModal");
-    const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
-    modal.show();
-  };
-
-  const proceedToUpdateForm = () => {
-    setTimeout(() => {
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-
-      if (selectedItem) {
-        openUpdateDrawer(selectedItem);
-      }
-    }, 400);
-  };
-
-  const openUpdateDrawer = (cw) => {
-    setDrawerMode("update");
-    setSelectedItem(cw);
-    setFormData({
-      title: cw.title,
-      type: cw.type,
-      instruction: cw.instruction,
-      points: cw.points || "",
-      deadline: cw.deadline ? cw.deadline.slice(0, 16) : "",
-      link: cw.link || "",
-      form_id: cw.form_id || "",
-    });
-    setNewFiles([]);
-    setExistingFiles(cw.files || []);
-    setDeletedFileIds([]);
-    setIncludeLink(!!cw.link);
-    setIncludeForm(!!cw.form_id);
-    setIncludeFiles(cw.files && cw.files.length > 0);
-    new Offcanvas(document.getElementById("classworkDrawer")).show();
-  };
-
-  const triggerSaveConfirmation = () => {
-    Offcanvas.getInstance(document.getElementById("classworkDrawer"))?.hide();
-    setTimeout(() => {
-      document
-        .querySelectorAll(".offcanvas-backdrop")
-        .forEach((el) => el.remove());
-      new Modal(document.getElementById("saveConfirmModal")).show();
-    }, 400);
-  };
-
-  const executeSubmit = async () => {
-    setIsLoading(true);
-    try {
-      const data = new FormData();
-      data.append("title", formData.title);
-      data.append("type", formData.type);
-      data.append("instruction", formData.instruction);
-      if (formData.points) data.append("points", formData.points);
-      if (formData.deadline) data.append("deadline", formData.deadline);
-      if (includeLink && formData.link) data.append("link", formData.link);
-      if (includeForm && formData.form_id)
-        data.append("form_id", formData.form_id);
-      if (includeFiles && newFiles.length > 0)
-        newFiles.forEach((file) => data.append("files[]", file));
-      if (drawerMode === "update" && deletedFileIds.length > 0)
-        deletedFileIds.forEach((id) => data.append("deleted_file_ids[]", id));
-
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-        "Content-Type": "multipart/form-data",
-      };
-      if (drawerMode === "create") {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/classworks`,
-          data,
-          { headers },
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "DONE":
+        return (
+          <span
+            className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            <i className="bi bi-check-circle-fill me-1"></i> Done
+          </span>
         );
-        sileo.success({
-          title: "Posted",
-          description: "Classwork created.",
-          ...darkToast,
-        });
-      } else {
-        data.append("_method", "PUT");
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/classworks/${selectedItem.id}`,
-          data,
-          { headers },
+      case "MISSING":
+        return (
+          <span
+            className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            <i className="bi bi-x-circle-fill me-1"></i> Missing
+          </span>
         );
-        sileo.success({
-          title: "Updated",
-          description: "Classwork changes saved.",
-          ...darkToast,
-        });
-      }
-      fetchClassworks();
-    } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Failed to save classwork.",
-        ...darkToast,
-      });
-      setIsLoading(false);
-    }
-  };
-
-  const promptDelete = (cw) => {
-    setSelectedItem(cw);
-    new Modal(document.getElementById("deleteConfirmModal")).show();
-  };
-
-  const executeDelete = async () => {
-    setIsLoading(true);
-    try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/classworks/${selectedItem.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
-      );
-      sileo.success({
-        title: "Deleted",
-        description: "Classwork moved to recycle bin.",
-        ...darkToast,
-      });
-      fetchClassworks();
-    } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Failed to delete classwork.",
-        ...darkToast,
-      });
-      setIsLoading(false);
+      case "DUE SOON":
+        return (
+          <span
+            className="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            <i className="bi bi-clock-fill me-1"></i> Due Soon
+          </span>
+        );
+      default:
+        return (
+          <span
+            className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            Pending
+          </span>
+        );
     }
   };
 
@@ -398,7 +252,7 @@ const TabStream = () => {
 
   return (
     <>
-      <GlobalSpinner isLoading={isLoading} text="Loading Classworks..." />
+      <GlobalSpinner isLoading={isLoading} text="Loading Stream..." />
       <div className="row g-4">
         {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
@@ -416,13 +270,13 @@ const TabStream = () => {
               className="card-body p-2 custom-scrollbar"
               style={{ maxHeight: "450px", overflowY: "auto" }}
             >
-              {classworks.length === 0 ? (
+              {stream.length === 0 ? (
                 <p className="text-muted small mb-0 text-center py-4">
                   No works posted yet.
                 </p>
               ) : (
                 <div className="d-flex flex-column gap-1">
-                  {classworks.map((task, index) => {
+                  {stream.map((task, index) => {
                     const taskStyle = getBadgeStyle(task.type);
                     return (
                       <React.Fragment key={task.id}>
@@ -514,7 +368,7 @@ const TabStream = () => {
                             </div>
                           </div>
                         </div>
-                        {index !== classworks.length - 1 && (
+                        {index !== stream.length - 1 && (
                           <hr className="my-1 border-secondary opacity-10 mx-2" />
                         )}
                       </React.Fragment>
@@ -528,42 +382,7 @@ const TabStream = () => {
 
         {/* FEED / STREAM */}
         <div className="col-12 col-lg-9 pb-5">
-          <div
-            className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card"
-            style={{ cursor: "pointer", border: "1px solid rgba(0,0,0,0.05)" }}
-            onClick={openCreateDrawer}
-          >
-            <div className="card-body p-3 px-4 d-flex align-items-center justify-content-between gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <div
-                  className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold flex-shrink-0 shadow-sm"
-                  style={{
-                    width: "45px",
-                    height: "45px",
-                    backgroundColor: "var(--primary-color)",
-                    fontSize: "1.2rem",
-                  }}
-                >
-                  {userInitial}
-                </div>
-                <span className="text-muted fw-medium fs-6">
-                  Post a new classwork to your class...
-                </span>
-              </div>
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center text-light shadow-sm flex-shrink-0 hover-shadow transition-all"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--secondary-color)",
-                }}
-              >
-                <i className="bi bi-plus-lg fs-5"></i>
-              </div>
-            </div>
-          </div>
-
-          {classworks.length === 0 ? (
+          {stream.length === 0 ? (
             <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
               <div className="card-body p-5 text-center">
                 <i
@@ -572,13 +391,15 @@ const TabStream = () => {
                 ></i>
                 <h5 className="fw-bold text-dark">No classworks yet.</h5>
                 <p className="text-muted small mb-0">
-                  Click the area above to post assignments or materials.
+                  Your teacher hasn't posted anything in this classroom.
                 </p>
               </div>
             </div>
           ) : (
-            classworks.map((cw) => {
+            stream.map((cw) => {
               const typeStyle = getBadgeStyle(cw.type);
+              const isMaterial = cw.type === "material";
+
               return (
                 <div
                   key={cw.id}
@@ -590,6 +411,7 @@ const TabStream = () => {
                   }}
                 >
                   <div className="card-body p-4 p-md-5 pb-4">
+                    {/* PREMIUM HEADER */}
                     <div className="d-flex justify-content-between align-items-start mb-4">
                       <div className="d-flex align-items-center gap-3">
                         <div
@@ -648,18 +470,8 @@ const TabStream = () => {
                         </div>
                       </div>
 
-                      {/* ACTIONS & DROPDOWN */}
+                      {/* 3 DOTS STUDENT ACTIONS MENU */}
                       <div className="d-flex align-items-center gap-2 position-relative ms-3">
-                        {cw.type !== "material" && (
-                          <button
-                            className="btn btn-sm btn-campusloop fw-bold rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
-                            data-bs-toggle="modal"
-                            data-bs-target="#respondentsModal"
-                          >
-                            <i className="bi bi-people-fill me-2"></i>{" "}
-                            Respondents
-                          </button>
-                        )}
                         <div
                           className="dropdown classwork-card-dropdown"
                           onClick={(e) => e.stopPropagation()}
@@ -667,6 +479,7 @@ const TabStream = () => {
                           <button
                             className="btn rounded-circle d-flex align-items-center justify-content-center border-0 shadow-sm transition-all"
                             type="button"
+                            disabled={isMaterial}
                             onClick={() =>
                               setOpenDropdownId(
                                 openDropdownId === cw.id ? null : cw.id,
@@ -675,74 +488,79 @@ const TabStream = () => {
                             style={{
                               width: "35px",
                               height: "35px",
-                              backgroundColor:
-                                openDropdownId === cw.id
+                              backgroundColor: isMaterial
+                                ? "#f1f3f5"
+                                : openDropdownId === cw.id
                                   ? "#e9ecef"
                                   : "#f8f9fa",
+                              cursor: isMaterial ? "not-allowed" : "pointer",
+                              opacity: isMaterial ? 0.5 : 1,
                             }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                "#e9ecef")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.backgroundColor =
-                                openDropdownId === cw.id
-                                  ? "#e9ecef"
-                                  : "#f8f9fa")
-                            }
+                            onMouseEnter={(e) => {
+                              if (!isMaterial)
+                                e.currentTarget.style.backgroundColor =
+                                  "#e9ecef";
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isMaterial)
+                                e.currentTarget.style.backgroundColor =
+                                  openDropdownId === cw.id
+                                    ? "#e9ecef"
+                                    : "#f8f9fa";
+                            }}
                           >
                             <i className="bi bi-three-dots-vertical text-dark"></i>
                           </button>
-                          <ul
-                            className={`dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2 ${openDropdownId === cw.id ? "show" : ""}`}
-                            style={{
-                              position: "absolute",
-                              zIndex: 1050,
-                              minWidth: "160px",
-                              right: 0,
-                              left: "auto",
-                              top: "100%",
-                            }}
-                          >
-                            {cw.type !== "material" && (
-                              <li className="d-md-none border-bottom">
-                                <button
-                                  className="dropdown-item py-2 fw-medium text-campusloop"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#respondentsModal"
-                                >
-                                  <i className="bi bi-people-fill me-2"></i>{" "}
-                                  Respondents
-                                </button>
-                              </li>
-                            )}
-                            <li>
-                              <button
-                                className="dropdown-item py-2 fw-medium text-dark"
-                                onClick={() => handleConfirmUpdateClick(cw)}
-                              >
-                                <i
-                                  className="bi bi-pencil-square me-2"
-                                  style={{ color: "var(--primary-color)" }}
-                                ></i>{" "}
-                                Update
-                              </button>
-                            </li>
-                            <li>
-                              <hr className="dropdown-divider my-1" />
-                            </li>
-                            <li>
-                              <button
-                                className="dropdown-item py-2 fw-medium text-danger"
-                                onClick={() => {
-                                  promptDelete(cw);
-                                  setOpenDropdownId(null);
-                                }}
-                              >
-                                <i className="bi bi-trash-fill me-2"></i> Delete
-                              </button>
-                            </li>
-                          </ul>
+
+                          {!isMaterial && (
+                            <ul
+                              className={`dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2 ${openDropdownId === cw.id ? "show" : ""}`}
+                              style={{
+                                position: "absolute",
+                                zIndex: 1050,
+                                minWidth: "160px",
+                                right: 0,
+                                left: "auto",
+                                top: "100%",
+                              }}
+                            >
+                              {cw.type === "form" &&
+                                cw.student_status !== "DONE" && (
+                                  <li>
+                                    <button className="dropdown-item py-2 fw-medium text-campusloop">
+                                      <i className="bi bi-ui-checks me-2"></i>{" "}
+                                      Open Form
+                                    </button>
+                                  </li>
+                                )}
+                              {(cw.type === "assignment" ||
+                                cw.type === "activity") &&
+                                cw.student_status !== "DONE" && (
+                                  <>
+                                    <li>
+                                      <button className="dropdown-item py-2 fw-medium text-campusloop">
+                                        <i className="bi bi-cloud-upload me-2"></i>{" "}
+                                        Add Work
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button className="dropdown-item py-2 fw-medium text-success">
+                                        <i className="bi bi-check-circle me-2"></i>{" "}
+                                        Mark as Done
+                                      </button>
+                                    </li>
+                                  </>
+                                )}
+                              {cw.student_status === "DONE" && (
+                                <li>
+                                  <button className="dropdown-item py-2 fw-medium text-secondary">
+                                    <i className="bi bi-eye me-2"></i> View
+                                    Submission
+                                  </button>
+                                </li>
+                              )}
+                            </ul>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -756,7 +574,7 @@ const TabStream = () => {
                       </p>
 
                       {/* ATTACHMENTS */}
-                      <div className="d-flex flex-column gap-2 mb-4">
+                      <div className="d-flex flex-column gap-2 mb-3">
                         {cw.link && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
                             <div
@@ -797,7 +615,7 @@ const TabStream = () => {
                         {cw.form && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
                             <div
-                              className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-dark bg-opacity-10 text-dark"
+                              className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-campusloop text-white"
                               style={{ width: "45px", height: "45px" }}
                             >
                               <i className="bi bi-ui-radios fs-4"></i>
@@ -820,7 +638,7 @@ const TabStream = () => {
                               </p>
                             </div>
                             <Link
-                              to={`/teacher/forms/${cw.form.id}`}
+                              to={`/student/forms/${cw.form.id}`}
                               className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                               style={{ width: "35px", height: "35px" }}
                               title="View Form"
@@ -886,7 +704,40 @@ const TabStream = () => {
                           })}
                       </div>
 
-                      {/* FB-STYLE COMMENTS THREAD */}
+                      {!isMaterial && (
+                        <div className="d-flex align-items-center justify-content-between mt-2 mb-4 px-1">
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              className="fw-bold text-muted text-uppercase"
+                              style={{
+                                fontSize: "0.65rem",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Status:
+                            </span>
+                            {getStatusBadge(cw.student_status)}
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              className="fw-bold text-muted text-uppercase"
+                              style={{
+                                fontSize: "0.65rem",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Points:
+                            </span>
+                            <span
+                              className="fw-bolder text-dark"
+                              style={{ fontSize: "0.85rem" }}
+                            >
+                              {cw.points ? `${cw.points}` : "0"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">
@@ -1165,34 +1016,8 @@ const TabStream = () => {
           )}
         </div>
       </div>
-
-      <ClassworkFormDrawer
-        drawerMode={drawerMode}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        includeLink={includeLink}
-        setIncludeLink={setIncludeLink}
-        includeFiles={includeFiles}
-        setIncludeFiles={setIncludeFiles}
-        includeForm={includeForm}
-        setIncludeForm={setIncludeForm}
-        newFiles={newFiles}
-        setNewFiles={setNewFiles}
-        existingFiles={existingFiles}
-        setExistingFiles={setExistingFiles}
-        setDeletedFileIds={setDeletedFileIds}
-        triggerSaveConfirmation={triggerSaveConfirmation}
-        executeSubmit={executeSubmit}
-        selectedItem={selectedItem}
-        proceedToUpdateForm={proceedToUpdateForm}
-      />
-
-      <RespondentsModal
-        selectedItem={selectedItem}
-        executeDelete={executeDelete}
-      />
     </>
   );
 };
 
-export default TabStream;
+export default StudentTabStream;
