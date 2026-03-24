@@ -51,7 +51,12 @@ import TeacherRecycleBin from "./pages/Teacher/TeacherRecycleBin";
 // Student Components
 import StudentLayout from "./components/Layouts/StudentLayout";
 import StudentHome from "./pages/Student/StudentHome";
+
 import StudentClassrooms from "./pages/Student/StudentClassrooms";
+import StudentClassroomInside from "./pages/Student/Classroom/StudentClassroomInside";
+import StudentTabStream from "./pages/Student/Classroom/StudentTabStream";
+import StudentTabGrades from "./pages/Student/Classroom/StudentTabGrades";
+
 import StudentFiles from "./pages/Student/StudentFiles";
 import StudentELibrary from "./pages/Student/StudentELibrary";
 import StudentGrades from "./pages/Student/StudentGrades";
@@ -166,6 +171,11 @@ function App() {
           {/* Relative paths na lang dapat */}
           <Route path="home" element={<StudentHome />} />
           <Route path="classrooms" element={<StudentClassrooms />} />
+          <Route path="classrooms/:id" element={<StudentClassroomInside />}>
+            <Route index element={<Navigate to="stream" replace />} />
+            <Route path="stream" element={<StudentTabStream />} />
+            <Route path="grades" element={<StudentTabGrades />} />
+          </Route>
           <Route path="files" element={<StudentFiles />} />
           <Route path="e-library" element={<StudentELibrary />} />
           <Route path="grades" element={<StudentGrades />} />
