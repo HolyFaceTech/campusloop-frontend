@@ -83,9 +83,18 @@ const TabStream = () => {
     }
   };
 
+  // STANDARD ASYNC SUBMIT (TO PREVENT DUPLICATION)
   const handleCommentSubmit = async (classworkId, parentId = null) => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
+
+    // Clear text field instantly for responsive feel and to prevent double clicks
+    if (parentId) {
+      setReplyText((prev) => ({ ...prev, [parentId]: "" }));
+      setActiveReplyBox(null);
+    } else {
+      setCommentText((prev) => ({ ...prev, [classworkId]: "" }));
+    }
 
     try {
       await axios.post(
@@ -97,16 +106,9 @@ const TabStream = () => {
           },
         },
       );
-
-      if (parentId) {
-        setReplyText({ ...replyText, [parentId]: "" });
-        setActiveReplyBox(null);
-      } else {
-        setCommentText({ ...commentText, [classworkId]: "" });
-      }
-
-      fetchClassworks();
+      fetchClassworks(); // Fetch real data directly from DB
     } catch (error) {
+      console.error(error);
       sileo.error({
         title: "Failed",
         description: "Could not post comment.",
@@ -540,7 +542,7 @@ const TabStream = () => {
                   style={{
                     width: "45px",
                     height: "45px",
-                    backgroundColor: "var(--primary-color)",
+                    backgroundColor: "var(--secondary-color)",
                     fontSize: "1.2rem",
                   }}
                 >
@@ -551,12 +553,8 @@ const TabStream = () => {
                 </span>
               </div>
               <div
-                className="rounded-circle d-flex justify-content-center align-items-center text-light shadow-sm flex-shrink-0 hover-shadow transition-all"
-                style={{
-                  width: "40px",
-                  height: "40px",
-                  backgroundColor: "var(--secondary-color)",
-                }}
+                className="bg-light rounded-circle d-flex justify-content-center align-items-center text-primary shadow-sm flex-shrink-0 hover-shadow transition-all"
+                style={{ width: "40px", height: "40px" }}
               >
                 <i className="bi bi-plus-lg fs-5"></i>
               </div>
@@ -579,6 +577,8 @@ const TabStream = () => {
           ) : (
             classworks.map((cw) => {
               const typeStyle = getBadgeStyle(cw.type);
+              const isMaterial = cw.type === "material";
+
               return (
                 <div
                   key={cw.id}
@@ -590,6 +590,7 @@ const TabStream = () => {
                   }}
                 >
                   <div className="card-body p-4 p-md-5 pb-4">
+                    {/* PREMIUM HEADER */}
                     <div className="d-flex justify-content-between align-items-start mb-4">
                       <div className="d-flex align-items-center gap-3">
                         <div
@@ -650,7 +651,7 @@ const TabStream = () => {
 
                       {/* ACTIONS & DROPDOWN */}
                       <div className="d-flex align-items-center gap-2 position-relative ms-3">
-                        {cw.type !== "material" && (
+                        {!isMaterial && (
                           <button
                             className="btn btn-sm btn-campusloop fw-bold rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
                             data-bs-toggle="modal"
@@ -704,7 +705,7 @@ const TabStream = () => {
                               top: "100%",
                             }}
                           >
-                            {cw.type !== "material" && (
+                            {!isMaterial && (
                               <li className="d-md-none border-bottom">
                                 <button
                                   className="dropdown-item py-2 fw-medium text-campusloop"
@@ -756,7 +757,7 @@ const TabStream = () => {
                       </p>
 
                       {/* ATTACHMENTS */}
-                      <div className="d-flex flex-column gap-2 mb-4">
+                      <div className="d-flex flex-column gap-2 mb-3">
                         {cw.link && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
                             <div
@@ -885,6 +886,29 @@ const TabStream = () => {
                             );
                           })}
                       </div>
+
+                      {/* POINTS FOR TEACHER VIEW (HIDDEN FOR MATERIAL) */}
+                      {!isMaterial && (
+                        <div className="d-flex align-items-center justify-content-end mt-2 mb-4 px-1">
+                          <div className="d-flex align-items-center gap-2">
+                            <span
+                              className="fw-bold text-muted text-uppercase"
+                              style={{
+                                fontSize: "0.65rem",
+                                letterSpacing: "0.5px",
+                              }}
+                            >
+                              Points:
+                            </span>
+                            <span
+                              className="fw-bolder text-dark"
+                              style={{ fontSize: "0.85rem" }}
+                            >
+                              {cw.points ? `${cw.points}` : "0"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
                       {/* FB-STYLE COMMENTS THREAD */}
                       <div className="border-top pt-3 mt-4">
