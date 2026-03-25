@@ -243,12 +243,12 @@ const TabPeople = () => {
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
         <div className="table-responsive custom-scrollbar">
           <table
-            className="table table-hover align-middle mb-0"
+            className="table table-summer align-middle mb-0"
             style={{ minWidth: "1000px" }}
           >
-            <thead className="bg-light">
+            <thead>
               <tr>
-                <th className="ps-4 py-3" style={{ width: "50px" }}>
+                <th className="ps-4" style={{ width: "50px" }}>
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -259,30 +259,13 @@ const TabPeople = () => {
                     }
                   />
                 </th>
-                <th
-                  className="text-muted small fw-bold text-uppercase py-3"
-                  style={{ width: "60px" }}
-                >
-                  #
-                </th>
-                <th className="text-muted small fw-bold text-uppercase py-3">
-                  Student Details
-                </th>
-                <th className="text-muted small fw-bold text-uppercase py-3">
-                  LRN
-                </th>
-                <th className="text-muted small fw-bold text-uppercase py-3">
-                  Strand
-                </th>
-                <th className="text-muted small fw-bold text-uppercase py-3">
-                  Gender
-                </th>
-                <th className="text-muted small fw-bold text-uppercase py-3">
-                  Status
-                </th>
-                <th className="text-muted small fw-bold text-uppercase text-center pe-4 py-3">
-                  Action
-                </th>
+                <th style={{ width: "60px" }}>#</th>
+                <th>Student Details</th>
+                <th>LRN</th>
+                <th>Strand</th>
+                <th>Gender</th>
+                <th>Status</th>
+                <th className="text-center pe-4">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -293,7 +276,7 @@ const TabPeople = () => {
                     selectedIds.includes(student.id) ? "table-active-row" : ""
                   }
                 >
-                  <td className="ps-4 py-2">
+                  <td className="ps-4">
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -308,40 +291,39 @@ const TabPeople = () => {
                       }}
                     />
                   </td>
-                  <td className="fw-medium text-dark py-2">
+                  <td className="fw-bold text-muted">
                     {indexOfFirstItem + index + 1}
                   </td>
 
-                  <td className="py-2">
-                    <div className="d-flex align-items-center">
+                  <td>
+                    <div className="d-flex align-items-center py-1">
                       <div
                         className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
                         style={{
                           width: "40px",
                           height: "40px",
-                          backgroundColor: "var(--primary-color)",
+                          backgroundColor: "var(--secondary-color)",
                         }}
                       >
                         {student.first_name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="overflow-hidden">
-                        <span
-                          className="fw-bold text-dark d-block text-truncate"
-                          style={{ maxWidth: "200px" }}
-                        >
-                          {student.first_name} {student.last_name}
-                        </span>
-                        <span
-                          className="text-muted small d-block text-truncate"
-                          style={{ fontSize: "0.75rem", maxWidth: "200px" }}
+                      <div>
+                        <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                          <span className="fw-bold text-dark">
+                            {student.first_name} {student.last_name}
+                          </span>
+                        </div>
+                        <p
+                          className="mb-0 text-muted"
+                          style={{ fontSize: "0.80rem" }}
                         >
                           {student.email}
-                        </span>
+                        </p>
                       </div>
                     </div>
                   </td>
 
-                  <td className="py-2">
+                  <td>
                     <span
                       className="fw-bold font-monospace tracking-wide text-dark"
                       style={{ fontSize: "0.90rem" }}
@@ -350,40 +332,54 @@ const TabPeople = () => {
                     </span>
                   </td>
 
-                  {/* HINIWALAY NA ANG STRAND AT GENDER COLUMN */}
-                  <td className="py-2">
+                  <td>
                     <span
-                      className="badge bg-light text-dark border px-2 py-1 fw-medium shadow-sm text-wrap text-start"
-                      style={{ maxWidth: "150px" }}
+                      className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                      style={{
+                        maxWidth: "150px",
+                        backgroundColor: "var(--accent-color)",
+                      }}
                     >
                       {student.strand?.name || "N/A"}
                     </span>
                   </td>
 
-                  <td className="py-2">
+                  <td>
                     <span className="text-muted small fw-bold">
                       {student.gender || "N/A"}
                     </span>
                   </td>
 
-                  <td className="py-2">
+                  <td>
                     {student.pivot.status === "approved" ? (
-                      <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-2 fw-medium">
-                        <i className="bi bi-check-circle-fill me-1"></i>{" "}
+                      <span
+                        className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1"
+                        style={{ fontSize: "0.65rem" }}
+                      >
+                        <i
+                          className="bi bi-circle-fill me-1"
+                          style={{ fontSize: "0.4rem" }}
+                        ></i>{" "}
                         Enrolled
                       </span>
                     ) : (
-                      <span className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-2 fw-medium">
-                        <i className="bi bi-hourglass-split me-1 text-warning"></i>{" "}
+                      <span
+                        className="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1"
+                        style={{ fontSize: "0.65rem" }}
+                      >
+                        <i
+                          className="bi bi-circle-fill me-1"
+                          style={{ fontSize: "0.4rem" }}
+                        ></i>{" "}
                         Pending
                       </span>
                     )}
                   </td>
 
-                  <td className="text-center pe-4 py-2">
+                  <td className="text-center pe-4">
                     <button
                       onClick={() => openViewDrawer(student)}
-                      className="btn btn-sm btn-light border shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center"
+                      className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center"
                       style={{ width: "35px", height: "35px" }}
                       title="View Profile"
                     >
@@ -402,8 +398,19 @@ const TabPeople = () => {
               {currentItems.length === 0 && !isLoading && (
                 <tr>
                   <td colSpan="8" className="text-center py-5 text-muted">
-                    <i className="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
-                    <span className="fw-medium">No students found.</span>
+                    {students.length === 0 ? (
+                      <>
+                        <i className="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
+                        <span className="fw-medium">No students found.</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
+                        <span className="fw-medium">
+                          No matching records found.
+                        </span>
+                      </>
+                    )}
                   </td>
                 </tr>
               )}
@@ -426,7 +433,7 @@ const TabPeople = () => {
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark"
+                  className="page-link page-link-summer"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -440,16 +447,7 @@ const TabPeople = () => {
                   className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
                 >
                   <button
-                    className="page-link"
-                    style={
-                      currentPage === i + 1
-                        ? {
-                            backgroundColor: "var(--primary-color)",
-                            borderColor: "var(--primary-color)",
-                            color: "white",
-                          }
-                        : { color: "var(--primary-color)" }
-                    }
+                    className="page-link page-link-summer"
                     onClick={() => setCurrentPage(i + 1)}
                   >
                     {i + 1}
@@ -460,7 +458,7 @@ const TabPeople = () => {
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark"
+                  className="page-link page-link-summer"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -473,56 +471,13 @@ const TabPeople = () => {
         </div>
       )}
 
-      <StudentViewDrawer student={selectedStudent} />
-
-      {/* CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="actionConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-body text-center p-4">
-              <div
-                className={`rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 ${actionType === "approve" ? "bg-success" : "bg-danger"} bg-opacity-10`}
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className={`bi ${actionType === "approve" ? "bi-person-check-fill text-success" : actionType === "decline" ? "bi-person-x-fill text-warning" : "bi-trash3-fill text-danger"}`}
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-              <h4 className="fw-bold text-dark mt-3 text-capitalize">
-                {actionType} Students
-              </h4>
-              <p className="text-muted mb-4">
-                Are you sure you want to {actionType} the{" "}
-                <b>{selectedIds.length} selected student(s)</b>?
-              </p>
-              <div className="d-flex justify-content-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                  data-bs-dismiss="modal"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className={`btn ${actionType === "approve" ? "btn-campusloop" : "btn-danger"} px-4 fw-medium shadow-sm rounded-3`}
-                  data-bs-dismiss="modal"
-                  onClick={executeAction}
-                >
-                  Yes, Proceed
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* MODALS AND DRAWERS */}
+      <StudentViewDrawer
+        student={selectedStudent}
+        actionType={actionType}
+        selectedIdsCount={selectedIds.length}
+        executeAction={executeAction}
+      />
     </>
   );
 };
