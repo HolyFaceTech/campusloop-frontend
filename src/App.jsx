@@ -56,6 +56,7 @@ import StudentClassrooms from "./pages/Student/StudentClassrooms";
 import StudentClassroomInside from "./pages/Student/Classroom/StudentClassroomInside";
 import StudentTabStream from "./pages/Student/Classroom/StudentTabStream";
 import StudentTabGrades from "./pages/Student/Classroom/StudentTabGrades";
+import StudentTakeForm from "./pages/Student/Classroom/StudentTakeForm";
 
 import StudentFiles from "./pages/Student/StudentFiles";
 import StudentELibrary from "./pages/Student/StudentELibrary";
@@ -176,6 +177,7 @@ function App() {
             <Route path="stream" element={<StudentTabStream />} />
             <Route path="grades" element={<StudentTabGrades />} />
           </Route>
+          <Route path="/student/forms/:id" element={<StudentTakeForm />} />
           <Route path="files" element={<StudentFiles />} />
           <Route path="e-library" element={<StudentELibrary />} />
           <Route path="grades" element={<StudentGrades />} />
