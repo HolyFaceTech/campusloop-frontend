@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useOutletContext, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
+import { Modal } from "bootstrap";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
+import StudentWorkModal from "./StudentWorkModal";
 
 const darkToast = {
   fill: "#242424",
@@ -24,12 +26,14 @@ const StudentTabStream = () => {
     ? currentUser.first_name.charAt(0).toUpperCase()
     : "S";
 
-  // MGA STATES PARA SA COMMENTS AT REPLIES
   const [commentText, setCommentText] = useState({});
   const [replyText, setReplyText] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
-
   const [openDropdownId, setOpenDropdownId] = useState(null);
+
+  const [selectedItemForWork, setSelectedItemForWork] = useState(null);
+  const [workFiles, setWorkFiles] = useState([]);
+  const workFileInputRef = useRef(null);
 
   useEffect(() => {
     fetchStream();
@@ -60,12 +64,12 @@ const StudentTabStream = () => {
     }
   };
 
-  // STANDARD ASYNC SUBMIT (TO PREVENT DUPLICATION)
+  // TINANGGAL ANG OPTIMISTIC COMMENT PARA WALANG DUPLICATION
   const handleCommentSubmit = async (classworkId, parentId = null) => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
-    // Clear text field instantly for responsive feel and to prevent double clicks
+    // Clear fields instantly for quick UX
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
       setActiveReplyBox(null);
@@ -73,6 +77,7 @@ const StudentTabStream = () => {
       setCommentText((prev) => ({ ...prev, [classworkId]: "" }));
     }
 
+    // Direct database submission and refetch
     try {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/classworks/${classworkId}/comments`,
@@ -83,7 +88,7 @@ const StudentTabStream = () => {
           },
         },
       );
-      fetchStream(); // Fetch real data directly from DB
+      fetchStream(); // Fetch the real data immediately
     } catch (error) {
       console.error(error);
       sileo.error({
@@ -94,15 +99,187 @@ const StudentTabStream = () => {
     }
   };
 
+  const isPastDeadline = (deadline) => {
+    if (!deadline) return false;
+    return new Date() > new Date(deadline);
+  };
+
+  const openAddWorkModal = (cw) => {
+    setOpenDropdownId(null);
+    setSelectedItemForWork(cw);
+    setWorkFiles([]);
+    new Modal(document.getElementById("addWorkModal")).show();
+  };
+
+  const openMarkDoneModal = (cw) => {
+    setOpenDropdownId(null);
+    setSelectedItemForWork(cw);
+    setWorkFiles([]);
+    new Modal(document.getElementById("markDoneModal")).show();
+  };
+
+  const openViewSubmissionModal = (cw) => {
+    setOpenDropdownId(null);
+    setSelectedItemForWork(cw);
+    new Modal(document.getElementById("viewSubmissionModal")).show();
+  };
+
+  const openUnsubmitModal = (cw) => {
+    setOpenDropdownId(null);
+    setSelectedItemForWork(cw);
+    new Modal(document.getElementById("unsubmitConfirmModal")).show();
+  };
+
+  const onWorkDragOver = (e) => e.preventDefault();
+  const onWorkDrop = (e) => {
+    e.preventDefault();
+    validateAndAddWorkFiles(Array.from(e.dataTransfer.files));
+  };
+  const onWorkFileInputChange = (e) =>
+    validateAndAddWorkFiles(Array.from(e.target.files));
+
+  const validateAndAddWorkFiles = (files) => {
+    const maxSizeBytes = 50 * 1024 * 1024;
+    const validFiles = files.filter((f) => {
+      if (f.size > maxSizeBytes) {
+        sileo.error({
+          title: "File too large",
+          description: `${f.name} exceeds the 50MB limit.`,
+          ...darkToast,
+        });
+        return false;
+      }
+      return true;
+    });
+    setWorkFiles((prev) => [...prev, ...validFiles]);
+  };
+
+  const removeWorkFile = (index) =>
+    setWorkFiles((prev) => prev.filter((_, i) => i !== index));
+
+  const submitStudentWork = async () => {
+    const filesToSubmit = [...workFiles];
+
+    const addModal = Modal.getInstance(document.getElementById("addWorkModal"));
+    if (addModal) addModal.hide();
+
+    const markModal = Modal.getInstance(
+      document.getElementById("markDoneModal"),
+    );
+    if (markModal) markModal.hide();
+
+    setTimeout(async () => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+
+      setIsLoading(true);
+
+      try {
+        const data = new FormData();
+        if (filesToSubmit.length > 0) {
+          filesToSubmit.forEach((file) => data.append("files[]", file));
+        }
+
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/submit`,
+          data,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+        sileo.success({
+          title: "Success",
+          description: "Work turned in successfully.",
+          ...darkToast,
+        });
+        fetchStream();
+      } catch (error) {
+        sileo.error({
+          title: "Failed",
+          description:
+            error.response?.data?.message || "Failed to turn in work.",
+          ...darkToast,
+        });
+        setIsLoading(false);
+      }
+    }, 400);
+  };
+
+  const executeUnsubmit = async () => {
+    const unsubmitModal = Modal.getInstance(
+      document.getElementById("unsubmitConfirmModal"),
+    );
+    if (unsubmitModal) unsubmitModal.hide();
+
+    setTimeout(async () => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+
+      setIsLoading(true);
+
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/unsubmit`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
+        );
+        sileo.success({
+          title: "Unsubmitted",
+          description: "Your work has been unsubmitted.",
+          ...darkToast,
+        });
+        fetchStream();
+      } catch (error) {
+        sileo.error({
+          title: "Failed",
+          description:
+            error.response?.data?.message || "Failed to unsubmit work.",
+          ...darkToast,
+        });
+        setIsLoading(false);
+      }
+    }, 400);
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "DONE":
+      case "GRADED":
         return (
           <span
             className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 shadow-sm"
             style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
           >
             <i className="bi bi-check-circle-fill me-1"></i> Done
+          </span>
+        );
+      case "DONE LATE":
+        return (
+          <span
+            className="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            <i className="bi bi-clock-history me-1"></i> Done Late
+          </span>
+        );
+      case "RETURNED":
+        return (
+          <span
+            className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm"
+            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
+          >
+            <i className="bi bi-arrow-return-left me-1"></i> Returned
           </span>
         );
       case "MISSING":
@@ -402,6 +579,15 @@ const StudentTabStream = () => {
               const typeStyle = getBadgeStyle(cw.type);
               const isMaterial = cw.type === "material";
 
+              // UPDATED STATUS CHECKS
+              const isDone =
+                cw.student_status === "DONE" ||
+                cw.student_status === "DONE LATE" ||
+                cw.student_status === "GRADED";
+              const isReturned = cw.student_status === "RETURNED";
+              const cannotUnsubmit =
+                isPastDeadline(cw.deadline) || cw.student_status === "GRADED";
+
               return (
                 <div
                   key={cw.id}
@@ -526,40 +712,86 @@ const StudentTabStream = () => {
                                 top: "100%",
                               }}
                             >
-                              {cw.type === "form" &&
-                                cw.student_status !== "DONE" && (
-                                  <li>
-                                    <button className="dropdown-item py-2 fw-medium text-campusloop">
-                                      <i className="bi bi-ui-checks me-2"></i>{" "}
-                                      Open Form
-                                    </button>
-                                  </li>
-                                )}
-                              {(cw.type === "assignment" ||
-                                cw.type === "activity") &&
-                                cw.student_status !== "DONE" && (
+                              {/* Kung may Form at hindi pa tapos at hindi rin ni-return */}
+                              {cw.type === "form" && !isDone && !isReturned && (
+                                <li>
+                                  <Link
+                                    to={`/student/forms/${cw.form.id}`}
+                                    className="dropdown-item py-2 fw-medium text-campusloop"
+                                  >
+                                    <i className="bi bi-ui-checks me-2"></i>{" "}
+                                    Open Form
+                                  </Link>
+                                </li>
+                              )}
+
+                              {/* Add Work / Resubmit Button (Hindi pwede sa Forms) */}
+                              {(!isDone || isReturned) &&
+                                cw.type !== "form" && (
                                   <>
                                     <li>
-                                      <button className="dropdown-item py-2 fw-medium text-campusloop">
+                                      <button
+                                        className="dropdown-item py-2 fw-medium text-campusloop"
+                                        onClick={() => openAddWorkModal(cw)}
+                                      >
                                         <i className="bi bi-cloud-upload me-2"></i>{" "}
-                                        Add Work
+                                        {isReturned
+                                          ? "Re-submit Work"
+                                          : "Add Work"}
                                       </button>
                                     </li>
                                     <li>
-                                      <button className="dropdown-item py-2 fw-medium text-success">
+                                      <button
+                                        className="dropdown-item py-2 fw-medium text-success"
+                                        onClick={() => openMarkDoneModal(cw)}
+                                      >
                                         <i className="bi bi-check-circle me-2"></i>{" "}
-                                        Mark as Done
+                                        {isReturned
+                                          ? "Mark as Re-submitted"
+                                          : "Mark as Done"}
                                       </button>
                                     </li>
                                   </>
                                 )}
-                              {cw.student_status === "DONE" && (
-                                <li>
-                                  <button className="dropdown-item py-2 fw-medium text-secondary">
-                                    <i className="bi bi-eye me-2"></i> View
-                                    Submission
-                                  </button>
-                                </li>
+
+                              {/* View Submission & Unsubmit Button */}
+                              {(isDone || isReturned) && (
+                                <>
+                                  <li>
+                                    <button
+                                      className="dropdown-item py-2 fw-medium text-secondary"
+                                      onClick={() =>
+                                        openViewSubmissionModal(cw)
+                                      }
+                                    >
+                                      <i className="bi bi-eye me-2"></i>{" "}
+                                      {isReturned
+                                        ? "View Feedback"
+                                        : "View Submission"}
+                                    </button>
+                                  </li>
+
+                                  {/* HINDI PWEDE I-UNSUBMIT KUNG MAY FORM O KUNG GRADED/LAGPAS DEADLINE NA */}
+                                  {!cw.form &&
+                                    cw.student_status !== "GRADED" &&
+                                    !isReturned && (
+                                      <li>
+                                        <button
+                                          className={`dropdown-item py-2 fw-medium ${cannotUnsubmit ? "text-muted" : "text-danger"}`}
+                                          disabled={cannotUnsubmit}
+                                          onClick={() => openUnsubmitModal(cw)}
+                                          style={{
+                                            cursor: cannotUnsubmit
+                                              ? "not-allowed"
+                                              : "pointer",
+                                          }}
+                                        >
+                                          <i className="bi bi-arrow-counterclockwise me-2"></i>{" "}
+                                          Unsubmit
+                                        </button>
+                                      </li>
+                                    )}
+                                </>
                               )}
                             </ul>
                           )}
@@ -753,7 +985,6 @@ const StudentTabStream = () => {
                           </span>
                         </div>
 
-                        {/* RENDER COMMENTS */}
                         {cw.comments && cw.comments.length > 0 && (
                           <div
                             className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
@@ -837,7 +1068,6 @@ const StudentTabStream = () => {
                                     </button>
                                   </div>
 
-                                  {/* RENDER REPLIES */}
                                   {comment.replies &&
                                     comment.replies.length > 0 && (
                                       <div className="d-flex flex-column gap-2 mt-2">
@@ -914,7 +1144,6 @@ const StudentTabStream = () => {
                                       </div>
                                     )}
 
-                                  {/* REPLY INPUT BOX */}
                                   {activeReplyBox === comment.id && (
                                     <div className="d-flex align-items-start gap-2 mt-2">
                                       <div
@@ -973,7 +1202,6 @@ const StudentTabStream = () => {
                           </div>
                         )}
 
-                        {/* MAIN COMMENT INPUT BOX */}
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div
                             className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0 mt-1"
@@ -1020,6 +1248,21 @@ const StudentTabStream = () => {
           )}
         </div>
       </div>
+
+      <StudentWorkModal
+        selectedItemForWork={selectedItemForWork}
+        workFiles={workFiles}
+        workFileInputRef={workFileInputRef}
+        onWorkDragOver={onWorkDragOver}
+        onWorkDrop={onWorkDrop}
+        onWorkFileInputChange={onWorkFileInputChange}
+        removeWorkFile={removeWorkFile}
+        submitStudentWork={submitStudentWork}
+        executeUnsubmit={executeUnsubmit}
+        formatBytes={formatBytes}
+        getFileDetails={getFileDetails}
+        openAddWorkModal={openAddWorkModal}
+      />
     </>
   );
 };

@@ -83,12 +83,10 @@ const TabStream = () => {
     }
   };
 
-  // STANDARD ASYNC SUBMIT (TO PREVENT DUPLICATION)
   const handleCommentSubmit = async (classworkId, parentId = null) => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
-    // Clear text field instantly for responsive feel and to prevent double clicks
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
       setActiveReplyBox(null);
@@ -106,7 +104,7 @@ const TabStream = () => {
           },
         },
       );
-      fetchClassworks(); // Fetch real data directly from DB
+      fetchClassworks();
     } catch (error) {
       console.error(error);
       sileo.error({
@@ -141,6 +139,18 @@ const TabStream = () => {
     new Offcanvas(document.getElementById("classworkDrawer")).show();
   };
 
+  // SAFE AT PROGRAMMATIC NA PAGBUKAS NG RESPONDENTS MODAL
+  const openRespondentsModal = (cw) => {
+    setSelectedItem(cw);
+    setTimeout(() => {
+      const modalEl = document.getElementById("respondentsModal");
+      if (modalEl) {
+        const modal = Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      }
+    }, 100);
+  };
+
   const handleConfirmUpdateClick = (cw) => {
     setOpenDropdownId(null);
     setSelectedItem(cw);
@@ -150,12 +160,10 @@ const TabStream = () => {
   };
 
   const proceedToUpdateForm = () => {
-    setTimeout(() => {
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
+    const m = Modal.getInstance(document.getElementById("updateConfirmModal"));
+    if (m) m.hide();
 
+    setTimeout(() => {
       if (selectedItem) {
         openUpdateDrawer(selectedItem);
       }
@@ -186,10 +194,10 @@ const TabStream = () => {
   const triggerSaveConfirmation = () => {
     Offcanvas.getInstance(document.getElementById("classworkDrawer"))?.hide();
     setTimeout(() => {
-      document
-        .querySelectorAll(".offcanvas-backdrop")
-        .forEach((el) => el.remove());
-      new Modal(document.getElementById("saveConfirmModal")).show();
+      const modal = Modal.getOrCreateInstance(
+        document.getElementById("saveConfirmModal"),
+      );
+      modal.show();
     }, 400);
   };
 
@@ -251,7 +259,10 @@ const TabStream = () => {
 
   const promptDelete = (cw) => {
     setSelectedItem(cw);
-    new Modal(document.getElementById("deleteConfirmModal")).show();
+    const modal = Modal.getOrCreateInstance(
+      document.getElementById("deleteConfirmModal"),
+    );
+    modal.show();
   };
 
   const executeDelete = async () => {
@@ -542,7 +553,7 @@ const TabStream = () => {
                   style={{
                     width: "45px",
                     height: "45px",
-                    backgroundColor: "var(--secondary-color)",
+                    backgroundColor: "var(--primary-color)",
                     fontSize: "1.2rem",
                   }}
                 >
@@ -553,8 +564,12 @@ const TabStream = () => {
                 </span>
               </div>
               <div
-                className="bg-light rounded-circle d-flex justify-content-center align-items-center text-primary shadow-sm flex-shrink-0 hover-shadow transition-all"
-                style={{ width: "40px", height: "40px" }}
+                className="rounded-circle d-flex justify-content-center align-items-center text-light shadow-sm flex-shrink-0 hover-shadow transition-all"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  backgroundColor: "var(--secondary-color)",
+                }}
               >
                 <i className="bi bi-plus-lg fs-5"></i>
               </div>
@@ -654,8 +669,7 @@ const TabStream = () => {
                         {!isMaterial && (
                           <button
                             className="btn btn-sm btn-campusloop fw-bold rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
-                            data-bs-toggle="modal"
-                            data-bs-target="#respondentsModal"
+                            onClick={() => openRespondentsModal(cw)}
                           >
                             <i className="bi bi-people-fill me-2"></i>{" "}
                             Respondents
@@ -709,8 +723,10 @@ const TabStream = () => {
                               <li className="d-md-none border-bottom">
                                 <button
                                   className="dropdown-item py-2 fw-medium text-campusloop"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#respondentsModal"
+                                  onClick={() => {
+                                    setOpenDropdownId(null);
+                                    openRespondentsModal(cw);
+                                  }}
                                 >
                                   <i className="bi bi-people-fill me-2"></i>{" "}
                                   Respondents
