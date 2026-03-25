@@ -88,18 +88,12 @@ const TabGrades = () => {
 
     if (submission.status === "graded") {
       return (
-        <div className="d-flex flex-column align-items-center justify-content-center">
+        <div className="d-flex align-items-center justify-content-center">
           <span
             className="fw-bold text-dark"
             style={{ fontSize: "1.1rem", lineHeight: "1" }}
           >
             {submission.grade}
-          </span>
-          <span
-            className="text-muted fw-medium mt-1"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            / {cw.points || 0}
           </span>
         </div>
       );
@@ -154,7 +148,7 @@ const TabGrades = () => {
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
         <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 w-100">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -171,10 +165,7 @@ const TabGrades = () => {
               entries
             </div>
 
-            <div
-              className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
-            >
+            <div className="input-group" style={{ maxWidth: "350px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
               </span>
@@ -189,27 +180,28 @@ const TabGrades = () => {
           </div>
         </div>
       </div>
+
       <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
         <div
           className="table-responsive custom-scrollbar"
           style={{ maxHeight: "650px" }}
         >
           <table
-            className="table table-hover align-middle mb-0 border-top-0"
+            className="table table-summer align-middle mb-0"
             style={{ minWidth: "100%" }}
           >
-            <thead className="sticky-top" style={{ zIndex: 10 }}>
+            <thead className="bg-light sticky-top" style={{ zIndex: 10 }}>
               <tr>
                 <th
-                  className="py-3 px-3 text-muted small fw-bold text-center border-bottom border-end align-middle bg-light"
-                  style={{ minWidth: "60px", borderTop: "none" }}
+                  className="py-3 px-3 text-center border-bottom border-end align-middle bg-light"
+                  style={{ width: "60px", borderTop: "none" }}
                 >
                   #
                 </th>
 
                 {/* STICKY COLUMN FOR STUDENT DETAILS */}
                 <th
-                  className="py-3 px-4 text-muted small fw-bold text-uppercase border-bottom align-middle bg-light"
+                  className="py-3 px-4 border-bottom align-middle bg-light"
                   style={{
                     minWidth: "320px",
                     position: "sticky",
@@ -219,11 +211,11 @@ const TabGrades = () => {
                     boxShadow: "4px 0 8px rgba(0,0,0,0.03)",
                   }}
                 >
-                  <i className="bi bi-people-fill me-2"></i> Student Details
+                  Student Details
                 </th>
 
                 {classworks.length === 0 ? (
-                  <th className="py-4 text-center text-muted small fw-normal border-bottom border-end bg-light">
+                  <th className="py-4 text-center text-muted fw-normal border-bottom border-end bg-light">
                     No gradable classworks yet.
                   </th>
                 ) : (
@@ -298,7 +290,7 @@ const TabGrades = () => {
                 </tr>
               ) : (
                 currentStudents.map((student, index) => (
-                  <tr key={student.id} style={{ cursor: "pointer" }}>
+                  <tr key={student.id} className="hover-bg-light">
                     <td
                       className="text-center fw-medium text-muted border-end bg-white"
                       style={{ fontSize: "0.9rem" }}
@@ -323,21 +315,21 @@ const TabGrades = () => {
                           style={{
                             width: "40px",
                             height: "40px",
-                            backgroundColor: "var(--primary-color)",
+                            backgroundColor: "var(--secondary-color)",
                             fontSize: "1.1rem",
                           }}
                         >
                           {student.first_name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="overflow-hidden">
+                        <div>
                           <span
                             className="fw-bold text-dark d-block text-truncate"
-                            style={{ maxWidth: "220px", fontSize: "0.95rem" }}
+                            style={{ fontSize: "0.95rem" }}
                           >
                             {student.first_name} {student.last_name}
                           </span>
                           <span
-                            className="text-muted small d-block text-truncate font-monospace tracking-wide mt-1"
+                            className="text-muted small d-block font-monospace tracking-wide mt-1"
                             style={{ fontSize: "0.75rem" }}
                           >
                             LRN: {student.lrn || "N/A"}
@@ -367,7 +359,6 @@ const TabGrades = () => {
         </div>
       </div>
 
-      {/* PAGINATION FOOTER */}
       {filteredStudents.length > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
           <p className="text-muted small mb-0">
@@ -381,7 +372,7 @@ const TabGrades = () => {
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark"
+                  className="page-link page-link-summer"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -395,16 +386,7 @@ const TabGrades = () => {
                   className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
                 >
                   <button
-                    className="page-link"
-                    style={
-                      currentPage === i + 1
-                        ? {
-                            backgroundColor: "var(--primary-color)",
-                            borderColor: "var(--primary-color)",
-                            color: "white",
-                          }
-                        : { color: "var(--primary-color)" }
-                    }
+                    className="page-link page-link-summer"
                     onClick={() => setCurrentPage(i + 1)}
                   >
                     {i + 1}
@@ -415,7 +397,7 @@ const TabGrades = () => {
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
                 <button
-                  className="page-link text-dark"
+                  className="page-link page-link-summer"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
