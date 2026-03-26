@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
+import { Modal } from "bootstrap";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
+import FormBuilder from "./FormBuilder";
+import ReviewSubmissionModal from "./ReviewSubmissionModal";
+
+const darkToast = {
+  fill: "#242424",
+  styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
+};
 
 const FormInside = () => {
   const { id } = useParams();
@@ -17,6 +25,9 @@ const FormInside = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // STATE PARA SA SELECTED RESPONDENT PARA SA REVIEW MODAL
+  const [selectedRespondent, setSelectedRespondent] = useState(null);
 
   useEffect(() => {
     fetchFormData();
@@ -50,6 +61,20 @@ const FormInside = () => {
       console.error("Error fetching respondents", error);
       setIsLoading(false);
     }
+  };
+
+  // FUNCTION PARA BUKSAN ANG REVIEW MODAL
+  const openReviewModal = (respondent) => {
+    setSelectedRespondent(respondent);
+
+    // Binibigyan natin ang React ng konting milliseconds para ma-render yung data sa Modal
+    setTimeout(() => {
+      const modalEl = document.getElementById("reviewSubmissionModal");
+      if (modalEl) {
+        const modal = Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      }
+    }, 150);
   };
 
   // DATATABLE LOGIC PARA SA RESPONDENTS
@@ -527,7 +552,7 @@ const FormInside = () => {
                   entries
                 </div>
 
-                <div className="input-group" style={{ width: "300px" }}>
+                <div className="input-group" style={{ width: "350px" }}>
                   <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                     <i className="bi bi-search"></i>
                   </span>
@@ -549,52 +574,58 @@ const FormInside = () => {
                 className="table table-summer align-middle mb-0"
                 style={{ minWidth: "950px" }}
               >
-                <thead>
+                <thead className="bg-light sticky-top" style={{ zIndex: 10 }}>
                   <tr>
-                    <th className="text-center ps-4" style={{ width: "60px" }}>
+                    <th
+                      className="text-center ps-4"
+                      style={{ width: "60px", borderTop: "none" }}
+                    >
                       #
                     </th>
-                    <th>STUDENT DETAILS</th>
-                    <th>LRN</th>
-                    <th>STRAND</th>
-                    <th className="text-center">SCORE</th>
-                    <th>SUBMITTED AT</th>
-                    <th className="text-center pe-4">ACTION</th>
+                    <th style={{ borderTop: "none" }}>Student Details</th>
+                    <th style={{ borderTop: "none" }}>LRN</th>
+                    <th style={{ borderTop: "none" }}>Strand</th>
+                    <th className="text-center" style={{ borderTop: "none" }}>
+                      Score
+                    </th>
+                    <th className="text-center" style={{ borderTop: "none" }}>
+                      Submitted At
+                    </th>
+                    <th
+                      className="text-center pe-4"
+                      style={{ borderTop: "none" }}
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentRespondents.length > 0 ? (
                     currentRespondents.map((sub, index) => (
-                      <tr key={sub.id}>
-                        <td className="text-center fw-medium text-dark px-4 py-2">
+                      <tr key={sub.id} className="hover-bg-light">
+                        <td className="text-center fw-bold text-muted px-4 py-2">
                           {indexOfFirstItem + index + 1}
                         </td>
                         <td className="py-2">
-                          <div className="d-flex align-items-center">
+                          <div className="d-flex align-items-center py-1">
                             <div
                               className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 flex-shrink-0 shadow-sm"
                               style={{
                                 width: "40px",
                                 height: "40px",
-                                backgroundColor: "var(--primary-color)",
+                                backgroundColor: "var(--secondary-color)",
                               }}
                             >
                               {sub.student?.first_name?.charAt(0).toUpperCase()}
                             </div>
-                            <div className="overflow-hidden">
-                              <div
-                                className="fw-bolder text-dark d-block text-truncate"
-                                style={{ maxWidth: "200px" }}
-                              >
+                            <div>
+                              <div className="fw-bold text-dark d-block">
                                 {sub.student?.first_name}{" "}
                                 {sub.student?.last_name}
                               </div>
                               <span
-                                className="text-muted small d-block text-truncate"
-                                style={{
-                                  maxWidth: "200px",
-                                  fontSize: "0.75rem",
-                                }}
+                                className="text-muted small d-block"
+                                style={{ fontSize: "0.80rem" }}
                               >
                                 {sub.student?.email}
                               </span>
@@ -611,46 +642,56 @@ const FormInside = () => {
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge border text-dark rounded-3 px-2 py-1"
-                            style={{ backgroundColor: "var(--accent-color)" }}
+                            className="badge bg-light text-dark border px-2 py-1 fw-medium shadow-sm text-wrap text-start"
+                            style={{ maxWidth: "150px" }}
                           >
                             {sub.student?.strand?.name || "N/A"}
                           </span>
                         </td>
                         <td className="text-center py-2">
-                          <span className="fw-bolder text-success fs-5">
-                            {sub.score}
-                          </span>
-                          <span
-                            className="text-muted fw-bold d-block text-uppercase"
-                            style={{ fontSize: "0.6rem", letterSpacing: "1px" }}
-                          >
-                            Points
-                          </span>
+                          <div className="d-flex flex-column align-items-center justify-content-center">
+                            <span
+                              className={`fw-bolder fs-5 ${sub.score < totalPoints / 2 ? "text-danger" : "text-success"}`}
+                            >
+                              {sub.score}
+                            </span>
+                            <span
+                              className="text-muted fw-bold d-block text-uppercase"
+                              style={{
+                                fontSize: "0.6rem",
+                                letterSpacing: "1px",
+                              }}
+                            >
+                              Points
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-2">
-                          <span className="d-block fw-bold text-dark small">
-                            {new Date(sub.submitted_at).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )}
-                          </span>
-                          <span
-                            className="text-muted font-monospace"
-                            style={{ fontSize: "0.75rem" }}
-                          >
-                            {new Date(sub.submitted_at).toLocaleTimeString(
-                              "en-US",
-                              { hour: "2-digit", minute: "2-digit" },
-                            )}
-                          </span>
+                        <td className="text-center py-2">
+                          <div className="d-inline-block text-center">
+                            <span className="d-block fw-bold text-dark small">
+                              {new Date(sub.submitted_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                },
+                              )}
+                            </span>
+                            <span
+                              className="text-muted font-monospace d-block"
+                              style={{ fontSize: "0.75rem" }}
+                            >
+                              {new Date(sub.submitted_at).toLocaleTimeString(
+                                "en-US",
+                                { hour: "2-digit", minute: "2-digit" },
+                              )}
+                            </span>
+                          </div>
                         </td>
                         <td className="text-center pe-4 py-2">
                           <button
+                            onClick={() => openReviewModal(sub)}
                             className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center transition-all hover-primary"
                             style={{ width: "35px", height: "35px" }}
                             title="View Answers"
@@ -714,6 +755,7 @@ const FormInside = () => {
                       Previous
                     </button>
                   </li>
+                  {/* NAGLAGAY NG KEY PROP SA LOOP */}
                   {[...Array(totalPages)].map((_, i) => (
                     <li
                       key={i}
@@ -745,6 +787,13 @@ const FormInside = () => {
           )}
         </>
       )}
+
+      {/* RENDER REVIEW MODAL COMPONENT SA IBABA */}
+      <ReviewSubmissionModal
+        form={form}
+        respondent={selectedRespondent}
+        totalPoints={totalPoints}
+      />
     </>
   );
 };
