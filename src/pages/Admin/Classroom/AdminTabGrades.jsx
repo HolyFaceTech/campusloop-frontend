@@ -3,7 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 
-const TabGrades = () => {
+const AdminTabGrades = () => {
   const { classroom } = useOutletContext();
   const [students, setStudents] = useState([]);
   const [classworks, setClassworks] = useState([]);
@@ -18,6 +18,7 @@ const TabGrades = () => {
     if (classroom) fetchGradesData();
   }, [classroom]);
 
+  // Reset sa Page 1 kapag nag-search o nagpalit ng entries limit
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
@@ -26,18 +27,28 @@ const TabGrades = () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/grades`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/classrooms/${classroom.id}/grades`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
         },
       );
+
       const data = res.data;
       setClassworks(data.classworks || []);
       setStudents(data.students || []);
     } catch (error) {
       console.error("Error fetching grades data", error);
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
+        alert(
+          "MAY ERROR SA LARAVEL BACKEND: \n\n" + error.response.data.message,
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +102,7 @@ const TabGrades = () => {
       );
     }
 
-    if (submission.status === "graded" && submission.grade !== null) {
+    if (submission.status === "graded") {
       return (
         <div className="d-flex align-items-center justify-content-center">
           <span
@@ -104,18 +115,6 @@ const TabGrades = () => {
       );
     }
 
-    if (submission.status === "missing") {
-      return (
-        <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill fw-medium"
-          style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-        >
-          Missing
-        </span>
-      );
-    }
-
-    // KAPAG RETURNED NI TEACHER
     if (
       submission.status === "returned" ||
       (submission.status === "pending" && submission.teacher_feedback)
@@ -126,6 +125,17 @@ const TabGrades = () => {
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Returned
+        </span>
+      );
+    }
+
+    if (submission.status === "missing") {
+      return (
+        <span
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill fw-medium"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+        >
+          Missing
         </span>
       );
     }
@@ -147,6 +157,7 @@ const TabGrades = () => {
     return <span className="text-muted fw-light">—</span>;
   };
 
+  // LOGIC PARA SA SEARCH & PAGINATION
   const filteredStudents = students.filter((s) => {
     return `${s.first_name} ${s.last_name} ${s.lrn}`
       .toLowerCase()
@@ -217,6 +228,8 @@ const TabGrades = () => {
                 >
                   #
                 </th>
+
+                {/* STICKY COLUMN FOR STUDENT DETAILS */}
                 <th
                   className="py-3 px-4 border-bottom align-middle bg-light"
                   style={{
@@ -230,6 +243,7 @@ const TabGrades = () => {
                 >
                   Student Details
                 </th>
+
                 {classworks.length === 0 ? (
                   <th className="py-4 text-center text-muted fw-normal border-bottom border-end bg-light">
                     No gradable classworks yet.
@@ -292,6 +306,7 @@ const TabGrades = () => {
                 )}
               </tr>
             </thead>
+
             <tbody>
               {currentStudents.length === 0 ? (
                 <tr>
@@ -312,6 +327,8 @@ const TabGrades = () => {
                     >
                       {indexOfFirstItem + index + 1}
                     </td>
+
+                    {/* STICKY DATA FOR STUDENT NAME */}
                     <td
                       className="px-4 py-3 bg-white"
                       style={{
@@ -350,6 +367,8 @@ const TabGrades = () => {
                         </div>
                       </div>
                     </td>
+
+                    {/* DYNAMIC GRADES CELLS */}
                     {classworks.length === 0 ? (
                       <td className="text-center bg-white border-end"></td>
                     ) : (
@@ -424,4 +443,4 @@ const TabGrades = () => {
   );
 };
 
-export default TabGrades;
+export default AdminTabGrades;

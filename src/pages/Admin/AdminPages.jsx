@@ -17,11 +17,6 @@ export const Dashboard = () => (
 );
 
 // Placeholders para sa iba pang links sa sidebar
-export const ClassroomsAdmin = () => (
-  <div className="p-5 text-center">
-    <h4 className="text-muted">Classrooms Oversight (Coming Soon)</h4>
-  </div>
-);
 export const FormsAdmin = () => (
   <div className="p-5 text-center">
     <h4 className="text-muted">Forms Builder & Oversight (Coming Soon)</h4>

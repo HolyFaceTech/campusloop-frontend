@@ -1,6 +1,6 @@
 import React from "react";
 
-const StudentViewDrawer = ({
+const AdminStudentViewDrawer = ({
   student,
   actionType,
   selectedIdsCount,
@@ -14,11 +14,10 @@ const StudentViewDrawer = ({
 
   return (
     <>
-      {/* OFFCANVAS DRAWER */}
       <div
         className="offcanvas offcanvas-end shadow-lg border-0"
         tabIndex="-1"
-        id="studentViewDrawer"
+        id="adminStudentViewDrawer"
         style={{ width: "450px" }}
       >
         <div
@@ -42,7 +41,6 @@ const StudentViewDrawer = ({
         <div className="offcanvas-body custom-scrollbar p-4 bg-white">
           {student ? (
             <div className="row g-4">
-              {/* Personal Information Section */}
               <div className="col-12">
                 <h6
                   className="fw-bold text-muted mb-0 border-bottom pb-2"
@@ -116,7 +114,6 @@ const StudentViewDrawer = ({
                 </div>
               </div>
 
-              {/* Account Settings Section */}
               <div className="col-12 mt-4">
                 <h6
                   className="fw-bold text-muted mb-0 border-bottom pb-2"
@@ -162,7 +159,6 @@ const StudentViewDrawer = ({
                 />
               </div>
 
-              {/* Academic Details */}
               <div className="col-12 mt-4">
                 <h6
                   className="fw-bold text-muted mb-0 border-bottom pb-2"
@@ -218,10 +214,9 @@ const StudentViewDrawer = ({
         </div>
       </div>
 
-      {/* CONFIRMATION MODAL */}
       <div
         className="modal fade"
-        id="actionConfirmModal"
+        id="adminActionConfirmModal"
         tabIndex="-1"
         aria-hidden="true"
         data-bs-backdrop="static"
@@ -270,4 +265,4 @@ const StudentViewDrawer = ({
   );
 };
 
-export default StudentViewDrawer;
+export default AdminStudentViewDrawer;
