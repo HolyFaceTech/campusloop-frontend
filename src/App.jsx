@@ -19,9 +19,13 @@ import Announcements from "./pages/Admin/Announcements";
 import AdminCalendar from "./pages/Admin/Calendar";
 import AdminELibrary from "./pages/Admin/AdminELibrary";
 import AdminStudentGrades from "./pages/Admin/AdminStudentGrades";
+import AdminClassrooms from "./pages/Admin/AdminClassrooms";
+import AdminClassroomView from "./pages/Admin/Classroom/AdminClassroomView";
+import AdminTabStream from "./pages/Admin/Classroom/AdminTabStream";
+import AdminTabPeople from "./pages/Admin/Classroom/AdminTabPeople";
+import AdminTabGrades from "./pages/Admin/Classroom/AdminTabGrades";
 import {
   Dashboard,
-  ClassroomsAdmin,
   FormsAdmin,
   FilesAdmin,
   RecycleBin,
@@ -119,7 +123,13 @@ function App() {
           <Route path="student-grades" element={<AdminStudentGrades />} />
           <Route path="strands" element={<Strands />} />
           <Route path="subjects" element={<Subjects />} />
-          <Route path="classrooms" element={<ClassroomsAdmin />} />
+          <Route path="classrooms" element={<AdminClassrooms />} />
+          <Route path="classrooms/:id" element={<AdminClassroomView />}>
+            <Route index element={<Navigate to="stream" replace />} />
+            <Route path="stream" element={<AdminTabStream />} />
+            <Route path="people" element={<AdminTabPeople />} />
+            <Route path="grades" element={<AdminTabGrades />} />
+          </Route>
           <Route path="forms" element={<FormsAdmin />} />
           <Route path="files" element={<FilesAdmin />} />
           <Route path="announcements" element={<Announcements />} />
