@@ -24,9 +24,10 @@ import AdminClassroomView from "./pages/Admin/Classroom/AdminClassroomView";
 import AdminTabStream from "./pages/Admin/Classroom/AdminTabStream";
 import AdminTabPeople from "./pages/Admin/Classroom/AdminTabPeople";
 import AdminTabGrades from "./pages/Admin/Classroom/AdminTabGrades";
+import AdminForms from "./pages/Admin/AdminForms";
+import AdminFormInside from "./pages/Admin/AdminFormInside";
 import {
   Dashboard,
-  FormsAdmin,
   FilesAdmin,
   RecycleBin,
   AdminNotifications,
@@ -130,7 +131,8 @@ function App() {
             <Route path="people" element={<AdminTabPeople />} />
             <Route path="grades" element={<AdminTabGrades />} />
           </Route>
-          <Route path="forms" element={<FormsAdmin />} />
+          <Route path="forms" element={<AdminForms />} />
+          <Route path="forms/:id" element={<AdminFormInside />} />
           <Route path="files" element={<FilesAdmin />} />
           <Route path="announcements" element={<Announcements />} />
           <Route path="e-libraries" element={<AdminELibrary />} />

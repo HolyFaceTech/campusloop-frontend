@@ -1,40 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
 import { Modal } from "bootstrap";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
-import FormBuilder from "./FormBuilder";
-import ReviewSubmissionModal from "./ReviewSubmissionModal";
+import AdminReviewSubmissionModal from "./AdminReviewSubmissionModal";
+import { ConfirmTeacherPDFModal, UnsubmitFormModal } from "./AdminFormModals";
 
 const darkToast = {
   fill: "#242424",
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
-const FormInside = () => {
+const AdminFormInside = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [form, setForm] = useState(null);
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState("Loading Form Details...");
   const [activeTab, setActiveTab] = useState("questionnaire");
 
-  // States para sa Respondents Datatable
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // STATE PARA SA SELECTED RESPONDENT PARA SA REVIEW MODAL
   const [selectedRespondent, setSelectedRespondent] = useState(null);
+  const [respondentToUnsubmit, setRespondentToUnsubmit] = useState(null);
 
   useEffect(() => {
     fetchFormData();
     fetchRespondents();
   }, [id]);
 
-  // Reset sa Page 1 kapag nag-search o nagpalit ng entries limit
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
@@ -42,44 +40,113 @@ const FormInside = () => {
   const fetchFormData = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/forms/${id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/forms/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setForm(res.data);
     } catch (error) {
-      console.error("Error fetching form", error);
+      console.error(error);
     }
   };
 
   const fetchRespondents = async () => {
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/forms/${id}/respondents`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/forms/${id}/respondents`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setRespondents(res.data);
       setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching respondents", error);
+      console.error(error);
       setIsLoading(false);
     }
   };
 
-  // FUNCTION PARA BUKSAN ANG REVIEW MODAL
   const openReviewModal = (respondent) => {
     setSelectedRespondent(respondent);
-
-    // Binibigyan natin ang React ng konting milliseconds para ma-render yung data sa Modal
     setTimeout(() => {
-      const modalEl = document.getElementById("reviewSubmissionModal");
-      if (modalEl) {
-        const modal = Modal.getOrCreateInstance(modalEl);
-        modal.show();
-      }
+      const modalEl = document.getElementById("adminReviewSubmissionModal");
+      if (modalEl) Modal.getOrCreateInstance(modalEl).show();
     }, 150);
   };
 
-  // DATATABLE LOGIC PARA SA RESPONDENTS
+  const confirmTeacherPDF = () => {
+    const modalEl = document.getElementById("adminConfirmTeacherPDFModal");
+    if (modalEl) Modal.getOrCreateInstance(modalEl).show();
+  };
+
+  const executeGenerateTeacherPDF = async () => {
+    const modalEl = document.getElementById("adminConfirmTeacherPDFModal");
+    if (modalEl) Modal.getInstance(modalEl)?.hide();
+
+    setIsLoading(true);
+    setLoadingText("Generating PDF...");
+
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/forms/${id}/print`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(res.data);
+      printWindow.document.close();
+    } catch (error) {
+      alert("Failed to generate PDF. Check backend configuration.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- UNSUBMIT LOGIC ---
+  const executeUnsubmit = async () => {
+    const modalEl = document.getElementById("adminUnsubmitFormModal");
+    if (modalEl) Modal.getInstance(modalEl)?.hide();
+
+    setIsLoading(true);
+    setLoadingText("Unsubmitting record...");
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/forms/${id}/submissions/${respondentToUnsubmit.id}/unsubmit`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+
+      sileo.success({
+        title: "Success",
+        description: "Student submission removed successfully.",
+        ...darkToast,
+      });
+      fetchRespondents(); // Refresh listahan para mawala siya agad
+    } catch (error) {
+      sileo.error({
+        title: "Failed",
+        description: "Failed to unsubmit form.",
+        ...darkToast,
+      });
+      setIsLoading(false);
+    }
+  };
+
   const filteredRespondents = respondents.filter((r) =>
-    `${r.student?.first_name} ${r.student?.last_name} ${r.student?.lrn} ${r.student?.email} ${r.student?.strand?.name}`
+    `${r.student?.first_name} ${r.student?.last_name} ${r.student?.lrn} ${r.student?.strand?.name}`
       .toLowerCase()
       .includes(searchQuery.toLowerCase()),
   );
@@ -92,13 +159,13 @@ const FormInside = () => {
   );
   const totalPages = Math.ceil(filteredRespondents.length / entriesPerPage);
 
-  if (isLoading || !form)
-    return <GlobalSpinner isLoading={true} text="Loading Form Details..." />;
+  if (isLoading && !form)
+    return <GlobalSpinner isLoading={true} text={loadingText} />;
 
   const groupedQuestions = [];
   const existingSections = [];
 
-  if (form.questions) {
+  if (form?.questions) {
     form.questions.forEach((q) => {
       const secName = q.section || "";
       if (!existingSections.includes(secName) && q.section)
@@ -121,37 +188,18 @@ const FormInside = () => {
     });
   }
 
-  const totalPoints = form.questions
+  const totalPoints = form?.questions
     ? form.questions.reduce((sum, q) => sum + q.points, 0)
     : 0;
 
   return (
     <>
-      {/* BREADCRUMB NAVIGATION */}
-      <nav aria-label="breadcrumb" className="mb-3 ps-1">
-        <ol className="breadcrumb mb-0">
-          <li className="breadcrumb-item">
-            <Link
-              to="/teacher/forms"
-              className="text-decoration-none text-muted fw-medium d-flex align-items-center"
-            >
-              Forms
-            </Link>
-          </li>
-          <li
-            className="breadcrumb-item active fw-bold text-dark"
-            aria-current="page"
-          >
-            {form.name}
-          </li>
-        </ol>
-      </nav>
+      <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       {/* UNIFIED HEADER CARD */}
       <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
         <div className="card-body p-4 p-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
-            {/* TITLE & INSTRUCTION */}
             <div className="flex-grow-1" style={{ maxWidth: "800px" }}>
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div
@@ -168,7 +216,7 @@ const FormInside = () => {
                   className="fw-bolder text-dark mb-0"
                   style={{ letterSpacing: "-0.5px" }}
                 >
-                  {form.name}
+                  {form?.name}
                 </h2>
               </div>
               <p
@@ -179,16 +227,15 @@ const FormInside = () => {
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {form.instruction}
+                {form?.instruction}
               </p>
             </div>
 
-            {/* ACTION BUTTON */}
             <button
-              onClick={() => navigate(`/teacher/forms/${form.id}/builder`)}
-              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0"
+              onClick={confirmTeacherPDF}
+              className="btn btn-primary shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 transition-all"
             >
-              <i className="bi bi-pencil-square"></i> Open Builder
+              <i className="bi bi-printer-fill"></i> Print Form
             </button>
           </div>
 
@@ -215,7 +262,7 @@ const FormInside = () => {
                   Time Limit
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {form.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
+                  {form?.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
                 </span>
               </div>
             </div>
@@ -226,7 +273,7 @@ const FormInside = () => {
                 style={{ width: "40px", height: "40px" }}
               >
                 <i
-                  className={`bi ${form.is_focus_mode ? "bi-eye-slash-fill text-danger" : "bi-shield-check text-success"} fs-5`}
+                  className={`bi ${form?.is_focus_mode ? "bi-eye-slash-fill text-danger" : "bi-shield-check text-success"} fs-5`}
                 ></i>
               </div>
               <div>
@@ -240,7 +287,7 @@ const FormInside = () => {
                 >
                   Security Mode
                 </span>
-                {form.is_focus_mode ? (
+                {form?.is_focus_mode ? (
                   <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 mt-1 px-2 py-1">
                     Focus Mode ON
                   </span>
@@ -258,7 +305,7 @@ const FormInside = () => {
                 style={{ width: "40px", height: "40px" }}
               >
                 <i
-                  className={`bi bi-shuffle ${form.is_shuffle_questions ? "text-primary" : "text-muted"} fs-5`}
+                  className={`bi bi-shuffle ${form?.is_shuffle_questions ? "text-primary" : "text-muted"} fs-5`}
                 ></i>
               </div>
               <div>
@@ -272,7 +319,7 @@ const FormInside = () => {
                 >
                   Question Order
                 </span>
-                {form.is_shuffle_questions ? (
+                {form?.is_shuffle_questions ? (
                   <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 px-2 py-1">
                     Shuffled
                   </span>
@@ -284,7 +331,6 @@ const FormInside = () => {
               </div>
             </div>
 
-            {/* TOTAL POINTS SA WIDGET ROW */}
             <div className="d-flex align-items-center gap-3">
               <div
                 className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
@@ -358,13 +404,12 @@ const FormInside = () => {
         </button>
       </div>
 
-      {/* TAB 1: QUESTIONNAIRE (PREVIEW) */}
+      {/* TAB 1: QUESTIONNAIRE */}
       {activeTab === "questionnaire" && (
         <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
           {groupedQuestions.length > 0 ? (
             groupedQuestions.map((group, gIndex) => (
               <div className="mb-5 pb-2" key={gIndex}>
-                {/* SECTION HEADER PREVIEW */}
                 {group.sectionName !== "" && (
                   <div className="position-relative mt-4 mb-3">
                     <div
@@ -408,8 +453,6 @@ const FormInside = () => {
                     </div>
                   </div>
                 )}
-
-                {/* QUESTIONS LIST PREVIEW */}
                 <div className="d-flex flex-column gap-3 mt-3">
                   {group.questions.map((q, index) => (
                     <div
@@ -422,7 +465,6 @@ const FormInside = () => {
                       key={q.id}
                     >
                       <div className="card-body p-4 pt-4 pb-4">
-                        {/* QUESTION HEADER */}
                         <div className="d-flex justify-content-between align-items-start gap-3 mb-4">
                           <div className="d-flex gap-2 align-items-start flex-grow-1">
                             <span className="fw-normal text-dark mt-1">
@@ -435,7 +477,6 @@ const FormInside = () => {
                               {q.text}
                             </h5>
                           </div>
-                          {/* POINTS */}
                           <div className="text-end flex-shrink-0 mt-1">
                             <span
                               className="text-muted fw-medium"
@@ -446,7 +487,6 @@ const FormInside = () => {
                           </div>
                         </div>
 
-                        {/* DISPLAY CHOICES / ANSWER */}
                         <div className="ps-4 mb-2">
                           {q.type === "multiple_choice" && q.choices && (
                             <div className="d-flex flex-column gap-3">
@@ -468,7 +508,6 @@ const FormInside = () => {
                               ))}
                             </div>
                           )}
-
                           {q.type === "short_answer" && (
                             <div
                               className="d-flex align-items-center gap-3 border-bottom pb-2"
@@ -511,18 +550,8 @@ const FormInside = () => {
                     className="text-muted small mb-4"
                     style={{ maxWidth: "400px", margin: "0 auto" }}
                   >
-                    Your form is currently empty. Open the Question Builder to
-                    start adding sections and questions.
+                    Your form is currently empty.
                   </p>
-                  <button
-                    onClick={() =>
-                      navigate(`/teacher/forms/${form.id}/builder`)
-                    }
-                    className="btn shadow-sm fw-medium px-4 py-2 rounded-3 text-white d-inline-flex align-items-center gap-2"
-                    style={{ backgroundColor: "var(--primary-color)" }}
-                  >
-                    <i className="bi bi-magic me-2"></i> Go to Builder
-                  </button>
                 </div>
               </div>
             </div>
@@ -693,20 +722,34 @@ const FormInside = () => {
                           </div>
                         </td>
                         <td className="text-center pe-4 py-2">
-                          <button
-                            onClick={() => openReviewModal(sub)}
-                            className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center transition-all hover-primary"
-                            style={{ width: "35px", height: "35px" }}
-                            title="View Answers"
-                          >
-                            <i
-                              className="bi bi-eye-fill"
-                              style={{
-                                color: "var(--primary-color)",
-                                fontSize: "0.9rem",
+                          <div className="d-flex justify-content-center align-items-center gap-2">
+                            <button
+                              onClick={() => openReviewModal(sub)}
+                              className="btn btn-sm btn-light shadow-sm rounded-circle hover-primary transition-all"
+                              style={{ width: "35px", height: "35px" }}
+                              title="View Answers"
+                            >
+                              <i
+                                className="bi bi-eye-fill"
+                                style={{ color: "var(--primary-color)" }}
+                              ></i>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setRespondentToUnsubmit(sub);
+                                const modalEl = document.getElementById(
+                                  "adminUnsubmitFormModal",
+                                );
+                                if (modalEl)
+                                  Modal.getOrCreateInstance(modalEl).show();
                               }}
-                            ></i>
-                          </button>
+                              className="btn btn-sm btn-light shadow-sm rounded-circle hover-danger transition-all"
+                              style={{ width: "35px", height: "35px" }}
+                              title="Unsubmit Form"
+                            >
+                              <i className="bi bi-arrow-counterclockwise text-danger"></i>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -758,7 +801,6 @@ const FormInside = () => {
                       Previous
                     </button>
                   </li>
-                  {/* NAGLAGAY NG KEY PROP SA LOOP */}
                   {[...Array(totalPages)].map((_, i) => (
                     <li
                       key={i}
@@ -791,14 +833,25 @@ const FormInside = () => {
         </>
       )}
 
-      {/* RENDER REVIEW MODAL COMPONENT SA IBABA */}
-      <ReviewSubmissionModal
+      <ConfirmTeacherPDFModal
+        form={form}
+        executeGenerateTeacherPDF={executeGenerateTeacherPDF}
+      />
+
+      <UnsubmitFormModal
+        respondent={respondentToUnsubmit}
+        executeUnsubmit={executeUnsubmit}
+      />
+
+      <AdminReviewSubmissionModal
         form={form}
         respondent={selectedRespondent}
         totalPoints={totalPoints}
+        setIsLoading={setIsLoading}
+        setLoadingText={setLoadingText}
       />
     </>
   );
 };
 
-export default FormInside;
+export default AdminFormInside;
