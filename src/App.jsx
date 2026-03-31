@@ -52,6 +52,7 @@ import FormBuilder from "./pages/Teacher/FormBuilder";
 import TeacherFiles from "./pages/Teacher/TeacherFiles";
 import TeacherELibrary from "./pages/Teacher/TeacherELibrary";
 import TeacherRecycleBin from "./pages/Teacher/TeacherRecycleBin";
+import TeacherCalendar from "./pages/Teacher/TeacherCalendar";
 
 // Student Components
 import StudentLayout from "./components/Layouts/StudentLayout";
@@ -162,13 +163,7 @@ function App() {
           <Route path="files" element={<TeacherFiles />} />
           <Route path="e-library" element={<TeacherELibrary />} />
           <Route path="recycle-bin" element={<TeacherRecycleBin />} />
-          {/* Pwede mo rin i-re-use ang Calendar component ng admin dito kapag ready na, o gumawa ng sarili niya */}
-          <Route
-            path="calendar"
-            element={
-              <div className="p-5 text-center">Calendar (Coming Soon)</div>
-            }
-          />
+          <Route path="calendar" element={<TeacherCalendar />} />
           <Route
             path="notifications"
             element={
