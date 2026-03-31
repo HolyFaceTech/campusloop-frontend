@@ -76,7 +76,7 @@ const AdminCalendar = () => {
         </div>
 
         {/* LEGEND COLOR INDICATORS SA UPPER RIGHT */}
-        <div className="d-flex align-items-center gap-3 bg-white px-4 py-2 rounded-pill shadow-sm border">
+        <div className="d-flex align-items-center gap-3 bg-white px-4 py-2 rounded-3 shadow-sm border">
           <span className="small fw-bold text-muted me-1 border-end pe-3">
             Legend
           </span>
