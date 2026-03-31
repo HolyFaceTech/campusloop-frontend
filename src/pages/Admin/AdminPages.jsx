@@ -22,11 +22,6 @@ export const FormsAdmin = () => (
     <h4 className="text-muted">Forms Builder & Oversight (Coming Soon)</h4>
   </div>
 );
-export const FilesAdmin = () => (
-  <div className="p-5 text-center">
-    <h4 className="text-muted">Files Management (Coming Soon)</h4>
-  </div>
-);
 export const RecycleBin = () => (
   <div className="p-5 text-center">
     <h4 className="text-muted">Recycle Bin (Coming Soon)</h4>
