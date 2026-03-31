@@ -26,9 +26,9 @@ import AdminTabPeople from "./pages/Admin/Classroom/AdminTabPeople";
 import AdminTabGrades from "./pages/Admin/Classroom/AdminTabGrades";
 import AdminForms from "./pages/Admin/AdminForms";
 import AdminFormInside from "./pages/Admin/AdminFormInside";
+import AdminFiles from "./pages/Admin/AdminFiles";
 import {
   Dashboard,
-  FilesAdmin,
   RecycleBin,
   AdminNotifications,
 } from "./pages/Admin/AdminPages";
@@ -133,7 +133,7 @@ function App() {
           </Route>
           <Route path="forms" element={<AdminForms />} />
           <Route path="forms/:id" element={<AdminFormInside />} />
-          <Route path="files" element={<FilesAdmin />} />
+          <Route path="files" element={<AdminFiles />} />
           <Route path="announcements" element={<Announcements />} />
           <Route path="e-libraries" element={<AdminELibrary />} />
           <Route path="settings" element={<SystemSettings />} />
