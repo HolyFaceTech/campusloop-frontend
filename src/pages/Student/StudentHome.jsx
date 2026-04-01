@@ -130,8 +130,6 @@ const StudentHome = () => {
 
   // --- DELETE COMMENT ---
   const deleteComment = async (commentId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this?"))
-      return;
     setIsPosting(true);
     try {
       await axios.delete(
@@ -278,6 +276,12 @@ const StudentHome = () => {
             }}
           >
             {comment.user?.first_name} {comment.user?.last_name}
+            {comment.user?.role === "admin" && (
+              <i
+                className="bi bi-patch-check-fill text-primary ms-1"
+                title="Admin"
+              ></i>
+            )}
           </span>
           <span
             className="text-dark lh-sm d-block"
@@ -321,7 +325,7 @@ const StudentHome = () => {
                 className="btn btn-link p-0 text-primary fw-bold text-decoration-none shadow-none"
                 onClick={() => startEditing(comment)}
                 title="Edit Comment"
-                style={{ fontSize: "0.7rem" }}
+                style={{ fontSize: "0.8rem" }}
               >
                 <i className="bi bi-pencil-square"></i>
               </button>
@@ -329,7 +333,7 @@ const StudentHome = () => {
                 className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
                 onClick={() => deleteComment(comment.id)}
                 title="Delete Comment"
-                style={{ fontSize: "0.7rem" }}
+                style={{ fontSize: "0.8rem" }}
               >
                 <i className="bi bi-trash3-fill"></i>
               </button>
@@ -678,6 +682,7 @@ const StudentHome = () => {
                                             )
                                           }
                                           disabled={isPosting}
+                                          style={{ height: "32px" }}
                                         >
                                           <i className="bi bi-send-fill fs-6"></i>
                                         </button>
@@ -686,6 +691,10 @@ const StudentHome = () => {
                                           onClick={() =>
                                             setActiveReplyBox(null)
                                           }
+                                          style={{
+                                            width: "32px",
+                                            height: "32px",
+                                          }}
                                         >
                                           <i className="bi bi-x-lg"></i>
                                         </button>

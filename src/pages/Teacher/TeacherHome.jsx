@@ -19,13 +19,11 @@ const TeacherHome = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // States para sa Commenting
   const [commentInputs, setCommentInputs] = useState({});
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
 
-  // States para sa Updating Comments at Dropdown
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
   const [openDropdownId, setOpenDropdownId] = useState(null);
@@ -67,7 +65,6 @@ const TeacherHome = () => {
     }
   };
 
-  // --- POST COMMENT / REPLY ---
   const submitComment = async (announcementId, parentId = null) => {
     const content = parentId
       ? replyInputs[parentId]
@@ -76,7 +73,6 @@ const TeacherHome = () => {
 
     setIsPosting(true);
 
-    // CLEAR FIELDS AGAD PARA IWAS DUPLICATION BAGO MAG-AXIOS
     if (parentId) {
       setReplyInputs({ ...replyInputs, [parentId]: "" });
       setActiveReplyBox(null);
@@ -84,7 +80,6 @@ const TeacherHome = () => {
       setCommentInputs({ ...commentInputs, [announcementId]: "" });
     }
 
-    // SEND TO SERVER
     try {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/teacher/announcements/${announcementId}/comment`,
@@ -96,7 +91,6 @@ const TeacherHome = () => {
         },
       );
 
-      // FETCH DASHBOARD WITH MILLISECOND DELAY
       setTimeout(() => {
         fetchDashboard(false);
       }, 300);
@@ -111,7 +105,6 @@ const TeacherHome = () => {
     }
   };
 
-  // --- UPDATE COMMENT ---
   const startEditing = (comment) => {
     setEditingCommentId(comment.id);
     setEditContent(comment.content);
@@ -145,7 +138,6 @@ const TeacherHome = () => {
     }
   };
 
-  // --- DELETE COMMENT ---
   const deleteComment = async (commentId) => {
     setIsPosting(true);
     try {
@@ -222,7 +214,6 @@ const TeacherHome = () => {
     };
   };
 
-  // --- HELPER PARA I-RENDER ANG COMMENT BOX ---
   const renderCommentBox = (comment, isReply = false) => {
     const isOwner = comment.user_id === data.user?.id;
 
@@ -273,6 +264,12 @@ const TeacherHome = () => {
             }}
           >
             {comment.user?.first_name} {comment.user?.last_name}
+            {comment.user?.role === "admin" && (
+              <i
+                className="bi bi-patch-check-fill text-primary ms-1"
+                title="Admin"
+              ></i>
+            )}
           </span>
           <span
             className="text-dark lh-sm d-block"
@@ -285,7 +282,6 @@ const TeacherHome = () => {
           </span>
         </div>
 
-        {/* DATE, REPLY, AT DIREKTANG ACTION BUTTONS */}
         <div className="ms-2 mt-1 d-flex align-items-center gap-3">
           <span
             className="text-muted"
@@ -309,7 +305,6 @@ const TeacherHome = () => {
             </button>
           )}
 
-          {/* DIREKTANG ICONS PARA SA UPDATE AT DELETE KUNG SIYA ANG MAY-ARI */}
           {isOwner && (
             <div className="d-flex align-items-center gap-2 ms-1 ps-2">
               <button
@@ -406,7 +401,7 @@ const TeacherHome = () => {
             </div>
           </div>
 
-          {/* FEED / ANNOUNCEMENTS */}
+          {/* 2. FEED / ANNOUNCEMENTS */}
           {data.announcements.length > 0 ? (
             data.announcements.map((announcement) => {
               const statusColor =
@@ -671,20 +666,20 @@ const TeacherHome = () => {
                                           }}
                                         ></textarea>
                                         <button
-                                          className="btn btn-sm btn-campusloop shadow-sm rounded-pill d-flex justify-content-center align-items-center flex-shrink-0 px-3 mt-1"
+                                          className="btn btn-sm btn-campusloop shadow-sm rounded-pill px-3 mt-1"
                                           onClick={() =>
                                             submitComment(
                                               announcement.id,
                                               comment.id,
                                             )
                                           }
-                                          style={{ height: "32px" }}
                                           disabled={isPosting}
+                                          style={{ height: "32px" }}
                                         >
                                           <i className="bi bi-send-fill fs-6"></i>
                                         </button>
                                         <button
-                                          className="btn btn-sm btn-light border shadow-sm rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 mt-1 text-muted"
+                                          className="btn btn-sm btn-light border shadow-sm rounded-circle mt-1 ms-1 text-muted"
                                           onClick={() =>
                                             setActiveReplyBox(null)
                                           }
@@ -734,9 +729,7 @@ const TeacherHome = () => {
                           ></textarea>
                           <button
                             className="btn btn-campusloop shadow-sm rounded-pill d-flex justify-content-center align-items-center flex-shrink-0 px-4 mt-1"
-                            title="Post Comment"
                             onClick={() => submitComment(announcement.id)}
-                            style={{ height: "38px" }}
                             disabled={isPosting}
                           >
                             <i className="bi bi-send-fill fs-6 me-1"></i> Send
@@ -822,9 +815,7 @@ const TeacherHome = () => {
                         cursor: "pointer",
                         borderLeft: "3px solid transparent",
                       }}
-                      onClick={() =>
-                        navigate(`/teacher/classrooms/${sched.classroom_id}`)
-                      }
+                      onClick={() => navigate("/teacher/calendar")}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderLeftColor =
                           sched.type === "deadline"
