@@ -3,6 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import AnnouncementFormModal from "./AnnouncementFormModal";
+import AnnouncementViewModal from "./AnnouncementViewModal";
 import { Modal } from "bootstrap";
 
 const darkToast = {
@@ -18,7 +19,6 @@ const Announcements = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDate, setSortDate] = useState("newest");
   const [filterAttachment, setFilterAttachment] = useState("all");
-  // STATUS FILTER
   const [filterStatus, setFilterStatus] = useState("all");
 
   const [selectedIds, setSelectedIds] = useState([]);
@@ -27,6 +27,12 @@ const Announcements = () => {
 
   const [modalMode, setModalMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
+
+  const currentUser = JSON.parse(
+    localStorage.getItem("campusloop_user") ||
+      sessionStorage.getItem("campusloop_user") ||
+      "{}",
+  );
 
   const [formData, setFormData] = useState({
     title: "",
@@ -50,12 +56,19 @@ const Announcements = () => {
     setCurrentPage(1);
   }, [searchQuery, sortDate, filterAttachment, filterStatus, entriesPerPage]);
 
-  const fetchAnnouncements = async () => {
-    setIsLoading(true);
-    setLoadingText("Fetching announcements...");
+  const fetchAnnouncements = async (showSpinner = true) => {
+    if (showSpinner) {
+      setIsLoading(true);
+      setLoadingText("Fetching announcements...");
+    }
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/announcements`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setAnnouncements(response.data);
     } catch (error) {
@@ -96,22 +109,8 @@ const Announcements = () => {
   };
 
   const openViewModal = (item) => {
-    resetFormStates();
-    setModalMode("view");
     setSelectedItem(item);
-    setFormData({
-      title: item.title,
-      content: item.content,
-      link: item.link || "",
-      publish_from: toDatetimeLocal(item.publish_from),
-      valid_until: toDatetimeLocal(item.valid_until),
-    });
-    setIncludeLink(!!item.link);
-    if (item.files && item.files.length > 0) {
-      setIncludeFiles(true);
-      setExistingFiles(item.files);
-    }
-    const modal = new Modal(document.getElementById("announcementFormModal"));
+    const modal = new Modal(document.getElementById("announcementViewModal"));
     modal.show();
   };
 
@@ -167,7 +166,6 @@ const Announcements = () => {
       });
       return;
     }
-
     if (new Date(formData.valid_until) <= new Date(formData.publish_from)) {
       sileo.error({
         title: "Invalid Date",
@@ -176,7 +174,6 @@ const Announcements = () => {
       });
       return;
     }
-
     if (includeLink && !formData.link) {
       sileo.error({
         title: "Incomplete",
@@ -230,7 +227,12 @@ const Announcements = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/announcements`,
           data,
-          { headers: { "Content-Type": "multipart/form-data" } },
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
         );
         sileo.success({
           title: "Posted",
@@ -242,7 +244,12 @@ const Announcements = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/announcements/${selectedItem.id}`,
           data,
-          { headers: { "Content-Type": "multipart/form-data" } },
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
         );
         sileo.success({
           title: "Updated",
@@ -280,11 +287,21 @@ const Announcements = () => {
         if (selectedItem) {
           await axios.delete(
             `${import.meta.env.VITE_API_BASE_URL}/announcements/${selectedItem.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+              },
+            },
           );
         } else {
           await axios.post(
             `${import.meta.env.VITE_API_BASE_URL}/announcements/bulk-delete`,
             { ids: selectedIds },
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+              },
+            },
           );
           setSelectedIds([]);
         }
@@ -322,7 +339,6 @@ const Announcements = () => {
     const matchesSearch =
       a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.content.toLowerCase().includes(searchQuery.toLowerCase());
-
     let matchesAttachment = true;
     if (filterAttachment === "files")
       matchesAttachment = a.files && a.files.length > 0;
@@ -331,10 +347,7 @@ const Announcements = () => {
       matchesAttachment = a.files && a.files.length > 0 && !!a.link;
     if (filterAttachment === "none")
       matchesAttachment = (!a.files || a.files.length === 0) && !a.link;
-
-    // STATUS FILTER LOGIC
     const matchesStatus = filterStatus === "all" || a.status === filterStatus;
-
     return matchesSearch && matchesAttachment && matchesStatus;
   });
 
@@ -362,6 +375,10 @@ const Announcements = () => {
     );
   };
 
+  const currentViewItem = selectedItem
+    ? announcements.find((a) => a.id === selectedItem.id) || selectedItem
+    : null;
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -386,7 +403,6 @@ const Announcements = () => {
         </button>
       </div>
 
-      {/* TOOLBAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
         <div className="card-body p-3">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
@@ -453,7 +469,6 @@ const Announcements = () => {
               </select>
             </div>
 
-            {/* STATUS FILTER */}
             <div className="input-group" style={{ minWidth: "140px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
@@ -579,12 +594,12 @@ const Announcements = () => {
                   <td className="py-3">
                     <div className="d-flex flex-wrap gap-2">
                       {item.link && (
-                        <span className="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 py-1">
+                        <span className="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3 px-2 py-1">
                           <i className="bi bi-link-45deg me-1"></i> Link
                         </span>
                       )}
                       {item.files && item.files.length > 0 && (
-                        <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2 py-1">
+                        <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-3 px-2 py-1">
                           <i className="bi bi-file-earmark-text me-1"></i>{" "}
                           {item.files.length} Files
                         </span>
@@ -599,18 +614,18 @@ const Announcements = () => {
                   </td>
                   <td className="py-3">
                     {item.status === "Pending" && (
-                      <span className="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm fw-medium">
+                      <span className="badge bg-warning text-dark rounded-3 px-3 py-2 shadow-sm fw-medium">
                         <i className="bi bi-hourglass-split me-1"></i> Pending
                       </span>
                     )}
                     {item.status === "Published" && (
-                      <span className="badge bg-success text-white rounded-pill px-3 py-2 shadow-sm fw-medium">
+                      <span className="badge bg-success text-white rounded-3 px-3 py-2 shadow-sm fw-medium">
                         <i className="bi bi-check-circle-fill me-1"></i>{" "}
                         Published
                       </span>
                     )}
                     {item.status === "Done" && (
-                      <span className="badge bg-secondary text-white rounded-pill px-3 py-2 shadow-sm fw-medium">
+                      <span className="badge bg-secondary text-white rounded-3 px-3 py-2 shadow-sm fw-medium">
                         <i className="bi bi-dash-circle-fill me-1"></i> Done
                       </span>
                     )}
@@ -725,7 +740,6 @@ const Announcements = () => {
         </div>
       )}
 
-      {/* --- MODALS SECTION --- */}
       <AnnouncementFormModal
         modalMode={modalMode}
         formData={formData}
@@ -740,225 +754,18 @@ const Announcements = () => {
         setExistingFiles={setExistingFiles}
         setDeletedFileIds={setDeletedFileIds}
         triggerSaveConfirmation={triggerSaveConfirmation}
+        executeSubmit={executeSubmit}
+        proceedToUpdateForm={proceedToUpdateForm}
+        executeDelete={executeDelete}
+        selectedItem={selectedItem}
+        selectedIds={selectedIds}
       />
 
-      <div
-        className="modal fade"
-        id="createConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-send-check-fill"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Post Announcement</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to schedule this to the global feed?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() => {
-                  const m = new Modal(
-                    document.getElementById("announcementFormModal"),
-                  );
-                  m.show();
-                }}
-              >
-                Go Back
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Publish
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="updatePreConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-pencil-square"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Edit Announcement</h4>
-              <p className="text-muted mb-0">
-                Proceed to edit <b>{selectedItem?.title}</b>?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={proceedToUpdateForm}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="saveConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-cloud-arrow-up-fill"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Save Changes</h4>
-              <p className="text-muted mb-0">
-                Apply these updates to the global feed?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() => {
-                  const m = new Modal(
-                    document.getElementById("announcementFormModal"),
-                  );
-                  m.show();
-                }}
-              >
-                Go Back
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Update
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Deletion</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move{" "}
-                {selectedItem ? (
-                  <b>"{selectedItem.title}"</b>
-                ) : (
-                  <b>{selectedIds.length} selected announcements</b>
-                )}{" "}
-                to the Recycle Bin?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AnnouncementViewModal
+        announcement={currentViewItem}
+        currentUser={currentUser}
+        fetchAnnouncements={fetchAnnouncements}
+      />
     </>
   );
 };
