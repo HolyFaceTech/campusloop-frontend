@@ -17,10 +17,12 @@ const AdminLayout = () => {
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
 
-  // FOOLPROOF REACT STATES PARA SA DROPDOWNS
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
+
+  // State para sa Announcement Indicator
+  const [hasTodayAnnouncement, setHasTodayAnnouncement] = useState(false);
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -39,17 +41,28 @@ const AdminLayout = () => {
   const toggleSidebarMobile = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
-  // KUNIN ANG ACTIVE SETTINGS AT ACTIVE INDICATOR AT MAKINIG SA "settingsChanged" EVENT
   useEffect(() => {
     fetchActiveSettings();
     fetchActiveIndicator();
+    checkTodayAnnouncements();
 
-    // Event listener para kapag nag-save sa Settings, mag-update ito nang walang reload!
+    // MGA LISTENERS PARA SA INSTANT UPDATE
     window.addEventListener("settingsChanged", fetchActiveSettings);
+    window.addEventListener("announcementsChanged", checkTodayAnnouncements);
 
-    // Cleanup function
+    // BACKGROUND CHECK EVERY 3 SECONDS (Para sa mga scheduled announcements at events)
+    const intervalId = setInterval(() => {
+      checkTodayAnnouncements();
+      fetchActiveIndicator();
+    }, 3000);
+
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
+      window.removeEventListener(
+        "announcementsChanged",
+        checkTodayAnnouncements,
+      );
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -88,7 +101,43 @@ const AdminLayout = () => {
     }
   };
 
-  // ISARA ANG DROPDOWNS KAPAG PUMINDOT SA LABAS
+  const checkTodayAnnouncements = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/announcements`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+
+      const today = new Date();
+      const todayStr =
+        today.getFullYear() +
+        "-" +
+        String(today.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(today.getDate()).padStart(2, "0");
+
+      const hasPublishedToday = response.data.some((a) => {
+        const pubDateObj = new Date(a.publish_from);
+        const pubDateStr =
+          pubDateObj.getFullYear() +
+          "-" +
+          String(pubDateObj.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(pubDateObj.getDate()).padStart(2, "0");
+
+        return pubDateStr === todayStr && a.status === "Published";
+      });
+
+      setHasTodayAnnouncement(hasPublishedToday);
+    } catch (error) {
+      console.error("Failed to check today's announcements", error);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (avatarRef.current && !avatarRef.current.contains(event.target)) {
@@ -142,7 +191,6 @@ const AdminLayout = () => {
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       <div className="admin-layout">
-        {/* Mobile Backdrop */}
         {isSidebarOpen && (
           <div
             className="sidebar-backdrop d-lg-none"
@@ -150,9 +198,8 @@ const AdminLayout = () => {
           ></div>
         )}
 
-        {/* SIDEBAR SECTION */}
         <aside
-          className={`admin-sidebar shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
+          className={`admin-sidebar flex-shrink-0 shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
         >
           <div className="p-3 border-bottom text-center sidebar-header flex-shrink-0">
             <div className="sidebar-logo-container d-flex align-items-center justify-content-center mb-2">
@@ -169,7 +216,7 @@ const AdminLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2"
+              className="sidebar-badge badge rounded-3 w-100 py-2"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-shield-lock me-1"></i> ADMIN
@@ -303,41 +350,26 @@ const AdminLayout = () => {
             </NavLink>
           </div>
 
-          {/* AVATAR DROPDOWN */}
-          <div className="p-3 border-top bg-light flex-shrink-0">
-            <div className="dropup w-100 position-relative" ref={avatarRef}>
+          <div className="p-3 border-top bg-light flex-shrink-0 d-flex align-items-center justify-content-center">
+            <div
+              className="dropup position-relative flex-shrink-0"
+              ref={avatarRef}
+            >
               <button
-                className="sidebar-footer-btn btn w-100 text-start d-flex align-items-center justify-content-between border-0 p-1"
+                className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
                 type="button"
                 onClick={() => setShowAvatar(!showAvatar)}
               >
-                <div className="d-flex align-items-center justify-content-center w-100 text-lg-start">
-                  <div
-                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      fontSize: "1.2rem",
-                      flexShrink: 0,
-                      backgroundColor: "var(--primary-color)",
-                    }}
-                  >
-                    {user.first_name ? user.first_name.charAt(0) : "A"}
-                  </div>
-                  <div className="sidebar-footer-text ms-3 overflow-hidden text-start flex-grow-1">
-                    <p
-                      className="mb-0 fw-bold text-truncate text-dark"
-                      style={{ fontSize: "0.90rem" }}
-                    >
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p
-                      className="mb-0 text-muted text-truncate"
-                      style={{ fontSize: "0.75rem" }}
-                    >
-                      {user.email || "admin@campusloop.com"}
-                    </p>
-                  </div>
+                <div
+                  className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm transition-all hover-shadow"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "1.2rem",
+                    backgroundColor: "var(--primary-color)",
+                  }}
+                >
+                  {user.first_name ? user.first_name.charAt(0) : "A"}
                 </div>
               </button>
 
@@ -348,9 +380,32 @@ const AdminLayout = () => {
                   position: "absolute",
                   bottom: "100%",
                   left: "0",
-                  minWidth: "250px",
+                  minWidth: "260px",
+                  width: "max-content",
+                  paddingBottom: "0",
+                  overflow: "hidden",
                 }}
               >
+                <li className="p-4 text-muted border-bottom">
+                  <span
+                    className="fw-bold d-block text-dark mb-1"
+                    style={{ fontSize: "0.75rem", letterSpacing: "1px" }}
+                  >
+                    SIGNED IN AS:
+                  </span>
+                  <span
+                    className="d-block fw-bold text-dark"
+                    style={{ fontSize: "0.95rem", whiteSpace: "nowrap" }}
+                  >
+                    {user.first_name} {user.last_name}
+                  </span>
+                  <span
+                    className="d-block text-muted mt-1"
+                    style={{ fontSize: "0.80rem", whiteSpace: "nowrap" }}
+                  >
+                    {user.email || "admin@campusloop.com"}
+                  </span>
+                </li>
                 <li>
                   <button
                     className="dropdown-item py-2 fw-medium"
@@ -373,23 +428,19 @@ const AdminLayout = () => {
                     Help Center
                   </button>
                 </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item py-2 fw-bold text-danger"
-                    onClick={handleLogout}
-                  >
-                    <i className="bi bi-box-arrow-right me-2"></i> Sign Out
-                  </button>
-                </li>
               </ul>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              style={{ transition: "all 0.3s ease" }}
+            >
+              <i className="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA */}
         <main className="admin-main-content custom-scrollbar">
           <header className="admin-navbar bg-white px-4 py-3">
             <div className="d-flex align-items-center">
@@ -429,7 +480,6 @@ const AdminLayout = () => {
               </div>
             </div>
 
-            {/* NOTIFICATION DROPDOWN */}
             <div className="d-flex align-items-center gap-2">
               <Link
                 to="/admin/calendar"
@@ -443,7 +493,7 @@ const AdminLayout = () => {
                 }}
               >
                 <i className="bi bi-calendar-date text-dark fs-5"></i>
-                {hasActiveEvent && (
+                {(hasActiveEvent || hasTodayAnnouncement) && (
                   <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 )}
               </Link>
@@ -462,7 +512,6 @@ const AdminLayout = () => {
                   onClick={() => setShowNotif(!showNotif)}
                 >
                   <i className="bi bi-bell text-dark fs-5"></i>
-                  <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 </button>
 
                 <div
@@ -486,7 +535,7 @@ const AdminLayout = () => {
                       Notifications
                     </h6>
                     <span className="badge rounded-pill bg-danger">
-                      2 Unread
+                      0 Unread
                     </span>
                   </div>
 
@@ -513,29 +562,14 @@ const AdminLayout = () => {
                         </div>
                         <div className="flex-grow-1">
                           <p className="mb-1 small text-dark fw-bold">
-                            New user registered!
+                            Welcome to CampusLoop!
                           </p>
                           <p
                             className="mb-0 text-muted"
                             style={{ fontSize: "0.75rem" }}
                           >
-                            A new teacher account was created.
+                            You have successfully logged in to the admin portal.
                           </p>
-                          <p
-                            className="mb-0 mt-1 fw-bold"
-                            style={{
-                              fontSize: "0.70rem",
-                              color: "var(--secondary-color)",
-                            }}
-                          >
-                            Just now
-                          </p>
-                        </div>
-                        <div className="ms-2 mt-2">
-                          <span
-                            className="p-1 rounded-circle d-inline-block"
-                            style={{ backgroundColor: "var(--primary-color)" }}
-                          ></span>
                         </div>
                       </div>
                     </a>
@@ -559,7 +593,6 @@ const AdminLayout = () => {
               <Outlet />
             </div>
 
-            {/* TERMS & POLICY */}
             <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0">
               <small className="text-muted fw-medium">
                 &copy; {new Date().getFullYear()} CampusLoop. All rights
@@ -580,7 +613,6 @@ const AdminLayout = () => {
         </main>
       </div>
 
-      {/* RENDER ANG TERMS & POLICY DRAWER */}
       <TermsAndPolicy />
 
       <div
