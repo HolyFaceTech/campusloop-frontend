@@ -27,11 +27,8 @@ import AdminTabGrades from "./pages/Admin/Classroom/AdminTabGrades";
 import AdminForms from "./pages/Admin/AdminForms";
 import AdminFormInside from "./pages/Admin/AdminFormInside";
 import AdminFiles from "./pages/Admin/AdminFiles";
-import {
-  Dashboard,
-  RecycleBin,
-  AdminNotifications,
-} from "./pages/Admin/AdminPages";
+import AdminNotifications from "./pages/Admin/AdminNotifications";
+import { Dashboard, RecycleBin } from "./pages/Admin/AdminPages";
 
 // Teacher Components
 import TeacherLayout from "./components/Layouts/TeacherLayout";

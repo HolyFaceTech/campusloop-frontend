@@ -27,9 +27,3 @@ export const RecycleBin = () => (
     <h4 className="text-muted">Recycle Bin (Coming Soon)</h4>
   </div>
 );
-
-export const AdminNotifications = () => (
-  <div className="p-5 text-center">
-    <h4 className="text-muted">🔔 All Notifications (Coming Soon)</h4>
-  </div>
-);

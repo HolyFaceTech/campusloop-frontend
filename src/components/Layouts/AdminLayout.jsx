@@ -20,9 +20,11 @@ const AdminLayout = () => {
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
-
-  // State para sa Announcement Indicator
   const [hasTodayAnnouncement, setHasTodayAnnouncement] = useState(false);
+
+  // MGA STATES PARA SA NOTIFICATIONS
+  const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -45,15 +47,16 @@ const AdminLayout = () => {
     fetchActiveSettings();
     fetchActiveIndicator();
     checkTodayAnnouncements();
+    fetchNotifications(); // Kunin ang notifications pagka-load
 
-    // MGA LISTENERS PARA SA INSTANT UPDATE
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAnnouncements);
 
-    // BACKGROUND CHECK EVERY 3 SECONDS (Para sa mga scheduled announcements at events)
+    // REAL-TIME POLLING (Every 3 seconds)
     const intervalId = setInterval(() => {
       checkTodayAnnouncements();
       fetchActiveIndicator();
+      fetchNotifications(); // Real-time notification check
     }, 3000);
 
     return () => {
@@ -77,16 +80,10 @@ const AdminLayout = () => {
           semester: response.data.semester,
         });
       } else {
-        setActiveSettings({
-          school_year: "Not Set",
-          semester: "Not Set",
-        });
+        setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
       }
     } catch (error) {
-      setActiveSettings({
-        school_year: "Error",
-        semester: "Error",
-      });
+      setActiveSettings({ school_year: "Error", semester: "Error" });
     }
   };
 
@@ -111,7 +108,6 @@ const AdminLayout = () => {
           },
         },
       );
-
       const today = new Date();
       const todayStr =
         today.getFullYear() +
@@ -128,7 +124,6 @@ const AdminLayout = () => {
           String(pubDateObj.getMonth() + 1).padStart(2, "0") +
           "-" +
           String(pubDateObj.getDate()).padStart(2, "0");
-
         return pubDateStr === todayStr && a.status === "Published";
       });
 
@@ -138,14 +133,49 @@ const AdminLayout = () => {
     }
   };
 
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/admin/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    setShowNotif(false);
+    if (!notif.is_read) {
+      try {
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/admin/notifications/${notif.id}/read`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
+        );
+        fetchNotifications(); // Update list instantly
+      } catch (error) {
+        console.error("Failed to mark as read", error);
+      }
+    }
+    navigate(notif.link); // Redirect to the specific page
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (avatarRef.current && !avatarRef.current.contains(event.target)) {
+      if (avatarRef.current && !avatarRef.current.contains(event.target))
         setShowAvatar(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
+      if (notifRef.current && !notifRef.current.contains(event.target))
         setShowNotif(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -176,14 +206,20 @@ const AdminLayout = () => {
     }
   };
 
-  const handleViewAllNotifications = () => {
-    setShowNotif(false);
-    setLoadingText("Fetching Notifications...");
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/admin/notifications");
-    }, 1200);
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.round((now - date) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+
+    if (seconds < 60) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return "Yesterday";
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
@@ -216,7 +252,7 @@ const AdminLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-3 w-100 py-2"
+              className="sidebar-badge badge rounded-pill w-100 py-2"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-shield-lock me-1"></i> ADMIN
@@ -430,7 +466,6 @@ const AdminLayout = () => {
                 </li>
               </ul>
             </div>
-
             <button
               onClick={handleLogout}
               className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
@@ -512,6 +547,9 @@ const AdminLayout = () => {
                   onClick={() => setShowNotif(!showNotif)}
                 >
                   <i className="bi bi-bell text-dark fs-5"></i>
+                  {unreadCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                  )}
                 </button>
 
                 <div
@@ -534,51 +572,89 @@ const AdminLayout = () => {
                     >
                       Notifications
                     </h6>
-                    <span className="badge rounded-pill bg-danger">
-                      0 Unread
-                    </span>
+                    {unreadCount > 0 && (
+                      <span className="badge rounded-3 bg-danger">
+                        {unreadCount} Unread
+                      </span>
+                    )}
                   </div>
 
                   <div
                     className="overflow-y-auto custom-scrollbar"
                     style={{ maxHeight: "350px" }}
                   >
-                    <a
-                      href="#"
-                      className="dropdown-item py-3 border-bottom text-wrap"
-                      style={{ backgroundColor: "rgba(98, 111, 71, 0.05)" }}
-                    >
-                      <div className="d-flex align-items-start">
-                        <div
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            backgroundColor: "var(--primary-color)",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <i className="bi bi-person-check"></i>
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-1 small text-dark fw-bold">
-                            Welcome to CampusLoop!
-                          </p>
-                          <p
-                            className="mb-0 text-muted"
-                            style={{ fontSize: "0.75rem" }}
-                          >
-                            You have successfully logged in to the admin portal.
-                          </p>
-                        </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted small">
+                        No notifications yet.
                       </div>
-                    </a>
+                    ) : (
+                      notifications.slice(0, 50).map((notif) => (
+                        <div
+                          key={notif.id}
+                          className="dropdown-item py-3 border-bottom text-wrap"
+                          style={{
+                            backgroundColor: notif.is_read
+                              ? "transparent"
+                              : "rgba(98, 111, 71, 0.05)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleNotificationClick(notif)}
+                        >
+                          <div className="d-flex align-items-start">
+                            <div
+                              className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                backgroundColor: notif.is_read
+                                  ? "#adb5bd"
+                                  : "var(--primary-color)",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <i
+                                className={`bi ${notif.is_read ? "bi-bell" : "bi-bell-fill"}`}
+                              ></i>
+                            </div>
+                            <div className="flex-grow-1">
+                              <p
+                                className={`mb-1 small ${notif.is_read ? "text-muted" : "text-dark fw-bold"}`}
+                              >
+                                {notif.description}
+                              </p>
+                              <p
+                                className="mb-0 mt-1 fw-bold"
+                                style={{
+                                  fontSize: "0.70rem",
+                                  color: "var(--secondary-color)",
+                                }}
+                              >
+                                {formatTimeAgo(notif.created_at)}
+                              </p>
+                            </div>
+                            {!notif.is_read && (
+                              <div className="ms-2 mt-2">
+                                <span
+                                  className="p-1 rounded-circle d-inline-block"
+                                  style={{
+                                    backgroundColor: "var(--primary-color)",
+                                  }}
+                                ></span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   <div className="p-3 text-center bg-white border-top">
                     <button
-                      onClick={handleViewAllNotifications}
-                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-pill"
+                      onClick={() => {
+                        setShowNotif(false);
+                        navigate("/admin/notifications");
+                      }}
+                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-3"
                     >
                       View All Notifications
                     </button>
@@ -615,6 +691,7 @@ const AdminLayout = () => {
 
       <TermsAndPolicy />
 
+      {/* MODALS */}
       <div
         className="modal fade"
         id="activityLogsModal"
@@ -637,17 +714,7 @@ const AdminLayout = () => {
               ></button>
             </div>
             <div className="modal-body p-4 text-center">
-              <img
-                src="/images/spinner.svg"
-                alt="Logs"
-                className="img-fluid opacity-50 mb-3"
-                style={{ maxWidth: "100px" }}
-              />
               <h5 className="text-muted">Activity Logs (Coming Soon)</h5>
-              <p className="small text-muted mb-0">
-                Dito ilalagay ang Datatable ng lahat ng activities ng Admin at
-                Users.
-              </p>
             </div>
           </div>
         </div>
@@ -675,16 +742,7 @@ const AdminLayout = () => {
               ></button>
             </div>
             <div className="modal-body p-4 text-center">
-              <img
-                src="/images/help.svg"
-                alt="Help"
-                className="img-fluid mb-3"
-                style={{ maxWidth: "150px" }}
-              />
               <h5 className="text-muted">Help Center (Coming Soon)</h5>
-              <p className="small text-muted mb-0">
-                Dito gagawin ang Accordion ng mga instructions.
-              </p>
             </div>
           </div>
         </div>
