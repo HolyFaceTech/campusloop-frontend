@@ -20,7 +20,10 @@ const StudentLayout = () => {
   // FOOLPROOF REACT STATES PARA SA DROPDOWNS
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
+
+  // RED DOT INDICATORS
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
+  const [hasTodayAlert, setHasTodayAlert] = useState(false);
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -39,17 +42,26 @@ const StudentLayout = () => {
   const toggleSidebarMobile = () => setIsSidebarOpen(!isSidebarOpen);
   const toggleSidebarDesktop = () => setIsSidebarCollapsed(!isSidebarCollapsed);
 
-  // KUNIN ANG ACTIVE SETTINGS AT ACTIVE INDICATOR AT MAKINIG SA "settingsChanged" EVENT
   useEffect(() => {
     fetchActiveSettings();
     fetchActiveIndicator();
+    checkTodayAlerts(); // Initial check pagka-load
 
-    // Event listener para kapag nag-save sa Settings, mag-update ito nang walang reload!
+    // Event listeners para mag-update instantly nang walang refresh
     window.addEventListener("settingsChanged", fetchActiveSettings);
+    window.addEventListener("announcementsChanged", checkTodayAlerts);
+
+    // SILENT BACKGROUND POLLING (Every 3 Seconds)
+    const intervalId = setInterval(() => {
+      checkTodayAlerts();
+      fetchActiveIndicator();
+    }, 3000);
 
     // Cleanup function
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
+      window.removeEventListener("announcementsChanged", checkTodayAlerts);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -79,6 +91,48 @@ const StudentLayout = () => {
       setHasActiveEvent(response.data.has_active_events);
     } catch (error) {
       console.error("Failed to fetch calendar indicator", error);
+    }
+  };
+
+  // SMART CHECKING PARA SA STUDENT: Announcements, Schedules, at Deadlines
+  const checkTodayAlerts = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/student/dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+
+      const today = new Date();
+      const todayStr =
+        today.getFullYear() +
+        "-" +
+        String(today.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(today.getDate()).padStart(2, "0");
+
+      // May announcement ba ngayon?
+      const hasPublishedToday = response.data.announcements?.some((a) => {
+        const pubDateObj = new Date(a.publish_from);
+        const pubDateStr =
+          pubDateObj.getFullYear() +
+          "-" +
+          String(pubDateObj.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(pubDateObj.getDate()).padStart(2, "0");
+
+        return pubDateStr === todayStr;
+      });
+
+      // May schedules o deadlines ba ngayon?
+      const hasSchedulesToday = response.data.today_schedules?.length > 0;
+
+      setHasTodayAlert(hasPublishedToday || hasSchedulesToday);
+    } catch (error) {
+      console.error("Failed to check today's alerts", error);
     }
   };
 
@@ -157,7 +211,7 @@ const StudentLayout = () => {
 
         {/* SIDEBAR SECTION */}
         <aside
-          className={`admin-sidebar shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
+          className={`admin-sidebar flex-shrink-0 shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
         >
           <div className="p-3 border-bottom text-center sidebar-header flex-shrink-0">
             <div className="sidebar-logo-container d-flex align-items-center justify-content-center mb-2">
@@ -174,7 +228,7 @@ const StudentLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2"
+              className="sidebar-badge badge rounded-3 w-100 py-2"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-mortarboard-fill me-1"></i> STUDENT
@@ -224,43 +278,29 @@ const StudentLayout = () => {
             </NavLink>
           </div>
 
-          {/* AVATAR DROPDOWN */}
-          <div className="p-3 border-top bg-light flex-shrink-0">
-            <div className="dropup w-100 position-relative" ref={avatarRef}>
+          {/* AVATAR FOOTER - INAYOS ANG LAYOUT */}
+          <div className="p-3 border-top bg-light flex-shrink-0 d-flex align-items-center justify-content-center">
+            <div
+              className="dropup position-relative flex-shrink-0"
+              ref={avatarRef}
+            >
               <button
-                className="sidebar-footer-btn btn w-100 text-start d-flex align-items-center justify-content-between border-0 p-1"
+                className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
                 type="button"
                 onClick={() => setShowAvatar(!showAvatar)}
               >
-                <div className="d-flex align-items-center justify-content-center w-100 text-lg-start">
-                  <div
-                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      fontSize: "1.2rem",
-                      flexShrink: 0,
-                      backgroundColor: "var(--primary-color)",
-                    }}
-                  >
-                    {user.first_name
-                      ? user.first_name.charAt(0).toUpperCase()
-                      : "S"}
-                  </div>
-                  <div className="sidebar-footer-text ms-3 overflow-hidden text-start flex-grow-1">
-                    <p
-                      className="mb-0 fw-bold text-truncate text-dark"
-                      style={{ fontSize: "0.90rem" }}
-                    >
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p
-                      className="mb-0 text-muted text-truncate"
-                      style={{ fontSize: "0.75rem" }}
-                    >
-                      {user.email || "student@campusloop.com"}
-                    </p>
-                  </div>
+                <div
+                  className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm transition-all hover-shadow"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "1.2rem",
+                    backgroundColor: "var(--primary-color)",
+                  }}
+                >
+                  {user.first_name
+                    ? user.first_name.charAt(0).toUpperCase()
+                    : "S"}
                 </div>
               </button>
 
@@ -271,9 +311,43 @@ const StudentLayout = () => {
                   position: "absolute",
                   bottom: "100%",
                   left: "0",
-                  minWidth: "250px",
+                  minWidth: "260px",
+                  width: "max-content",
+                  paddingBottom: "0",
+                  overflow: "hidden",
                 }}
               >
+                <li className="p-4 text-muted border-bottom">
+                  <span
+                    className="fw-bold d-block text-dark mb-2"
+                    style={{ fontSize: "0.70rem", letterSpacing: "1px" }}
+                  >
+                    SIGNED IN AS:
+                  </span>
+                  <span
+                    className="d-block fw-bold text-dark"
+                    style={{ fontSize: "0.95rem", whiteSpace: "nowrap" }}
+                    title={`${user.first_name} ${user.last_name}`}
+                  >
+                    {user.first_name} {user.last_name}
+                  </span>
+                  {user.lrn && (
+                    <span
+                      className="d-block text-muted mt-1"
+                      style={{ fontSize: "0.80rem", fontWeight: "500" }}
+                      title={`LRN: ${user.lrn}`}
+                    >
+                      LRN: {user.lrn}
+                    </span>
+                  )}
+                  <span
+                    className="d-block text-muted mt-1"
+                    style={{ fontSize: "0.80rem", whiteSpace: "nowrap" }}
+                    title={user.email || "student@campusloop.com"}
+                  >
+                    {user.email || "student@campusloop.com"}
+                  </span>
+                </li>
                 <li>
                   <button
                     className="dropdown-item py-2 fw-medium"
@@ -296,25 +370,26 @@ const StudentLayout = () => {
                     Help Center
                   </button>
                 </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item py-2 fw-bold text-danger"
-                    onClick={handleLogout}
-                  >
-                    <i className="bi bi-box-arrow-right me-2"></i> Sign Out
-                  </button>
-                </li>
               </ul>
             </div>
+
+            {/* SEPARATED SIGN OUT BUTTON */}
+            <button
+              onClick={handleLogout}
+              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              style={{ transition: "all 0.3s ease" }}
+            >
+              <i className="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
           </div>
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="admin-main-content custom-scrollbar">
-          <header className="admin-navbar bg-white px-4 py-3">
+        <main
+          className="admin-main-content custom-scrollbar"
+          style={{ backgroundColor: "var(--accent-color)" }}
+        >
+          <header className="admin-navbar bg-white px-4 py-3 shadow-sm z-1">
             <div className="d-flex align-items-center">
               <button
                 className="btn border-0 fs-4 text-dark p-0 me-3 d-none d-lg-block"
@@ -352,8 +427,8 @@ const StudentLayout = () => {
               </div>
             </div>
 
-            {/* NOTIFICATION & CALENDAR TRAY */}
             <div className="d-flex align-items-center gap-2">
+              {/* CALENDAR ICON NA MAY RED DOT INDICATOR */}
               <Link
                 to="/student/calendar"
                 className="btn btn-light rounded-circle shadow-sm position-relative"
@@ -366,7 +441,7 @@ const StudentLayout = () => {
                 }}
               >
                 <i className="bi bi-calendar-date text-dark fs-5"></i>
-                {hasActiveEvent && (
+                {(hasActiveEvent || hasTodayAlert) && (
                   <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 )}
               </Link>
@@ -385,8 +460,6 @@ const StudentLayout = () => {
                   onClick={() => setShowNotif(!showNotif)}
                 >
                   <i className="bi bi-bell text-dark fs-5"></i>
-                  {/* Dynamic Unread Indicator */}
-                  <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 </button>
 
                 <div
@@ -410,7 +483,7 @@ const StudentLayout = () => {
                       Notifications
                     </h6>
                     <span className="badge rounded-pill bg-danger">
-                      1 Unread
+                      0 Unread
                     </span>
                   </div>
 
@@ -446,21 +519,6 @@ const StudentLayout = () => {
                             Explore your Student Portal to view your classes and
                             grades.
                           </p>
-                          <p
-                            className="mb-0 mt-1 fw-bold"
-                            style={{
-                              fontSize: "0.70rem",
-                              color: "var(--secondary-color)",
-                            }}
-                          >
-                            Just now
-                          </p>
-                        </div>
-                        <div className="ms-2 mt-2">
-                          <span
-                            className="p-1 rounded-circle d-inline-block"
-                            style={{ backgroundColor: "var(--primary-color)" }}
-                          ></span>
                         </div>
                       </div>
                     </a>
@@ -485,14 +543,15 @@ const StudentLayout = () => {
             </div>
 
             {/* TERMS & POLICY */}
-            <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0">
+            <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0 px-4">
               <small className="text-muted fw-medium">
                 &copy; {new Date().getFullYear()} CampusLoop. All rights
-                reserved. <br className="d-md-none" />
-                <span className="d-none d-md-inline"> | </span>
+                reserved.
+                <span className="d-none d-md-inline mx-2">|</span>
+                <br className="d-md-none" />
                 <a
                   href="#"
-                  className="text-decoration-none ms-md-2 fw-bold"
+                  className="text-decoration-none fw-bold"
                   style={{ color: "var(--primary-color)" }}
                   data-bs-toggle="offcanvas"
                   data-bs-target="#termsDrawer"

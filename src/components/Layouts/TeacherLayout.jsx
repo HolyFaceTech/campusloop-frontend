@@ -19,7 +19,10 @@ const TeacherLayout = () => {
 
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
+
+  // MGA STATES PARA SA RED DOT INDICATORS
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
+  const [hasTodayAlert, setHasTodayAlert] = useState(false);
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -41,18 +44,23 @@ const TeacherLayout = () => {
   useEffect(() => {
     fetchActiveSettings();
     fetchActiveIndicator();
+    checkTodayAlerts(); // Check agad pagka-load ng page
 
+    // Event listeners para sa real-time na pag-update
     window.addEventListener("settingsChanged", fetchActiveSettings);
+    window.addEventListener("announcementsChanged", checkTodayAlerts);
 
-    // SILENT BACKGROUND POLLING PARA REAL-TIME
-    // Magche-check ang system ng settings every 10 seconds nang walang loading spinner
-    const interval = setInterval(() => {
-      fetchActiveSettings();
-    }, 10000);
+    // SILENT BACKGROUND POLLING (Every 3 Seconds)
+    // Walang loading spinner kaya hindi ramdam ng user
+    const intervalId = setInterval(() => {
+      checkTodayAlerts();
+      fetchActiveIndicator();
+    }, 3000);
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
-      clearInterval(interval); // Cleanup kapag nag-close
+      window.removeEventListener("announcementsChanged", checkTodayAlerts);
+      clearInterval(intervalId); // Cleanup
     };
   }, []);
 
@@ -82,6 +90,49 @@ const TeacherLayout = () => {
       setHasActiveEvent(response.data.has_active_events);
     } catch (error) {
       console.error("Failed to fetch calendar indicator", error);
+    }
+  };
+
+  // INAYOS: Smart Checking para sa Announcements, Class Schedules, at Deadlines
+  const checkTodayAlerts = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/teacher/dashboard`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+
+      const today = new Date();
+      const todayStr =
+        today.getFullYear() +
+        "-" +
+        String(today.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(today.getDate()).padStart(2, "0");
+
+      // 1. I-check kung may announcement ngayong araw
+      const hasPublishedToday = response.data.announcements?.some((a) => {
+        const pubDateObj = new Date(a.publish_from);
+        const pubDateStr =
+          pubDateObj.getFullYear() +
+          "-" +
+          String(pubDateObj.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(pubDateObj.getDate()).padStart(2, "0");
+
+        return pubDateStr === todayStr;
+      });
+
+      // 2. I-check kung may Schedules o Deadlines ngayong araw
+      const hasSchedulesToday = response.data.today_schedules?.length > 0;
+
+      // Kung may kahit alin sa dalawa, pa-ilawin ang red dot
+      setHasTodayAlert(hasPublishedToday || hasSchedulesToday);
+    } catch (error) {
+      console.error("Failed to check today's alerts", error);
     }
   };
 
@@ -144,7 +195,7 @@ const TeacherLayout = () => {
         )}
 
         <aside
-          className={`admin-sidebar shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
+          className={`admin-sidebar flex-shrink-0 shadow-sm bg-white ${isSidebarOpen ? "show" : ""} ${isSidebarCollapsed ? "collapsed" : ""}`}
         >
           <div className="p-3 border-bottom text-center sidebar-header flex-shrink-0">
             <div className="sidebar-logo-container d-flex align-items-center justify-content-center mb-2">
@@ -161,7 +212,7 @@ const TeacherLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2"
+              className="sidebar-badge badge rounded-3 w-100 py-2"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-person-video3 me-1"></i> TEACHER
@@ -227,41 +278,27 @@ const TeacherLayout = () => {
             </NavLink>
           </div>
 
-          {/* AVATAR FOOTER */}
-          <div className="p-3 border-top bg-light flex-shrink-0">
-            <div className="dropup w-100 position-relative" ref={avatarRef}>
+          {/* AVATAR FOOTER - INAYOS ANG LAYOUT */}
+          <div className="p-3 border-top bg-light flex-shrink-0 d-flex align-items-center justify-content-center">
+            <div
+              className="dropup position-relative flex-shrink-0"
+              ref={avatarRef}
+            >
               <button
-                className="sidebar-footer-btn btn w-100 text-start d-flex align-items-center justify-content-between border-0 p-1"
+                className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
                 type="button"
                 onClick={() => setShowAvatar(!showAvatar)}
               >
-                <div className="d-flex align-items-center justify-content-center w-100 text-lg-start">
-                  <div
-                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm"
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      fontSize: "1.2rem",
-                      flexShrink: 0,
-                      backgroundColor: "var(--primary-color)",
-                    }}
-                  >
-                    {user.first_name ? user.first_name.charAt(0) : "T"}
-                  </div>
-                  <div className="sidebar-footer-text ms-3 overflow-hidden text-start flex-grow-1">
-                    <p
-                      className="mb-0 fw-bold text-truncate text-dark"
-                      style={{ fontSize: "0.90rem" }}
-                    >
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p
-                      className="mb-0 text-muted text-truncate"
-                      style={{ fontSize: "0.75rem" }}
-                    >
-                      {user.email || "teacher@campusloop.com"}
-                    </p>
-                  </div>
+                <div
+                  className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm transition-all hover-shadow"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "1.2rem",
+                    backgroundColor: "var(--primary-color)",
+                  }}
+                >
+                  {user.first_name ? user.first_name.charAt(0) : "T"}
                 </div>
               </button>
 
@@ -272,9 +309,32 @@ const TeacherLayout = () => {
                   position: "absolute",
                   bottom: "100%",
                   left: "0",
-                  minWidth: "250px",
+                  minWidth: "260px",
+                  width: "max-content",
+                  paddingBottom: "0",
+                  overflow: "hidden",
                 }}
               >
+                <li className="p-4 text-muted border-bottom">
+                  <span
+                    className="fw-bold d-block text-dark mb-1"
+                    style={{ fontSize: "0.75rem", letterSpacing: "1px" }}
+                  >
+                    SIGNED IN AS:
+                  </span>
+                  <span
+                    className="d-block fw-bold text-dark"
+                    style={{ fontSize: "0.95rem", whiteSpace: "nowrap" }}
+                  >
+                    {user.first_name} {user.last_name}
+                  </span>
+                  <span
+                    className="d-block text-muted mt-1"
+                    style={{ fontSize: "0.80rem", whiteSpace: "nowrap" }}
+                  >
+                    {user.email || "teacher@campusloop.com"}
+                  </span>
+                </li>
                 <li>
                   <button
                     className="dropdown-item py-2 fw-medium"
@@ -297,19 +357,16 @@ const TeacherLayout = () => {
                     Help Center
                   </button>
                 </li>
-                <li>
-                  <hr className="dropdown-divider" />
-                </li>
-                <li>
-                  <button
-                    className="dropdown-item py-2 fw-bold text-danger"
-                    onClick={handleLogout}
-                  >
-                    <i className="bi bi-box-arrow-right me-2"></i> Sign Out
-                  </button>
-                </li>
               </ul>
             </div>
+
+            <button
+              onClick={handleLogout}
+              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              style={{ transition: "all 0.3s ease" }}
+            >
+              <i className="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
           </div>
         </aside>
 
@@ -357,6 +414,7 @@ const TeacherLayout = () => {
             </div>
 
             <div className="d-flex align-items-center gap-2">
+              {/* CALENDAR ICON NA MAY RED DOT INDICATOR */}
               <Link
                 to="/teacher/calendar"
                 className="btn btn-light rounded-circle shadow-sm position-relative"
@@ -369,7 +427,7 @@ const TeacherLayout = () => {
                 }}
               >
                 <i className="bi bi-calendar-date text-dark fs-5"></i>
-                {hasActiveEvent && (
+                {(hasActiveEvent || hasTodayAlert) && (
                   <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 )}
               </Link>
@@ -388,7 +446,7 @@ const TeacherLayout = () => {
                   onClick={() => setShowNotif(!showNotif)}
                 >
                   <i className="bi bi-bell text-dark fs-5"></i>
-                  <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                  {/* Kung may system notifs lang sa bell */}
                 </button>
 
                 <div
@@ -411,7 +469,9 @@ const TeacherLayout = () => {
                     >
                       Notifications
                     </h6>
-                    <span className="badge rounded-pill bg-danger">New</span>
+                    <span className="badge rounded-pill bg-danger">
+                      0 Unread
+                    </span>
                   </div>
                   <div
                     className="overflow-y-auto custom-scrollbar"
