@@ -20,9 +20,12 @@ const TeacherLayout = () => {
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
 
-  // MGA STATES PARA SA RED DOT INDICATORS
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
   const [hasTodayAlert, setHasTodayAlert] = useState(false);
+
+  // MGA STATES PARA SA NOTIFICATIONS
+  const [notifications, setNotifications] = useState([]);
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -44,23 +47,22 @@ const TeacherLayout = () => {
   useEffect(() => {
     fetchActiveSettings();
     fetchActiveIndicator();
-    checkTodayAlerts(); // Check agad pagka-load ng page
+    checkTodayAlerts();
+    fetchNotifications();
 
-    // Event listeners para sa real-time na pag-update
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAlerts);
 
-    // SILENT BACKGROUND POLLING (Every 3 Seconds)
-    // Walang loading spinner kaya hindi ramdam ng user
     const intervalId = setInterval(() => {
       checkTodayAlerts();
       fetchActiveIndicator();
-    }, 3000);
+      fetchNotifications(); // Realtime polling
+    }, 30000);
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
       window.removeEventListener("announcementsChanged", checkTodayAlerts);
-      clearInterval(intervalId); // Cleanup
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -93,7 +95,6 @@ const TeacherLayout = () => {
     }
   };
 
-  // INAYOS: Smart Checking para sa Announcements, Class Schedules, at Deadlines
   const checkTodayAlerts = async () => {
     try {
       const response = await axios.get(
@@ -113,7 +114,6 @@ const TeacherLayout = () => {
         "-" +
         String(today.getDate()).padStart(2, "0");
 
-      // 1. I-check kung may announcement ngayong araw
       const hasPublishedToday = response.data.announcements?.some((a) => {
         const pubDateObj = new Date(a.publish_from);
         const pubDateStr =
@@ -122,18 +122,51 @@ const TeacherLayout = () => {
           String(pubDateObj.getMonth() + 1).padStart(2, "0") +
           "-" +
           String(pubDateObj.getDate()).padStart(2, "0");
-
         return pubDateStr === todayStr;
       });
 
-      // 2. I-check kung may Schedules o Deadlines ngayong araw
       const hasSchedulesToday = response.data.today_schedules?.length > 0;
-
-      // Kung may kahit alin sa dalawa, pa-ilawin ang red dot
       setHasTodayAlert(hasPublishedToday || hasSchedulesToday);
     } catch (error) {
       console.error("Failed to check today's alerts", error);
     }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/teacher/notifications`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+      setNotifications(response.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    setShowNotif(false);
+    if (!notif.is_read) {
+      try {
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/teacher/notifications/${notif.id}/read`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
+        );
+        fetchNotifications();
+      } catch (error) {
+        console.error("Failed to mark as read", error);
+      }
+    }
+    navigate(notif.link);
   };
 
   useEffect(() => {
@@ -172,14 +205,20 @@ const TeacherLayout = () => {
     }
   };
 
-  const handleViewAllNotifications = () => {
-    setShowNotif(false);
-    setLoadingText("Fetching Notifications...");
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      navigate("/teacher/notifications");
-    }, 1200);
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.round((now - date) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+
+    if (seconds < 60) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return "Yesterday";
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   return (
@@ -278,7 +317,6 @@ const TeacherLayout = () => {
             </NavLink>
           </div>
 
-          {/* AVATAR FOOTER - INAYOS ANG LAYOUT */}
           <div className="p-3 border-top bg-light flex-shrink-0 d-flex align-items-center justify-content-center">
             <div
               className="dropup position-relative flex-shrink-0"
@@ -359,7 +397,6 @@ const TeacherLayout = () => {
                 </li>
               </ul>
             </div>
-
             <button
               onClick={handleLogout}
               className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
@@ -370,12 +407,8 @@ const TeacherLayout = () => {
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA */}
-        <main
-          className="admin-main-content custom-scrollbar"
-          style={{ backgroundColor: "var(--accent-color)" }}
-        >
-          <header className="admin-navbar bg-white px-4 py-3 shadow-sm z-1">
+        <main className="admin-main-content custom-scrollbar">
+          <header className="admin-navbar bg-white px-4 py-3">
             <div className="d-flex align-items-center">
               <button
                 className="btn border-0 fs-4 text-dark p-0 me-3 d-none d-lg-block"
@@ -395,7 +428,7 @@ const TeacherLayout = () => {
                   <i
                     className="bi bi-calendar-event me-2"
                     style={{ color: "var(--primary-color)" }}
-                  ></i>
+                  ></i>{" "}
                   {activeSettings.school_year !== "Not Set"
                     ? `SY: ${activeSettings.school_year}`
                     : "SY: Not Set"}
@@ -405,7 +438,7 @@ const TeacherLayout = () => {
                   <i
                     className="bi bi-clock-history me-2"
                     style={{ color: "var(--primary-color)" }}
-                  ></i>
+                  ></i>{" "}
                   {activeSettings.semester !== "Not Set"
                     ? `${activeSettings.semester} Semester`
                     : "Semester Not Set"}
@@ -414,7 +447,6 @@ const TeacherLayout = () => {
             </div>
 
             <div className="d-flex align-items-center gap-2">
-              {/* CALENDAR ICON NA MAY RED DOT INDICATOR */}
               <Link
                 to="/teacher/calendar"
                 className="btn btn-light rounded-circle shadow-sm position-relative"
@@ -446,7 +478,9 @@ const TeacherLayout = () => {
                   onClick={() => setShowNotif(!showNotif)}
                 >
                   <i className="bi bi-bell text-dark fs-5"></i>
-                  {/* Kung may system notifs lang sa bell */}
+                  {unreadCount > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                  )}
                 </button>
 
                 <div
@@ -469,49 +503,89 @@ const TeacherLayout = () => {
                     >
                       Notifications
                     </h6>
-                    <span className="badge rounded-pill bg-danger">
-                      0 Unread
-                    </span>
+                    {unreadCount > 0 && (
+                      <span className="badge rounded-3 bg-danger">
+                        {unreadCount} Unread
+                      </span>
+                    )}
                   </div>
+
                   <div
                     className="overflow-y-auto custom-scrollbar"
                     style={{ maxHeight: "350px" }}
                   >
-                    <a
-                      href="#"
-                      className="dropdown-item py-3 border-bottom text-wrap"
-                      style={{ backgroundColor: "rgba(98, 111, 71, 0.05)" }}
-                    >
-                      <div className="d-flex align-items-start">
-                        <div
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            backgroundColor: "var(--primary-color)",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <i className="bi bi-info-circle"></i>
-                        </div>
-                        <div className="flex-grow-1">
-                          <p className="mb-1 small text-dark fw-bold">
-                            Welcome to CampusLoop!
-                          </p>
-                          <p
-                            className="mb-0 text-muted"
-                            style={{ fontSize: "0.75rem" }}
-                          >
-                            Your teacher account is now active.
-                          </p>
-                        </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-muted small">
+                        No notifications yet.
                       </div>
-                    </a>
+                    ) : (
+                      notifications.slice(0, 5).map((notif) => (
+                        <div
+                          key={notif.id}
+                          className="dropdown-item py-3 border-bottom text-wrap"
+                          style={{
+                            backgroundColor: notif.is_read
+                              ? "transparent"
+                              : "rgba(98, 111, 71, 0.05)",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => handleNotificationClick(notif)}
+                        >
+                          <div className="d-flex align-items-start">
+                            <div
+                              className="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
+                              style={{
+                                width: "40px",
+                                height: "40px",
+                                backgroundColor: notif.is_read
+                                  ? "#adb5bd"
+                                  : "var(--primary-color)",
+                                flexShrink: 0,
+                              }}
+                            >
+                              <i
+                                className={`bi ${notif.is_read ? "bi-bell" : "bi-bell-fill"}`}
+                              ></i>
+                            </div>
+                            <div className="flex-grow-1">
+                              <p
+                                className={`mb-1 small ${notif.is_read ? "text-muted" : "text-dark fw-bold"}`}
+                              >
+                                {notif.description}
+                              </p>
+                              <p
+                                className="mb-0 mt-1 fw-bold"
+                                style={{
+                                  fontSize: "0.70rem",
+                                  color: "var(--secondary-color)",
+                                }}
+                              >
+                                {formatTimeAgo(notif.created_at)}
+                              </p>
+                            </div>
+                            {!notif.is_read && (
+                              <div className="ms-2 mt-2">
+                                <span
+                                  className="p-1 rounded-circle d-inline-block"
+                                  style={{
+                                    backgroundColor: "var(--primary-color)",
+                                  }}
+                                ></span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
+
                   <div className="p-3 text-center bg-white border-top">
                     <button
-                      onClick={handleViewAllNotifications}
-                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-pill"
+                      onClick={() => {
+                        setShowNotif(false);
+                        navigate("/teacher/notifications");
+                      }}
+                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-3"
                     >
                       View All Notifications
                     </button>
@@ -562,7 +636,7 @@ const TeacherLayout = () => {
                 className="modal-title fw-bold"
                 style={{ color: "var(--primary-color)" }}
               >
-                <i className="bi bi-clock-history me-2"></i> My Activity Logs
+                <i className="bi bi-clock-history me-2"></i> Activity Logs
               </h5>
               <button
                 type="button"
@@ -571,16 +645,7 @@ const TeacherLayout = () => {
               ></button>
             </div>
             <div className="modal-body p-4 text-center">
-              <img
-                src="/images/spinner.svg"
-                alt="Logs"
-                className="img-fluid opacity-50 mb-3"
-                style={{ maxWidth: "100px" }}
-              />
               <h5 className="text-muted">Activity Logs (Coming Soon)</h5>
-              <p className="small text-muted mb-0">
-                Dito makikita ang datatables ng iyong recent actions sa system.
-              </p>
             </div>
           </div>
         </div>
@@ -610,9 +675,6 @@ const TeacherLayout = () => {
             </div>
             <div className="modal-body p-4 text-center">
               <h5 className="text-muted">Help Center (Coming Soon)</h5>
-              <p className="small text-muted mb-0">
-                Dito gagawin ang Accordion ng mga instructions para sa teachers.
-              </p>
             </div>
           </div>
         </div>

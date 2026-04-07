@@ -52,12 +52,12 @@ const AdminLayout = () => {
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAnnouncements);
 
-    // REAL-TIME POLLING (Every 3 seconds)
+    // REAL-TIME POLLING (Every 30 seconds)
     const intervalId = setInterval(() => {
       checkTodayAnnouncements();
       fetchActiveIndicator();
       fetchNotifications(); // Real-time notification check
-    }, 3000);
+    }, 30000);
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
@@ -252,7 +252,7 @@ const AdminLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2"
+              className="sidebar-badge badge rounded-3 w-100 py-2"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-shield-lock me-1"></i> ADMIN

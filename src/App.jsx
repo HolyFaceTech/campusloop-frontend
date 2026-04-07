@@ -50,6 +50,7 @@ import TeacherFiles from "./pages/Teacher/TeacherFiles";
 import TeacherELibrary from "./pages/Teacher/TeacherELibrary";
 import TeacherRecycleBin from "./pages/Teacher/TeacherRecycleBin";
 import TeacherCalendar from "./pages/Teacher/TeacherCalendar";
+import TeacherNotifications from "./pages/Teacher/TeacherNotifications";
 
 // Student Components
 import StudentLayout from "./components/Layouts/StudentLayout";
@@ -161,12 +162,7 @@ function App() {
           <Route path="e-library" element={<TeacherELibrary />} />
           <Route path="recycle-bin" element={<TeacherRecycleBin />} />
           <Route path="calendar" element={<TeacherCalendar />} />
-          <Route
-            path="notifications"
-            element={
-              <div className="p-5 text-center">Notifications (Coming Soon)</div>
-            }
-          />
+          <Route path="notifications" element={<TeacherNotifications />} />
         </Route>
         {/* STUDENT PROTECTED ROUTES */}
         <Route path="/student" element={<StudentLayout />}>
