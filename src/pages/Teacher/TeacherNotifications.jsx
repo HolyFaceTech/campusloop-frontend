@@ -9,31 +9,25 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
-const AdminNotifications = () => {
+const TeacherNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initial Load (May kasamang spinner)
     fetchNotifications(true);
-
-    // REAL-TIME POLLING (Every 30 seconds sa background, walang spinner)
     const intervalId = setInterval(() => {
       fetchNotifications(false);
     }, 30000);
-
-    // Cleanup pag umalis sa page
     return () => clearInterval(intervalId);
   }, []);
 
-  // Idinagdag natin ang showSpinner parameter para hindi mag-flash ang screen tuwing mag-re-refresh sa background
   const fetchNotifications = async (showSpinner = true) => {
     if (showSpinner) setIsLoading(true);
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/notifications`,
+        `${import.meta.env.VITE_API_BASE_URL}/teacher/notifications`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
@@ -49,11 +43,10 @@ const AdminNotifications = () => {
   };
 
   const handleNotificationClick = async (notif) => {
-    // Kung hindi pa read, mark as read sa database
     if (!notif.is_read) {
       try {
         await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/admin/notifications/${notif.id}/read`,
+          `${import.meta.env.VITE_API_BASE_URL}/teacher/notifications/${notif.id}/read`,
           {},
           {
             headers: {
@@ -65,7 +58,6 @@ const AdminNotifications = () => {
         console.error("Failed to mark as read", error);
       }
     }
-    // Redirect sa link
     navigate(notif.link);
   };
 
@@ -73,7 +65,7 @@ const AdminNotifications = () => {
     setIsLoading(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/notifications/mark-all-read`,
+        `${import.meta.env.VITE_API_BASE_URL}/teacher/notifications/mark-all-read`,
         {},
         {
           headers: {
@@ -86,7 +78,7 @@ const AdminNotifications = () => {
         description: "All notifications marked as read.",
         ...darkToast,
       });
-      fetchNotifications(false); // Update the list without spinner
+      fetchNotifications(false);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -109,7 +101,6 @@ const AdminNotifications = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  // FILTERING LOGIC PARA SA SEARCH BAR
   const filteredNotifications = notifications.filter((notif) =>
     notif.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -124,10 +115,10 @@ const AdminNotifications = () => {
             className="fw-bold mb-1"
             style={{ color: "var(--primary-color)" }}
           >
-            System Notifications <i className="bi bi-bell ms-1"></i>
+            Notifications <i className="bi bi-bell ms-1"></i>
           </h3>
           <p className="text-muted small mb-0">
-            Stay updated with system activities.
+            Stay updated with classroom and system activities.
           </p>
         </div>
         <button
@@ -139,7 +130,6 @@ const AdminNotifications = () => {
         </button>
       </div>
 
-      {/* SEARCH BAR SECTION */}
       <div className="row mb-4">
         <div className="col-12 col-md-6 col-xl-4">
           <div className="input-group shadow-sm rounded-3 overflow-hidden">
@@ -149,7 +139,7 @@ const AdminNotifications = () => {
             <input
               type="text"
               className="form-control border-start-0 ps-0 toolbar-input"
-              placeholder="Search Notifications..."
+              placeholder="Search notifications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -231,4 +221,4 @@ const AdminNotifications = () => {
   );
 };
 
-export default AdminNotifications;
+export default TeacherNotifications;
