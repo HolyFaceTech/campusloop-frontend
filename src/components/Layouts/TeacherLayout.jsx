@@ -519,7 +519,7 @@ const TeacherLayout = () => {
                         No notifications yet.
                       </div>
                     ) : (
-                      notifications.slice(0, 5).map((notif) => (
+                      notifications.slice(0, 50).map((notif) => (
                         <div
                           key={notif.id}
                           className="dropdown-item py-3 border-bottom text-wrap"
