@@ -28,24 +28,22 @@ import AdminForms from "./pages/Admin/AdminForms";
 import AdminFormInside from "./pages/Admin/AdminFormInside";
 import AdminFiles from "./pages/Admin/AdminFiles";
 import AdminNotifications from "./pages/Admin/AdminNotifications";
-import { Dashboard, RecycleBin } from "./pages/Admin/AdminPages";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import { RecycleBin } from "./pages/Admin/AdminPages";
 
 // Teacher Components
 import TeacherLayout from "./components/Layouts/TeacherLayout";
 import TeacherHome from "./pages/Teacher/TeacherHome";
 import TeacherAdvisory from "./pages/Teacher/TeacherAdvisory";
 import TeacherAdvisoryDetails from "./pages/Teacher/TeacherAdvisoryDetails";
-
 import TeacherClassrooms from "./pages/Teacher/TeacherClassrooms";
 import ClassroomView from "./pages/Teacher/Classroom/ClassroomView";
 import TabStream from "./pages/Teacher/Classroom/TabStream";
 import TabPeople from "./pages/Teacher/Classroom/TabPeople";
 import TabGrades from "./pages/Teacher/Classroom/TabGrades";
-
 import TeacherForms from "./pages/Teacher/TeacherForms";
 import FormInside from "./pages/Teacher/FormInside";
 import FormBuilder from "./pages/Teacher/FormBuilder";
-
 import TeacherFiles from "./pages/Teacher/TeacherFiles";
 import TeacherELibrary from "./pages/Teacher/TeacherELibrary";
 import TeacherRecycleBin from "./pages/Teacher/TeacherRecycleBin";
@@ -55,13 +53,11 @@ import TeacherNotifications from "./pages/Teacher/TeacherNotifications";
 // Student Components
 import StudentLayout from "./components/Layouts/StudentLayout";
 import StudentHome from "./pages/Student/StudentHome";
-
 import StudentClassrooms from "./pages/Student/StudentClassrooms";
 import StudentClassroomInside from "./pages/Student/Classroom/StudentClassroomInside";
 import StudentTabStream from "./pages/Student/Classroom/StudentTabStream";
 import StudentTabGrades from "./pages/Student/Classroom/StudentTabGrades";
 import StudentTakeForm from "./pages/Student/Classroom/StudentTakeForm";
-
 import StudentFiles from "./pages/Student/StudentFiles";
 import StudentELibrary from "./pages/Student/StudentELibrary";
 import StudentGrades from "./pages/Student/StudentGrades";
@@ -110,6 +106,7 @@ function App() {
       </div>
 
       <Routes>
+        {/* AUTHENTICATION ROUTES */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -118,7 +115,7 @@ function App() {
 
         {/* ADMIN ROUTES (Protected) */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<UserRecords />} />
           <Route path="student-grades" element={<AdminStudentGrades />} />
           <Route path="strands" element={<Strands />} />
@@ -141,11 +138,9 @@ function App() {
           <Route path="notifications" element={<AdminNotifications />} />
         </Route>
 
-        {/* Placeholder */}
         {/* TEACHER PROTECTED ROUTES */}
         <Route path="/teacher" element={<TeacherLayout />}>
           <Route index element={<TeacherHome />} />{" "}
-          {/* Default redirect to home */}
           <Route path="home" element={<TeacherHome />} />
           <Route path="advisory" element={<TeacherAdvisory />} />
           <Route path="advisory/:id" element={<TeacherAdvisoryDetails />} />
@@ -164,12 +159,10 @@ function App() {
           <Route path="calendar" element={<TeacherCalendar />} />
           <Route path="notifications" element={<TeacherNotifications />} />
         </Route>
+
         {/* STUDENT PROTECTED ROUTES */}
         <Route path="/student" element={<StudentLayout />}>
-          {/* Redirects /student to /student/home automatically */}
           <Route index element={<Navigate to="home" replace />} />
-
-          {/* Relative paths na lang dapat */}
           <Route path="home" element={<StudentHome />} />
           <Route path="classrooms" element={<StudentClassrooms />} />
           <Route path="classrooms/:id" element={<StudentClassroomInside />}>
@@ -185,6 +178,7 @@ function App() {
           <Route path="notifications" element={<StudentNotifications />} />
         </Route>
 
+        {/* 404 ROUTE */}
         <Route
           path="*"
           element={
