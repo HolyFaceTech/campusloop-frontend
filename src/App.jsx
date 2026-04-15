@@ -29,7 +29,7 @@ import AdminFormInside from "./pages/Admin/AdminFormInside";
 import AdminFiles from "./pages/Admin/AdminFiles";
 import AdminNotifications from "./pages/Admin/AdminNotifications";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
-import { RecycleBin } from "./pages/Admin/AdminPages";
+import RecycleBin from "./pages/Admin/RecycleBin";
 
 // Teacher Components
 import TeacherLayout from "./components/Layouts/TeacherLayout";
