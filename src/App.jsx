@@ -3,6 +3,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sileo";
 import axios from "axios";
 
+// Maintenace Shared
+import MaintenanceGuard from "./components/Shared/MaintenanceGuard";
+
 // Auth Components
 import Login from "./pages/Auth/Login";
 import ForgotPassword from "./pages/Auth/ForgotPassword";
@@ -139,7 +142,14 @@ function App() {
         </Route>
 
         {/* TEACHER PROTECTED ROUTES */}
-        <Route path="/teacher" element={<TeacherLayout />}>
+        <Route
+          path="/teacher"
+          element={
+            <MaintenanceGuard>
+              <TeacherLayout />
+            </MaintenanceGuard>
+          }
+        >
           <Route index element={<TeacherHome />} />{" "}
           <Route path="home" element={<TeacherHome />} />
           <Route path="advisory" element={<TeacherAdvisory />} />
@@ -161,7 +171,14 @@ function App() {
         </Route>
 
         {/* STUDENT PROTECTED ROUTES */}
-        <Route path="/student" element={<StudentLayout />}>
+        <Route
+          path="/student"
+          element={
+            <MaintenanceGuard>
+              <StudentLayout />
+            </MaintenanceGuard>
+          }
+        >
           <Route index element={<Navigate to="home" replace />} />
           <Route path="home" element={<StudentHome />} />
           <Route path="classrooms" element={<StudentClassrooms />} />
