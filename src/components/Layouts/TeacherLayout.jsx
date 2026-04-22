@@ -4,6 +4,8 @@ import axios from "axios";
 import { sileo } from "sileo";
 import GlobalSpinner from "../Shared/GlobalSpinner";
 import TermsAndPolicy from "../Shared/TermsAndPolicy";
+import { Modal } from "bootstrap";
+import TeacherActivityLogsModal from "../../pages/Teacher/TeacherActivityLogsModal";
 
 const darkToast = {
   fill: "#242424",
@@ -221,6 +223,25 @@ const TeacherLayout = () => {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
+  // PROGRAMMATIC MODAL OPENERS (Iwas Illegal Invocation Error)
+  const openActivityLogs = () => {
+    setShowAvatar(false);
+    const modalElement = document.getElementById("teacherActivityLogsModal");
+    if (modalElement) {
+      const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
+      modal.show();
+    }
+  };
+
+  const openHelpCenter = () => {
+    setShowAvatar(false);
+    const modalElement = document.getElementById("teacherHelpModal");
+    if (modalElement) {
+      const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
+      modal.show();
+    }
+  };
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -376,9 +397,7 @@ const TeacherLayout = () => {
                 <li>
                   <button
                     className="dropdown-item py-2 fw-medium"
-                    data-bs-toggle="modal"
-                    data-bs-target="#activityLogsModal"
-                    onClick={() => setShowAvatar(false)}
+                    onClick={openActivityLogs}
                   >
                     <i className="bi bi-clock-history text-primary me-2"></i>{" "}
                     Activity Logs
@@ -387,9 +406,7 @@ const TeacherLayout = () => {
                 <li>
                   <button
                     className="dropdown-item py-2 fw-medium"
-                    data-bs-toggle="modal"
-                    data-bs-target="#teacherHelpModal"
-                    onClick={() => setShowAvatar(false)}
+                    onClick={openHelpCenter}
                   >
                     <i className="bi bi-question-circle text-primary me-2"></i>{" "}
                     Help Center
@@ -622,34 +639,7 @@ const TeacherLayout = () => {
       </div>
 
       <TermsAndPolicy />
-
-      <div
-        className="modal fade"
-        id="activityLogsModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4">
-            <div className="modal-header border-bottom-0 pb-0">
-              <h5
-                className="modal-title fw-bold"
-                style={{ color: "var(--primary-color)" }}
-              >
-                <i className="bi bi-clock-history me-2"></i> Activity Logs
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body p-4 text-center">
-              <h5 className="text-muted">Activity Logs (Coming Soon)</h5>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TeacherActivityLogsModal />
 
       <div
         className="modal fade"
