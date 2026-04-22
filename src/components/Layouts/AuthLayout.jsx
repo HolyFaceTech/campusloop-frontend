@@ -1,6 +1,6 @@
 import React from "react";
 import TermsAndPolicy from "../Shared/TermsAndPolicy";
-import HelpAuth from "../Shared/HelpAuth";
+import HelpAuth from "../../pages/Auth/HelpAuth";
 
 const AuthLayout = ({ children, illustration }) => {
   const currentYear = new Date().getFullYear();

@@ -6,6 +6,7 @@ import GlobalSpinner from "../Shared/GlobalSpinner";
 import TermsAndPolicy from "../Shared/TermsAndPolicy";
 import { Modal } from "bootstrap";
 import StudentActivityLogsModal from "../../pages/Student/StudentActivityLogsModal";
+import StudentHelpModal from "../../pages/Student/StudentHelpModal";
 
 const darkToast = {
   fill: "#242424",
@@ -662,44 +663,7 @@ const StudentLayout = () => {
 
       <TermsAndPolicy />
       <StudentActivityLogsModal />
-
-      <div
-        className="modal fade"
-        id="studentHelpModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4">
-            <div className="modal-header border-bottom-0 pb-0">
-              <h5
-                className="modal-title fw-bold"
-                style={{ color: "var(--primary-color)" }}
-              >
-                <i className="bi bi-question-circle me-2"></i> Student Help
-                Center
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body p-4 text-center">
-              <img
-                src="/images/help.svg"
-                alt="Help"
-                className="img-fluid mb-3"
-                style={{ maxWidth: "150px" }}
-              />
-              <h5 className="text-muted">Help Center (Coming Soon)</h5>
-              <p className="small text-muted mb-0">
-                Dito gagawin ang Accordion ng mga instructions para sa students.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <StudentHelpModal />
     </>
   );
 };
