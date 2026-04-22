@@ -6,6 +6,7 @@ import GlobalSpinner from "../Shared/GlobalSpinner";
 import TermsAndPolicy from "../Shared/TermsAndPolicy";
 import { Modal } from "bootstrap";
 import TeacherActivityLogsModal from "../../pages/Teacher/TeacherActivityLogsModal";
+import TeacherHelpModal from "../../pages/Teacher/TeacherHelpModal";
 
 const darkToast = {
   fill: "#242424",
@@ -640,35 +641,7 @@ const TeacherLayout = () => {
 
       <TermsAndPolicy />
       <TeacherActivityLogsModal />
-
-      <div
-        className="modal fade"
-        id="teacherHelpModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4">
-            <div className="modal-header border-bottom-0 pb-0">
-              <h5
-                className="modal-title fw-bold"
-                style={{ color: "var(--primary-color)" }}
-              >
-                <i className="bi bi-question-circle me-2"></i> Teacher Help
-                Center
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-              ></button>
-            </div>
-            <div className="modal-body p-4 text-center">
-              <h5 className="text-muted">Help Center (Coming Soon)</h5>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TeacherHelpModal />
     </>
   );
 };
