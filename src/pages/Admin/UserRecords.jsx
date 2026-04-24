@@ -3,6 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import UserDrawer from "./UserDrawer";
+import UserImportModal from "./UserImportModal";
 import { Offcanvas, Modal } from "bootstrap";
 
 const darkToast = {
@@ -265,6 +266,11 @@ const UserRecords = () => {
     }, 400);
   };
 
+  const openImportModal = () => {
+    const modal = new Modal(document.getElementById("importUserModal"));
+    modal.show();
+  };
+
   // INSTANT CLIENT-SIDE FILTERING (ROLE & GENDER ISAMA NA SA SEARCH)
   const filteredUsers = users.filter((u) => {
     const matchesSearch = `${u.first_name} ${u.last_name} ${u.email}`
@@ -310,17 +316,27 @@ const UserRecords = () => {
             Manage all administrators, teachers, and student records.
           </p>
         </div>
-        <button
-          onClick={() => openDrawer("create")}
-          className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
-        >
-          <i className="bi bi-plus-lg fs-5"></i> New User
-        </button>
+        <div className="flex-shrink-0 d-flex gap-2">
+          <button
+            onClick={openImportModal}
+            className="btn btn-success border shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
+          >
+            <i className="bi bi-file-earmark-arrow-up fs-5"></i>
+            <span className="d-none d-sm-inline">Import CSV</span>
+          </button>
+
+          <button
+            onClick={() => openDrawer("create")}
+            className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
+          >
+            <i className="bi bi-plus-lg fs-5"></i> New User
+          </button>
+        </div>
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -463,7 +479,7 @@ const UserRecords = () => {
                         <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
                           <span
                             className="fw-bold text-dark text-truncate"
-                            style={{ maxWidth: "180px" }}
+                            style={{ maxWidth: "250px" }}
                           >
                             {user.first_name} {user.last_name}
                           </span>
@@ -501,7 +517,7 @@ const UserRecords = () => {
                         </div>
                         <p
                           className="mb-0 text-muted text-truncate"
-                          style={{ fontSize: "0.80rem", maxWidth: "200px" }}
+                          style={{ fontSize: "0.80rem", maxWidth: "250px" }}
                         >
                           {user.email}
                         </p>
@@ -569,7 +585,7 @@ const UserRecords = () => {
                       className="btn btn-sm btn-light border-0 shadow-sm rounded-circle"
                       style={{ width: "35px", height: "35px" }}
                       title="Delete User"
-                      disabled={user.id === currentUser.id} // Bawal i-delete ang sarili
+                      disabled={user.id === currentUser.id}
                     >
                       <i className="bi bi-trash-fill text-danger"></i>
                     </button>
@@ -657,119 +673,16 @@ const UserRecords = () => {
         handleSubmit={handleSubmit}
         calculateAge={calculateAge}
         strandsList={strandsList}
+        userToUpdate={userToUpdate}
+        proceedToUpdate={proceedToUpdate}
+        executeDelete={executeDelete}
       />
 
-      {/* DYNAMIC DELETE CONFIRMATION MODAL (Handles Single & Bulk) */}
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Deletion</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move{" "}
-                {userToDelete ? (
-                  <b>
-                    {userToDelete.first_name} {userToDelete.last_name}
-                  </b>
-                ) : (
-                  <b>{selectedIds.length} selected user(s)</b>
-                )}{" "}
-                to the Recycle Bin?
-                <br />
-                This action can be undone later.
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* UPDATE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="updateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-pencil-square"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Edit User Information</h4>
-              <p className="text-muted mb-0">
-                You are about to edit the records of{" "}
-                <b>
-                  {userToUpdate?.first_name} {userToUpdate?.last_name}
-                </b>
-                . Do you want to proceed to the update form?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={proceedToUpdate}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserImportModal
+        fetchUsers={fetchUsers}
+        setIsLoading={setIsLoading}
+        setLoadingText={setLoadingText}
+      />
     </>
   );
 };
