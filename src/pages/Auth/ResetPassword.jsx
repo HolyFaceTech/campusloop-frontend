@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
 import AuthLayout from "../../components/Layouts/AuthLayout";
@@ -67,6 +67,7 @@ const ResetPassword = () => {
     } catch (error) {
       if (error.response) {
         const errData = error.response.data;
+
         if (errData.errors && errData.errors.password) {
           sileo.error({
             title: "Validation Error",
@@ -78,7 +79,7 @@ const ResetPassword = () => {
             title: "Reset Failed",
             description:
               errData.message ||
-              "Failed to reset password. Link might be expired.",
+              "Failed to reset password. Link might be invalid or expired.",
             ...darkToast,
           });
         }
@@ -122,16 +123,22 @@ const ResetPassword = () => {
     return (
       <AuthLayout illustration="/images/reset.svg">
         <div className="text-center">
-          <h3 className="text-danger fw-bold">Invalid Reset Link</h3>
-          <p className="text-muted">
-            The password reset link is missing or broken. Please request a new
-            one.
+          <h2 className="fw-bold" style={{ color: "var(--primary-color)" }}>
+            Link Unavailable <span className="wave-icon">❌</span>
+          </h2>
+
+          <p className="text-muted mb-2">
+            The password reset link is missing or broken.
           </p>
+          <p className="text-muted mb-4">
+            Please use the exact link sent to your email.
+          </p>
+
           <button
             onClick={() => navigate("/forgot-password")}
             className="btn btn-campusloop mt-3"
           >
-            Go to Forgot Password
+            Request New Link
           </button>
         </div>
       </AuthLayout>
@@ -146,7 +153,7 @@ const ResetPassword = () => {
         <div className="w-100" style={{ maxWidth: "400px", margin: "0 auto" }}>
           <div className="mb-4 text-center text-md-start">
             <h2 className="fw-bold" style={{ color: "var(--primary-color)" }}>
-              Create New Password
+              New Password <span className="wave-icon">🔐</span>
             </h2>
             <p className="text-muted">
               Your new password must be at least 8 characters long and contain
@@ -155,21 +162,20 @@ const ResetPassword = () => {
           </div>
 
           <form onSubmit={handleResetSubmit}>
-            <div className="mb-3">
-              <label className="form-label fw-medium text-dark">
-                Email Address
-              </label>
-              <input
-                type="email"
-                className="form-control form-control-lg bg-light text-muted"
-                value={email}
-                readOnly
-              />
-            </div>
+            {email && (
+              <div className="mb-3">
+                <p
+                  className="fw-bold text-dark bg-light p-3 rounded-3 border shadow-sm mb-0 text-center"
+                  style={{ wordBreak: "break-all", letterSpacing: "0.5px" }}
+                >
+                  {email}
+                </p>
+              </div>
+            )}
 
             <div className="mb-3">
               <label className="form-label fw-medium text-dark">
-                New Password
+                <i className="bi bi-key me-1 text-muted"></i> New Password
               </label>
               <div className="input-group">
                 <input
@@ -194,7 +200,8 @@ const ResetPassword = () => {
 
             <div className="mb-4">
               <label className="form-label fw-medium text-dark">
-                Confirm New Password
+                <i className="bi bi-key me-1 text-muted"></i> Confirm New
+                Password
               </label>
               <div className="input-group">
                 <input
@@ -218,11 +225,25 @@ const ResetPassword = () => {
 
             <button
               type="submit"
-              className="btn btn-campusloop btn-lg w-100 rounded-3 d-flex justify-content-center align-items-center"
+              className="btn btn-campusloop btn-lg w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center"
               disabled={isLoading}
             >
               Reset Password
             </button>
+
+            <div className="text-center">
+              <span className="text-muted">Remember your password? </span>
+              <Link
+                to="/login"
+                style={{
+                  color: "var(--primary-color)",
+                  fontWeight: "500",
+                  textDecoration: "none",
+                }}
+              >
+                Back to Login
+              </Link>
+            </div>
           </form>
         </div>
       </AuthLayout>

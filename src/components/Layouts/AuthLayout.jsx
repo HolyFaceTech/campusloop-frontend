@@ -25,7 +25,7 @@ const AuthLayout = ({ children, illustration }) => {
                 <div className="position-absolute top-0 start-0 p-4 d-flex align-items-center">
                   <img
                     src="/images/logo.png"
-                    alt="Holy Face Logo"
+                    alt="CampusLoop Logo"
                     style={{
                       width: "40px",
                       height: "40px",
@@ -39,7 +39,7 @@ const AuthLayout = ({ children, illustration }) => {
                       letterSpacing: "1px",
                     }}
                   >
-                    HOLY FACE
+                    CAMPUSLOOP
                   </span>
                 </div>
                 <img
@@ -84,29 +84,35 @@ const AuthLayout = ({ children, illustration }) => {
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-3 mt-auto">
-        <small className="text-muted fw-medium">
-          &copy; {currentYear} CampusLoop. All rights reserved. <br />
-          <a
-            href="#"
-            className="text-decoration-none"
-            style={{ color: "var(--primary-color)" }}
-            data-bs-toggle="offcanvas"
-            data-bs-target="#termsDrawer"
-          >
-            Terms & Policy
-          </a>{" "}
-          <span className="text-muted mx-1">|</span>{" "}
-          <a
-            href="#"
-            className="text-decoration-none"
-            style={{ color: "var(--primary-color)" }}
-            data-bs-toggle="modal"
-            data-bs-target="#helpAuthModal"
-          >
-            Help Center
-          </a>
-        </small>
+      <footer className="py-3 mt-auto px-4 px-md-5">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <small className="text-muted fw-medium mb-2 mb-md-0">
+            &copy; {currentYear} CampusLoop. All rights reserved.
+          </small>
+          <small className="text-muted fw-medium">
+            <a
+              href="#"
+              className="text-decoration-none"
+              style={{ color: "var(--primary-color)" }}
+              data-bs-toggle="offcanvas"
+              data-bs-target="#termsDrawer"
+            >
+              Terms & Policy
+            </a>
+
+            <span className="text-muted mx-2">|</span>
+
+            <a
+              href="#"
+              className="text-decoration-none"
+              style={{ color: "var(--primary-color)" }}
+              data-bs-toggle="modal"
+              data-bs-target="#helpAuthModal"
+            >
+              Help Center
+            </a>
+          </small>
+        </div>
       </footer>
       <TermsAndPolicy />
       <HelpAuth />

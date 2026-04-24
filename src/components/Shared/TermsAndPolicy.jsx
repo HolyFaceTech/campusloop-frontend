@@ -13,10 +13,19 @@ const TermsAndPolicy = () => {
         className="offcanvas-header border-bottom"
         style={{ backgroundColor: "var(--accent-color)" }}
       >
+        <img
+          src="/images/logo.png"
+          alt="CampusLoop Logo"
+          style={{
+            width: "32px",
+            height: "32px",
+            objectFit: "contain",
+          }}
+        />
         <h5
-          className="offcanvas-title fw-bold"
+          className="offcanvas-title fw-bold ms-2 fs-5"
           id="termsDrawerLabel"
-          style={{ color: "var(--primary-color)" }}
+          style={{ color: "var(--primary-color)", letterSpacing: "1px" }}
         >
           Terms & Policy
         </h5>
