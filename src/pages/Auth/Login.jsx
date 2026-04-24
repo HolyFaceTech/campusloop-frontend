@@ -115,7 +115,7 @@ const Login = () => {
         <div className="w-100" style={{ maxWidth: "400px", margin: "0 auto" }}>
           <div className="mb-4 text-center text-md-start">
             <h2 className="fw-bold" style={{ color: "var(--primary-color)" }}>
-              Welcome Back!
+              Welcome Back! <span className="wave-icon">👋</span>
             </h2>
             <p className="text-muted">Sign in to your CampusLoop account.</p>
           </div>
@@ -123,7 +123,8 @@ const Login = () => {
           <form onSubmit={handleLogin}>
             <div className="mb-3">
               <label className="form-label fw-medium text-dark">
-                Email Address
+                <i className="bi bi-envelope-at me-1 text-muted"></i> Email
+                Address
               </label>
               <input
                 type="email"
@@ -138,7 +139,9 @@ const Login = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label fw-medium text-dark">Password</label>
+              <label className="form-label fw-medium text-dark">
+                <i className="bi bi-key me-1 text-muted"></i> Password
+              </label>
               <div className="input-group">
                 <input
                   type={showPassword ? "text" : "password"}

@@ -14,9 +14,29 @@ const HelpAuth = () => {
           <div className="row g-0">
             {/* Illustration */}
             <div
-              className="col-md-5 d-none d-md-flex align-items-center justify-content-center p-4"
+              className="col-lg-5 d-none d-lg-flex align-items-center justify-content-center p-4 position-relative"
               style={{ backgroundColor: "var(--accent-color)" }}
             >
+              <div className="position-absolute top-0 start-0 p-4 d-flex align-items-center">
+                <img
+                  src="/images/logo.png"
+                  alt="CampusLoop Logo"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    objectFit: "contain",
+                  }}
+                />
+                <span
+                  className="ms-2 fw-bold fs-5"
+                  style={{
+                    color: "var(--primary-color)",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  CAMPUSLOOP
+                </span>
+              </div>
               <img
                 src="/images/help.svg"
                 alt="Help Center"
@@ -26,8 +46,36 @@ const HelpAuth = () => {
             </div>
 
             {/* Instructions Accordion */}
-            <div className="col-md-7 position-relative">
-              <div className="modal-header border-0">
+            <div className="col-lg-7 position-relative">
+              <button
+                type="button"
+                className="btn-close position-absolute"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                style={{ top: "1.5rem", right: "1.5rem", zIndex: 10 }}
+              ></button>
+              <div className="modal-header border-0 flex-column align-items-start pb-0 pt-4 px-4">
+                <div className="d-flex align-items-center justify-content-center d-lg-none w-100 mb-3 mt-1">
+                  <img
+                    src="/images/logo.png"
+                    alt="CampusLoop Logo"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      objectFit: "contain",
+                    }}
+                  />
+                  <span
+                    className="ms-2 fw-bold fs-5"
+                    style={{
+                      color: "var(--primary-color)",
+                      letterSpacing: "1px",
+                    }}
+                  >
+                    CAMPUSLOOP
+                  </span>
+                </div>
+
                 <h4
                   className="modal-title fw-bold"
                   id="helpAuthModalLabel"
@@ -35,12 +83,6 @@ const HelpAuth = () => {
                 >
                   How can we help?
                 </h4>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                ></button>
               </div>
               <div className="modal-body px-4 pb-5">
                 <div className="accordion accordion-flush" id="helpAccordion">
@@ -55,7 +97,7 @@ const HelpAuth = () => {
                         data-bs-target="#collapseLogin"
                         aria-expanded="true"
                       >
-                        How do I Login?
+                        1. How do I Login?
                       </button>
                     </h2>
                     {/* Nilagyan ng 'show' class dito para naka-open agad */}
@@ -83,7 +125,7 @@ const HelpAuth = () => {
                         data-bs-toggle="collapse"
                         data-bs-target="#collapseForgot"
                       >
-                        I Forgot My Password
+                        2. I Forgot My Password
                       </button>
                     </h2>
                     <div
@@ -110,7 +152,7 @@ const HelpAuth = () => {
                         data-bs-toggle="collapse"
                         data-bs-target="#collapseReset"
                       >
-                        Password Reset Requirements
+                        3. Password Reset Requirements
                       </button>
                     </h2>
                     <div
@@ -137,7 +179,7 @@ const HelpAuth = () => {
                         data-bs-toggle="collapse"
                         data-bs-target="#collapseVerify"
                       >
-                        Email Verification Issues
+                        4. Email Verification Issues
                       </button>
                     </h2>
                     <div

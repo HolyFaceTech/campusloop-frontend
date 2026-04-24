@@ -82,7 +82,7 @@ const ForgotPassword = () => {
         <div className="w-100" style={{ maxWidth: "400px", margin: "0 auto" }}>
           <div className="mb-4 text-center text-md-start">
             <h2 className="fw-bold" style={{ color: "var(--primary-color)" }}>
-              Forgot Password?
+              Forgot Password <span className="wave-icon">❓</span>
             </h2>
             <p className="text-muted">
               Enter your registered email and we'll send you instructions to
@@ -93,7 +93,8 @@ const ForgotPassword = () => {
           <form onSubmit={handleForgotSubmit}>
             <div className="mb-4">
               <label className="form-label fw-medium text-dark">
-                Email Address
+                <i className="bi bi-envelope-at me-1 text-muted"></i> Email
+                Address
               </label>
               <input
                 type="email"
