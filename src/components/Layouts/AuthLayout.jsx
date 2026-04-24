@@ -92,15 +92,13 @@ const AuthLayout = ({ children, illustration }) => {
           <small className="text-muted fw-medium">
             <a
               href="#"
-              className="text-decoration-none"
+              className="text-decoration-none px-3"
               style={{ color: "var(--primary-color)" }}
               data-bs-toggle="offcanvas"
               data-bs-target="#termsDrawer"
             >
-              Terms & Policy
+              <i className="bi bi-shield-check me-1"></i> Terms & Policy
             </a>
-
-            <span className="text-muted mx-2">|</span>
 
             <a
               href="#"
@@ -109,7 +107,7 @@ const AuthLayout = ({ children, illustration }) => {
               data-bs-toggle="modal"
               data-bs-target="#helpAuthModal"
             >
-              Help Center
+              <i className="bi bi-question-circle me-1"></i> Help Center
             </a>
           </small>
         </div>
