@@ -134,7 +134,7 @@ const AdminDashboard = () => {
       <div className="row g-4 mb-4 align-items-stretch">
         <div className="col-12 col-xl-8 d-flex flex-column">
           <div
-            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative h-100 flex-grow-1"
+            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative h-100 flex-grow-1 premium-hover-card"
             style={{
               background:
                 "linear-gradient(135deg, var(--primary-color) 0%, #4a5435 100%)",
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="col-12 col-xl-4 d-flex">
-          <div className="card border-0 shadow-sm rounded-4 bg-white d-flex flex-column w-100 h-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white d-flex flex-column w-100 h-100 premium-hover-card">
             <div
               className="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center rounded-top-4 flex-shrink-0"
               style={{ cursor: "pointer" }}
@@ -206,10 +206,10 @@ const AdminDashboard = () => {
               title="Go to Announcements"
             >
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center hover-primary transition-all">
-                <i className="bi bi-megaphone-fill fs-5 me-2 text-primary"></i>
+                <i className="bi bi-megaphone fs-5 me-2"></i>
                 Announcements
               </h6>
-              <span className="badge bg-primary rounded-pill shadow-sm">
+              <span className="badge bg-primary rounded-3 shadow-sm">
                 {data.recent_announcements?.length || 0}
               </span>
             </div>
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
       {/* STATS CARDS */}
       <div className="row g-4 mb-4">
         <div className="col-12 col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between hover-shadow transition-all h-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between premium-hover-card h-100">
             <div>
               <span
                 className="d-block text-muted mb-1 fw-bold text-uppercase"
@@ -319,18 +319,15 @@ const AdminDashboard = () => {
               style={{
                 width: "55px",
                 height: "55px",
-                backgroundColor: "rgba(98, 111, 71, 0.1)",
+                backgroundColor: "rgba(71, 111, 71, 0.1)",
               }}
             >
-              <i
-                className="bi bi-people-fill fs-3"
-                style={{ color: "var(--primary-color)" }}
-              ></i>
+              <i className="bi bi-people-fill fs-3 text-success"></i>
             </div>
           </div>
         </div>
         <div className="col-12 col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between hover-shadow transition-all h-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between premium-hover-card h-100">
             <div>
               <span
                 className="d-block text-muted mb-1 fw-bold text-uppercase"
@@ -347,18 +344,15 @@ const AdminDashboard = () => {
               style={{
                 width: "55px",
                 height: "55px",
-                backgroundColor: "rgba(164, 180, 101, 0.1)",
+                backgroundColor: "rgba(13, 110, 253, 0.1)",
               }}
             >
-              <i
-                className="bi bi-person-video3 fs-3"
-                style={{ color: "#A4B465" }}
-              ></i>
+              <i className="bi bi-person-video3 fs-3 text-primary"></i>
             </div>
           </div>
         </div>
         <div className="col-12 col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between hover-shadow transition-all h-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between premium-hover-card h-100">
             <div>
               <span
                 className="d-block text-muted mb-1 fw-bold text-uppercase"
@@ -383,7 +377,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="col-12 col-sm-6 col-xl-3">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between hover-shadow transition-all h-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 d-flex flex-row align-items-center justify-content-between premium-hover-card h-100">
             <div>
               <span
                 className="d-block text-muted mb-1 fw-bold text-uppercase"
@@ -400,10 +394,10 @@ const AdminDashboard = () => {
               style={{
                 width: "55px",
                 height: "55px",
-                backgroundColor: "rgba(13, 110, 253, 0.1)",
+                backgroundColor: "rgba(253, 249, 13, 0.1)",
               }}
             >
-              <i className="bi bi-folder-fill fs-3 text-primary"></i>
+              <i className="bi bi-folder-fill fs-3 text-warning"></i>
             </div>
           </div>
         </div>
@@ -412,14 +406,20 @@ const AdminDashboard = () => {
       {/* CHARTS & TOP TEACHERS */}
       <div className="row g-4 mb-4">
         {/* BAR CHART: Students Per Strand */}
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+        <div
+          className="col-12 col-md-6 col-xl-4"
+          style={{
+            zIndex: openDropdown === "strand" ? 10 : 1,
+            position: "relative",
+          }}
+        >
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 premium-hover-card">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h6 className="fw-bold text-dark mb-0">
-                <i className="bi bi-bar-chart-fill me-2 text-muted"></i>{" "}
-                Students Per Strand{" "}
+                <i className="bi bi-bar-chart fs-5 me-2"></i> Students Per
+                Strand{" "}
                 {strandYear && (
-                  <span className="badge bg-light text-dark ms-1">
+                  <span className="badge bg-primary text-light ms-1">
                     {strandYear}
                   </span>
                 )}
@@ -495,14 +495,20 @@ const AdminDashboard = () => {
         </div>
 
         {/* DOUGHNUT CHART: Active vs Inactive Users */}
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
+        <div
+          className="col-12 col-md-6 col-xl-4"
+          style={{
+            zIndex: openDropdown === "status" ? 10 : 1,
+            position: "relative",
+          }}
+        >
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 premium-hover-card">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h6 className="fw-bold text-dark mb-0">
-                <i className="bi bi-person-check-fill me-2 text-muted"></i>{" "}
-                Active vs Inactive Users{" "}
+                <i className="bi bi-person-check fs-5 me-2"></i> Active vs
+                Inactive Users{" "}
                 {statusYear && (
-                  <span className="badge bg-light text-dark ms-1">
+                  <span className="badge bg-primary text-light ms-1">
                     {statusYear}
                   </span>
                 )}
@@ -609,11 +615,10 @@ const AdminDashboard = () => {
 
         {/* TOP TEACHERS */}
         <div className="col-12 col-xl-4 d-flex">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-0 overflow-hidden d-flex flex-column w-100">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-0 overflow-hidden d-flex flex-column w-100 premium-hover-card">
             <div className="card-header bg-light border-bottom p-3 flex-shrink-0">
               <h6 className="fw-bold text-dark mb-0 py-1">
-                <i className="bi bi-trophy-fill me-2 text-warning"></i> Top
-                Teachers Activity
+                <i className="bi bi-trophy fs-5 me-2"></i> Top Teachers Activity
               </h6>
             </div>
             <div
@@ -631,7 +636,7 @@ const AdminDashboard = () => {
                       className="py-2 text-muted small fw-bold text-center"
                       title="Classrooms"
                     >
-                      <i className="bi bi-easel-fill text-danger"></i>
+                      <i className="bi bi-easel text-danger"></i>
                     </th>
                     <th
                       className="py-2 text-muted small fw-bold text-center"
@@ -675,17 +680,17 @@ const AdminDashboard = () => {
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-danger rounded-pill px-3 shadow-sm">
+                        <span className="badge bg-danger rounded-3 px-3 shadow-sm">
                           {teacher.classrooms}
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-primary rounded-pill px-3 shadow-sm">
+                        <span className="badge bg-primary rounded-3 px-3 shadow-sm">
                           {teacher.classworks}
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-success rounded-pill px-3 shadow-sm">
+                        <span className="badge bg-success rounded-3 px-3 shadow-sm">
                           {teacher.forms}
                         </span>
                       </td>
@@ -708,10 +713,10 @@ const AdminDashboard = () => {
       {/* LINE CHART */}
       <div className="row g-4">
         <div className="col-12">
-          <div className="card border-0 shadow-sm rounded-4 bg-white p-4">
+          <div className="card border-0 shadow-sm rounded-4 bg-white p-4 premium-hover-card">
             <h6 className="fw-bold text-dark mb-4">
-              <i className="bi bi-activity me-2 text-muted"></i> System Logins
-              (Last 7 Days)
+              <i className="bi bi-activity fs-5 me-2"></i> System Logins (Last 7
+              Days)
             </h6>
             <div style={{ width: "100%", height: 350 }}>
               <ResponsiveContainer>

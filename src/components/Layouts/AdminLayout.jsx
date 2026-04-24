@@ -222,12 +222,14 @@ const AdminLayout = () => {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days === 1) return "Yesterday";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  // -----------------------------------------------------
-  // PROGRAMMATIC MODAL OPENERS (IWAS BOOTSTRAP BUG)
-  // -----------------------------------------------------
+  // PROGRAMMATIC MODAL OPENERS
   const openActivityLogs = () => {
     setShowAvatar(false);
     const modalElement = document.getElementById("adminActivityLogsModal");
@@ -284,6 +286,12 @@ const AdminLayout = () => {
           </div>
 
           <div className="sidebar-links-container custom-scrollbar py-3">
+            <div
+              className="menu-header text-muted small fw-bold px-4 mb-2"
+              style={{ letterSpacing: "1px", fontSize: "0.75rem" }}
+            >
+              MAIN MENU
+            </div>
             <NavLink
               to="/admin/dashboard"
               className="sidebar-link"
@@ -301,12 +309,12 @@ const AdminLayout = () => {
               <span className="sidebar-text">User Records</span>
             </NavLink>
             <NavLink
-              to="/admin/student-grades"
+              to="/admin/announcements"
               className="sidebar-link"
               onClick={() => setIsSidebarOpen(false)}
             >
-              <i className="bi bi-award"></i>{" "}
-              <span className="sidebar-text">Student Grades</span>
+              <i className="bi bi-megaphone"></i>{" "}
+              <span className="sidebar-text">Announcements</span>
             </NavLink>
 
             <div
@@ -370,12 +378,12 @@ const AdminLayout = () => {
               CONTENT APPROVAL
             </div>
             <NavLink
-              to="/admin/announcements"
+              to="/admin/student-grades"
               className="sidebar-link"
               onClick={() => setIsSidebarOpen(false)}
             >
-              <i className="bi bi-megaphone"></i>{" "}
-              <span className="sidebar-text">Announcements</span>
+              <i className="bi bi-award"></i>{" "}
+              <span className="sidebar-text">Student Grades</span>
             </NavLink>
             <NavLink
               to="/admin/e-libraries"
@@ -473,8 +481,7 @@ const AdminLayout = () => {
                     data-bs-target="#activityLogsModal"
                     onClick={() => setShowAvatar(false)}
                   >
-                    <i className="bi bi-clock-history text-primary me-2"></i>{" "}
-                    Activity Logs
+                    <i className="bi bi-clock-history me-2"></i> Activity Logs
                   </button>
                 </li>
                 <li>
@@ -484,15 +491,14 @@ const AdminLayout = () => {
                     data-bs-target="#adminHelpModal"
                     onClick={() => setShowAvatar(false)}
                   >
-                    <i className="bi bi-question-circle text-primary me-2"></i>{" "}
-                    Help Center
+                    <i className="bi bi-question-circle me-2"></i> Help Center
                   </button>
                 </li>
               </ul>
             </div>
             <button
               onClick={handleLogout}
-              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3"
               style={{ transition: "all 0.3s ease" }}
             >
               <i className="bi bi-box-arrow-right me-1"></i> Sign Out
@@ -518,20 +524,14 @@ const AdminLayout = () => {
 
               <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
                 <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-calendar-event me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                  <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
                     ? `SY: ${activeSettings.school_year}`
                     : "SY: Not Set"}
                 </span>
                 <div className="vr"></div>
                 <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-clock-history me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                  <i className="bi bi-clock-history me-2 text-success"></i>{" "}
                   {activeSettings.semester !== "Not Set"
                     ? `${activeSettings.semester} Semester`
                     : "Semester Not Set"}
@@ -693,21 +693,24 @@ const AdminLayout = () => {
               <Outlet />
             </div>
 
-            <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0">
-              <small className="text-muted fw-medium">
-                &copy; {new Date().getFullYear()} CampusLoop. All rights
-                reserved. <br className="d-md-none" />
-                <span className="d-none d-md-inline"> | </span>
-                <a
-                  href="#"
-                  className="text-decoration-none ms-md-2 fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#termsDrawer"
-                >
-                  Terms & Policy
-                </a>
-              </small>
+            <footer className="py-3 bg-white border-top mt-auto flex-shrink-0 px-4 px-md-5">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <small className="text-muted fw-medium mb-2 mb-md-0">
+                  &copy; {new Date().getFullYear()} CampusLoop. All rights
+                  reserved.
+                </small>
+                <small className="text-muted fw-medium">
+                  <a
+                    href="#"
+                    className="text-decoration-none"
+                    style={{ color: "var(--primary-color)" }}
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#termsDrawer"
+                  >
+                    <i className="bi bi-shield-check me-1"></i> Terms & Policy
+                  </a>
+                </small>
+              </div>
             </footer>
           </div>
         </main>
