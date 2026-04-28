@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const UserDrawer = ({
   drawerMode,
@@ -10,7 +10,36 @@ const UserDrawer = ({
   userToUpdate,
   proceedToUpdate,
   executeDelete,
+  executeBulkDelete,
+  selectedIdsCount,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Eye Icon Renderer
+  const renderEyeIcon = (isVisible) =>
+    isVisible ? (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+      >
+        <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755l-.809-.805zm-4.643-2.617L7.14 7.045a2.001 2.001 0 0 1-1.185-1.185l-1.576-1.576A4.983 4.983 0 0 0 3.5 8c0 1.368.611 2.585 1.564 3.42l-.845.845A6.974 6.974 0 0 1 1.5 8s3-5.5 8-5.5c.34 0 .673.04 1 .116l-.806.806c-.06-.007-.128-.012-.194-.012zM8 12.5a5.944 5.944 0 0 1-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+      </svg>
+    ) : (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        fill="currentColor"
+        viewBox="0 0 16 16"
+      >
+        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z" />
+        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z" />
+      </svg>
+    );
+
   return (
     <>
       <div
@@ -213,20 +242,29 @@ const UserDrawer = ({
                   <label className="form-label small fw-bold text-dark">
                     <i className="bi bi-key me-1 text-muted"></i> Password
                   </label>
-                  <input
-                    type="text"
-                    className="form-control bg-light toolbar-input"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder={
-                      drawerMode === "create"
-                        ? "Leave blank to auto-generate"
-                        : "Leave blank to keep current"
-                    }
-                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}"
-                    title="Must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters."
-                  />
+                  <div className="input-group">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="form-control bg-light toolbar-input border-end-0"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder={
+                        drawerMode === "create"
+                          ? "Leave blank to auto-generate"
+                          : "Leave blank to keep current"
+                      }
+                      pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}"
+                      title="Must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters."
+                    />
+                    <span
+                      className="input-group-text bg-light cursor-pointer text-muted border-start-0"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {renderEyeIcon(showPassword)}
+                    </span>
+                  </div>
                   <small className="text-muted" style={{ fontSize: "0.70rem" }}>
                     Min. 8 chars, 1 uppercase, 1 lowercase, 1 number, and 1
                     special symbol.
@@ -330,6 +368,8 @@ const UserDrawer = ({
           </form>
         </div>
       </div>
+
+      {/* Confirmation Update */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -385,6 +425,7 @@ const UserDrawer = ({
         </div>
       </div>
 
+      {/* Confirmation Single Delete */}
       <div
         className="modal fade"
         id="deleteConfirmModal"
@@ -430,6 +471,56 @@ const UserDrawer = ({
                 onClick={executeDelete}
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Bulk Delete */}
+      <div
+        className="modal fade"
+        id="bulkDeleteConfirmModal"
+        tabIndex="-1"
+        aria-hidden="true"
+        data-bs-backdrop="static"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
+              <div
+                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
+                style={{ width: "80px", height: "80px" }}
+              >
+                <i
+                  className="bi bi-exclamation-triangle-fill text-danger"
+                  style={{ fontSize: "2.5rem" }}
+                ></i>
+              </div>
+            </div>
+            <div className="modal-body text-center p-4">
+              <h4 className="fw-bold text-dark">Confirm Bulk Deletion</h4>
+              <p className="text-muted mb-0">
+                Are you sure you want to move{" "}
+                <b>{selectedIdsCount} selected users</b> to the Recycle Bin?
+                <br /> This action can be undone later.
+              </p>
+            </div>
+            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
+              <button
+                type="button"
+                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
+                data-bs-dismiss="modal"
+                onClick={executeBulkDelete}
+              >
+                Yes, Delete All
               </button>
             </div>
           </div>
