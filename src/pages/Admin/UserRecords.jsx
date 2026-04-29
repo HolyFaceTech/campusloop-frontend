@@ -244,12 +244,20 @@ const UserRecords = () => {
     }
   };
 
+  // Unified Confirmation functions
   const confirmDelete = (user) => {
-    setUserToUpdate(user);
+    setUserToDelete(user); // Set the specific user to delete
     const modal = new Modal(document.getElementById("deleteConfirmModal"));
     modal.show();
   };
 
+  const confirmBulkDelete = () => {
+    setUserToDelete(null); // I-clear ang userToDelete para alam ng modal na BULK ang gagawin
+    const modal = new Modal(document.getElementById("deleteConfirmModal"));
+    modal.show();
+  };
+
+  // Unified Execution Function (Handles both Single at Bulk)
   const executeDelete = () => {
     setTimeout(async () => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -258,15 +266,30 @@ const UserRecords = () => {
       document.body.style.paddingRight = "";
 
       setIsLoading(true);
-      setLoadingText("Deleting User...");
+      setLoadingText(
+        userToDelete ? "Deleting User..." : "Deleting Selection...",
+      );
 
       try {
-        await axios.delete(
-          `${import.meta.env.VITE_API_BASE_URL}/users/${userToUpdate.id}`,
-        );
+        if (userToDelete) {
+          // SINGLE DELETE LOGIC
+          await axios.delete(
+            `${import.meta.env.VITE_API_BASE_URL}/users/${userToDelete.id}`,
+          );
+        } else {
+          // BULK DELETE LOGIC
+          await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/users/bulk-delete`,
+            { ids: selectedIds },
+          );
+          setSelectedIds([]);
+        }
+
         sileo.success({
           title: "Deleted",
-          description: "User moved to recycle bin.",
+          description: userToDelete
+            ? "User moved to recycle bin."
+            : "Selected users moved to recycle bin.",
           ...darkToast,
         });
 
@@ -275,47 +298,7 @@ const UserRecords = () => {
       } catch (error) {
         sileo.error({
           title: "Failed",
-          description: "Could not delete user.",
-          ...darkToast,
-        });
-        setIsLoading(false);
-      }
-    }, 400);
-  };
-
-  const confirmBulkDelete = () => {
-    const modal = new Modal(document.getElementById("bulkDeleteConfirmModal"));
-    modal.show();
-  };
-
-  const executeBulkDelete = () => {
-    setTimeout(async () => {
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-
-      setIsLoading(true);
-      setLoadingText("Deleting Selection...");
-
-      try {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/users/bulk-delete`,
-          { ids: selectedIds },
-        );
-        sileo.success({
-          title: "Deleted",
-          description: "Selected users moved to recycle bin.",
-          ...darkToast,
-        });
-
-        setSelectedIds([]);
-        setCurrentPage(1);
-        fetchUsers();
-      } catch (error) {
-        sileo.error({
-          title: "Failed",
-          description: "Could not delete selection.",
+          description: "Could not process deletion.",
           ...darkToast,
         });
         setIsLoading(false);
@@ -705,7 +688,7 @@ const UserRecords = () => {
         userToUpdate={userToUpdate}
         proceedToUpdate={proceedToUpdate}
         executeDelete={executeDelete}
-        executeBulkDelete={executeBulkDelete}
+        userToDelete={userToDelete}
         selectedIdsCount={selectedIds.length}
       />
 
