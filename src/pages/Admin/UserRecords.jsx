@@ -615,9 +615,19 @@ const UserRecords = () => {
               ))}
               {users.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="8" className="text-center py-5 text-muted">
-                    <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                    No matching records found.
+                  <td colSpan="8" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery
+                          ? "No matching users for your search."
+                          : "Click the 'New User' button to get started."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}

@@ -16,6 +16,7 @@ const Strands = () => {
   const [loadingText, setLoadingText] = useState("Loading...");
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(""); // Local Debounce State
 
   const [modalMode, setModalMode] = useState("");
   const [selectedStrand, setSelectedStrand] = useState(null);
@@ -23,9 +24,26 @@ const Strands = () => {
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
+  // Helper function para laging updated ang token na kukunin
+  const getAuthToken = () => {
+    return (
+      localStorage.getItem("campusloop_token") ||
+      sessionStorage.getItem("campusloop_token")
+    );
+  };
+
   useEffect(() => {
     fetchStrands();
   }, []);
+
+  // LOCAL DEBOUNCE EFFECT
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300); // 300 milliseconds delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,6 +61,11 @@ const Strands = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/strands`,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+        },
       );
       setStrands(response.data);
     } catch (error) {
@@ -121,6 +144,11 @@ const Strands = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/strands`,
           formData,
+          {
+            headers: {
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          },
         );
         sileo.success({
           title: "Success",
@@ -131,6 +159,11 @@ const Strands = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/strands/${selectedStrand.id}`,
           formData,
+          {
+            headers: {
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          },
         );
         sileo.success({
           title: "Updated",
@@ -170,6 +203,11 @@ const Strands = () => {
       try {
         await axios.delete(
           `${import.meta.env.VITE_API_BASE_URL}/strands/${selectedStrand.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${getAuthToken()}`,
+            },
+          },
         );
         sileo.success({
           title: "Deleted",
@@ -191,8 +229,8 @@ const Strands = () => {
 
   const filteredStrands = strands.filter(
     (strand) =>
-      strand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      strand.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      strand.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      strand.description.toLowerCase().includes(debouncedSearch.toLowerCase()),
   );
 
   return (
@@ -249,18 +287,42 @@ const Strands = () => {
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
               style={{ borderRadius: "1rem" }}
             >
-              {/* CARD HEADER - REDUCED HEIGHT */}
+              {/* CARD HEADER */}
               <div
                 className="p-4 position-relative d-flex flex-column justify-content-end"
                 style={{
                   backgroundColor: "var(--primary-color)",
-                  minHeight: "110px" /* Binawasan ang height mula 140px */,
+                  minHeight: "110px",
                   borderTopLeftRadius: "1rem",
                   borderTopRightRadius: "1rem",
                 }}
               >
+                {/* Decorative Circles */}
                 <div
-                  className="dropdown strand-card-dropdown position-absolute top-0 end-0 mt-3 me-3"
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    top: "-20px",
+                    right: "-20px",
+                    pointerEvents: "none",
+                  }}
+                ></div>
+                <div
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    bottom: "-10px",
+                    left: "20%",
+                    pointerEvents: "none",
+                  }}
+                ></div>
+
+                <div
+                  className="dropdown strand-card-dropdown position-absolute top-0 end-0 mt-3 me-3 z-3"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
@@ -273,11 +335,14 @@ const Strands = () => {
                     }
                     style={{
                       backgroundColor: "rgba(0,0,0,0.2)",
-                      width: "32px",
-                      height: "32px",
+                      width: "35px",
+                      height: "35px",
                     }}
                   >
-                    <i className="bi bi-three-dots-vertical"></i>
+                    <i
+                      className="bi bi-three-dots-vertical"
+                      style={{ pointerEvents: "none" }}
+                    ></i>
                   </button>
                   <ul
                     className={`dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-1 ${openDropdownId === strand.id ? "show" : ""}`}
@@ -326,11 +391,10 @@ const Strands = () => {
 
               {/* CARD BODY */}
               <div className="card-body p-4 d-flex flex-column position-relative">
-                {/* Floating Icon - REDUCED SIZE */}
                 <div
                   className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white"
                   style={{
-                    width: "45px" /* Pinaliit para mas compact */,
+                    width: "45px",
                     height: "45px",
                     top: "-22px",
                     right: "24px",
@@ -358,7 +422,7 @@ const Strands = () => {
                   </p>
                 </div>
 
-                {/* Main Details Box - SINGLE ROW LAYOUT */}
+                {/* Main Details Box */}
                 <div className="bg-light rounded-4 p-3 mt-auto border border-light-subtle d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center">
                     <div
@@ -392,7 +456,7 @@ const Strands = () => {
               ></i>
               <h5 className="fw-bold text-dark">No records found.</h5>
               <p className="text-muted small mb-0">
-                {searchQuery
+                {debouncedSearch
                   ? "No matching strands for your search."
                   : "Click the 'New Strand' button to get started."}
               </p>
@@ -406,110 +470,10 @@ const Strands = () => {
         formData={formData}
         handleInputChange={handleInputChange}
         handleFormSubmit={handleFormSubmit}
+        selectedStrand={selectedStrand}
+        proceedToUpdateForm={proceedToUpdateForm}
+        executeDelete={executeDelete}
       />
-
-      {/* UPDATE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="updateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-pencil-square"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Edit Strand Information</h4>
-              <p className="text-muted mb-0">
-                You are about to edit the records of{" "}
-                <b>{selectedStrand?.name}</b>. Do you want to proceed to the
-                update form?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={proceedToUpdateForm}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* DELETE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Deletion</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move <b>{selectedStrand?.name}</b> to
-                the Recycle Bin? This action can be undone later.
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
