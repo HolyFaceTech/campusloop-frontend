@@ -10,7 +10,7 @@ const UserDrawer = ({
   userToUpdate,
   proceedToUpdate,
   executeDelete,
-  executeBulkDelete,
+  userToDelete,
   selectedIdsCount,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -425,7 +425,7 @@ const UserDrawer = ({
         </div>
       </div>
 
-      {/* Confirmation Single Delete */}
+      {/* Confirmation Deletion */}
       <div
         className="modal fade"
         id="deleteConfirmModal"
@@ -450,10 +450,14 @@ const UserDrawer = ({
               <h4 className="fw-bold text-dark">Confirm Deletion</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to move{" "}
-                <b>
-                  {userToUpdate?.first_name} {userToUpdate?.last_name}
-                </b>{" "}
-                to the Recycle Bin? This action can be undone later.
+                {userToDelete ? (
+                  <b>
+                    "{userToDelete.first_name} {userToDelete.last_name}"
+                  </b>
+                ) : (
+                  <b>{selectedIdsCount} selected users</b>
+                )}{" "}
+                to the Recycle Bin?
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -471,56 +475,6 @@ const UserDrawer = ({
                 onClick={executeDelete}
               >
                 Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Confirmation Bulk Delete */}
-      <div
-        className="modal fade"
-        id="bulkDeleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Bulk Deletion</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move{" "}
-                <b>{selectedIdsCount} selected users</b> to the Recycle Bin?
-                <br /> This action can be undone later.
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeBulkDelete}
-              >
-                Yes, Delete All
               </button>
             </div>
           </div>
