@@ -22,8 +22,11 @@ const Announcements = () => {
   const [filterStatus, setFilterStatus] = useState("all");
 
   const [selectedIds, setSelectedIds] = useState([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [modalMode, setModalMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -48,13 +51,26 @@ const Announcements = () => {
   const [existingFiles, setExistingFiles] = useState([]);
   const [deletedFileIds, setDeletedFileIds] = useState([]);
 
-  useEffect(() => {
-    fetchAnnouncements();
-  }, []);
-
+  // Reset to page 1 kapag nagbago ang mga filters
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortDate, filterAttachment, filterStatus, entriesPerPage]);
+
+  // DEBOUNCE EFFECT Mag-fe-fetch sa server kapag nag-stop na mag-type
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchAnnouncements(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    searchQuery,
+    filterAttachment,
+    filterStatus,
+    sortDate,
+    currentPage,
+    entriesPerPage,
+  ]);
 
   const fetchAnnouncements = async (showSpinner = true) => {
     if (showSpinner) {
@@ -68,9 +84,20 @@ const Announcements = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            filterAttachment: filterAttachment,
+            filterStatus: filterStatus,
+            sortDate: sortDate,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setAnnouncements(response.data);
+      // Galing na sa server ang naka-paginate na data
+      setAnnouncements(response.data.data || []);
+      setTotalPages(response.data.last_page || 1);
+      setTotalRecords(response.data.total || 0);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -110,8 +137,15 @@ const Announcements = () => {
 
   const openViewModal = (item) => {
     setSelectedItem(item);
-    const modal = new Modal(document.getElementById("announcementViewModal"));
-    modal.show();
+
+    // Maliit na delay para iwas Bootstrap Backdrop error
+    setTimeout(() => {
+      const modalElement = document.getElementById("announcementViewModal");
+      if (modalElement) {
+        const modal = Modal.getOrCreateInstance(modalElement);
+        modal.show();
+      }
+    }, 100);
   };
 
   const openCreateModal = () => {
@@ -183,6 +217,13 @@ const Announcements = () => {
       return;
     }
 
+    // I-deretso na natin sa pag-submit
+    if (modalMode === "update") {
+      executeSubmit();
+      return;
+    }
+
+    // Ipakita pa rin ang confirmation modal
     const formModal = Modal.getInstance(
       document.getElementById("announcementFormModal"),
     );
@@ -190,14 +231,21 @@ const Announcements = () => {
 
     setTimeout(() => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      const confirmModalId =
-        modalMode === "create" ? "createConfirmModal" : "saveConfirmModal";
-      const confirmModal = new Modal(document.getElementById(confirmModalId));
+      const confirmModalId = "createConfirmModal";
+      const confirmModal = Modal.getOrCreateInstance(
+        document.getElementById(confirmModalId),
+      );
       confirmModal.show();
     }, 400);
   };
 
   const executeSubmit = async () => {
+    // Siguraduhing isasara ang form modal kung direct save on update
+    const formModal = Modal.getInstance(
+      document.getElementById("announcementFormModal"),
+    );
+    if (formModal) formModal.hide();
+
     document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
     document.body.classList.remove("modal-open");
     document.body.style.overflow = "";
@@ -310,6 +358,7 @@ const Announcements = () => {
           description: "Moved to recycle bin.",
           ...darkToast,
         });
+        setCurrentPage(1); // Balik page 1 kapag nakadelete
         fetchAnnouncements();
       } catch (error) {
         sileo.error({
@@ -335,40 +384,11 @@ const Announcements = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  let processedData = announcements.filter((a) => {
-    const matchesSearch =
-      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.content.toLowerCase().includes(searchQuery.toLowerCase());
-    let matchesAttachment = true;
-    if (filterAttachment === "files")
-      matchesAttachment = a.files && a.files.length > 0;
-    if (filterAttachment === "links") matchesAttachment = !!a.link;
-    if (filterAttachment === "both")
-      matchesAttachment = a.files && a.files.length > 0 && !!a.link;
-    if (filterAttachment === "none")
-      matchesAttachment = (!a.files || a.files.length === 0) && !a.link;
-    const matchesStatus = filterStatus === "all" || a.status === filterStatus;
-    return matchesSearch && matchesAttachment && matchesStatus;
-  });
-
-  processedData.sort((a, b) => {
-    if (sortDate === "newest")
-      return new Date(b.created_at) - new Date(a.created_at);
-    if (sortDate === "oldest")
-      return new Date(a.created_at) - new Date(b.created_at);
-    return 0;
-  });
-
-  const totalPages = Math.ceil(processedData.length / entriesPerPage);
-  const currentItems = processedData.slice(
-    (currentPage - 1) * entriesPerPage,
-    currentPage * entriesPerPage,
-  );
-
   const handleSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(currentItems.map((a) => a.id));
+    if (e.target.checked) setSelectedIds(announcements.map((a) => a.id));
     else setSelectedIds([]);
   };
+
   const handleSelect = (id) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -404,8 +424,8 @@ const Announcements = () => {
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -511,8 +531,8 @@ const Announcements = () => {
                     className="form-check-input"
                     onChange={handleSelectAll}
                     checked={
-                      selectedIds.length === currentItems.length &&
-                      currentItems.length > 0
+                      selectedIds.length === announcements.length &&
+                      announcements.length > 0
                     }
                   />
                 </th>
@@ -526,7 +546,7 @@ const Announcements = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item, index) => (
+              {announcements.map((item, index) => (
                 <tr key={item.id} className="table-row-hover">
                   <td className="ps-4 py-3">
                     <input
@@ -606,9 +626,7 @@ const Announcements = () => {
                       )}
                       {!item.link &&
                         (!item.files || item.files.length === 0) && (
-                          <span className="text-muted small">
-                            <i>None</i>
-                          </span>
+                          <span className="text-muted small">None</span>
                         )}
                     </div>
                   </td>
@@ -667,20 +685,11 @@ const Announcements = () => {
                   </td>
                 </tr>
               ))}
-              {currentItems.length === 0 && !isLoading && (
+              {announcements.length === 0 && !isLoading && (
                 <tr>
                   <td colSpan="8" className="text-center py-5 text-muted">
-                    {announcements.length === 0 ? (
-                      <>
-                        <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                        No records found.
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        No matching records found.
-                      </>
-                    )}
+                    <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
+                    No matching records found.
                   </td>
                 </tr>
               )}
@@ -689,12 +698,12 @@ const Announcements = () => {
         </div>
       </div>
 
-      {processedData.length > 0 && (
+      {totalRecords > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
-            {Math.min(currentPage * entriesPerPage, processedData.length)} of{" "}
-            {processedData.length} entries
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">
