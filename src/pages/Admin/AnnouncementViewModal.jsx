@@ -201,7 +201,7 @@ const AnnouncementViewModal = ({
               onClick={() => saveEditedComment(comment.id)}
               disabled={isPosting}
             >
-              Save
+              <i className="bi bi-check-circle-fill me-1"></i>Save Changes
             </button>
           </div>
         </div>

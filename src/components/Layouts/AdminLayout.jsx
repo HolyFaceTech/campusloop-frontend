@@ -119,7 +119,7 @@ const AdminLayout = () => {
         "-" +
         String(today.getDate()).padStart(2, "0");
 
-      const hasPublishedToday = response.data.some((a) => {
+      const hasPublishedToday = response.data.data.some((a) => {
         const pubDateObj = new Date(a.publish_from);
         const pubDateStr =
           pubDateObj.getFullYear() +

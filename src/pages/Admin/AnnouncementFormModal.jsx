@@ -40,18 +40,6 @@ const AnnouncementFormModal = ({
         color: "#dc3545",
         bg: "#f8d7da",
       };
-    if (["doc", "docx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "#0d6efd",
-        bg: "#cfe2ff",
-      };
-    if (["xls", "xlsx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-excel-fill",
-        color: "#198754",
-        bg: "#d1e7dd",
-      };
     if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
@@ -79,11 +67,6 @@ const AnnouncementFormModal = ({
   const validateAndAddFiles = (files) => {
     const allowedTypes = [
       "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "image/png",
       "image/jpeg",
       "image/gif",
       "video/mp4",
@@ -95,13 +78,11 @@ const AnnouncementFormModal = ({
     const validFiles = files.filter((f) => {
       if (
         !allowedTypes.includes(f.type) &&
-        !f.name.match(
-          /\.(pdf|doc|docx|xls|xlsx|png|jpg|jpeg|gif|mp4|avi|mov)$/i,
-        )
+        !f.name.match(/\.(pdf|jpg|jpeg|gif|mp4|avi|mov)$/i)
       ) {
         sileo.error({
-          title: "Invalid File",
-          description: `${f.name} is not supported.`,
+          title: "Invalid File Format",
+          description: `${f.name} is not allowed. Only PDF, Images (JPG/GIF), and specific videos are accepted.`,
         });
         return false;
       }
@@ -228,12 +209,12 @@ const AnnouncementFormModal = ({
               </div>
 
               <div className="mb-4">
-                <label className="form-label small fw-bold text-dark">
+                <label className="form-label small fw-bold text-dark d-block text-center">
                   <i className="bi bi-paperclip me-1 text-muted"></i> Attachment
                   Options
                 </label>
                 <div
-                  className="d-flex gap-4 p-3 rounded-3"
+                  className="d-flex justify-content-center gap-4 p-3 rounded-3"
                   style={{ backgroundColor: "var(--accent-color)" }}
                 >
                   <div className="form-check form-switch">
@@ -309,8 +290,8 @@ const AnnouncementFormModal = ({
                       className="text-muted mb-3"
                       style={{ fontSize: "0.75rem" }}
                     >
-                      Accepted formats: PDF, DOCX, XLS, XLSX, PNG, JPG, JPEG,
-                      GIF, MP4, AVI, MOV <br /> Max file size: 20MB
+                      Accepted formats: PDF, JPG, JPEG, GIF, MP4, AVI, MOV{" "}
+                      <br /> Max file size: 20MB
                     </p>
                     <p className="fw-medium text-dark mb-1">
                       Drag & Drop your files here
@@ -328,7 +309,7 @@ const AnnouncementFormModal = ({
                       className="d-none"
                       ref={fileInputRef}
                       multiple
-                      accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.mp4,.avi,.mov,.gif"
+                      accept=".pdf,.jpg,.jpeg,.gif,.mp4,.avi,.mov"
                       onChange={onFileInputChange}
                     />
                   </div>
@@ -459,14 +440,23 @@ const AnnouncementFormModal = ({
                 className="btn btn-campusloop px-4 fw-bold rounded-3"
                 onClick={triggerSaveConfirmation}
               >
-                {modalMode === "create" ? "Post" : "Save Changes"}
+                {modalMode === "create" ? (
+                  <>
+                    <i className="bi bi-send-fill me-2"></i> Post
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-check-circle-fill me-2"></i> Save
+                    Changes
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* CONFIRMATION MODALS INILIPAT DITO */}
+      {/* CONFIRMATION MODALS */}
       <div
         className="modal fade"
         id="createConfirmModal"
