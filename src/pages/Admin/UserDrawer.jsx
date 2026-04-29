@@ -296,7 +296,7 @@ const UserDrawer = ({
                       title="LRN must be exactly 12 digits."
                       className="form-control bg-light toolbar-input"
                       name="lrn"
-                      value={formData.lrn}
+                      value={formData.lrn || ""}
                       onChange={(e) => {
                         e.target.value = e.target.value.replace(/[^0-9]/g, "");
                         handleInputChange(e);
@@ -314,7 +314,7 @@ const UserDrawer = ({
                     <select
                       className="form-select bg-light toolbar-input"
                       name="strand_id"
-                      value={formData.strand_id}
+                      value={formData.strand_id || ""}
                       onChange={handleInputChange}
                       disabled={drawerMode === "view"}
                       required
