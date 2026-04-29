@@ -23,8 +23,12 @@ const Subjects = () => {
   const [filterSemester, setFilterSemester] = useState("all");
 
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // Modal & Form States
   const [modalMode, setModalMode] = useState("");
@@ -37,19 +41,46 @@ const Subjects = () => {
     semester: "",
   });
 
-  useEffect(() => {
-    fetchStrands();
-    fetchSubjects();
-  }, []);
+  // Helper function para laging updated ang token na kukunin
+  const getAuthToken = () => {
+    return (
+      localStorage.getItem("campusloop_token") ||
+      sessionStorage.getItem("campusloop_token")
+    );
+  };
 
   useEffect(() => {
-    setCurrentPage(1); // Reset page kapag nag-filter
+    fetchStrands();
+  }, []);
+
+  // Reset to page 1 kapag nagbago ang mga filters
+  useEffect(() => {
+    setCurrentPage(1);
   }, [searchQuery, filterStrand, filterGrade, filterSemester, entriesPerPage]);
+
+  // DEBOUNCE EFFECT: Mag-fe-fetch sa server kapag nag-stop na mag-type
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchSubjects(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    searchQuery,
+    filterStrand,
+    filterGrade,
+    filterSemester,
+    currentPage,
+    entriesPerPage,
+  ]);
 
   const fetchStrands = async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/strands`,
+        {
+          headers: { Authorization: `Bearer ${getAuthToken()}` },
+        },
       );
       setStrandsList(response.data);
     } catch (error) {
@@ -57,14 +88,32 @@ const Subjects = () => {
     }
   };
 
-  const fetchSubjects = async () => {
-    setIsLoading(true);
-    setLoadingText("Fetching subjects...");
+  const fetchSubjects = async (showSpinner = true) => {
+    if (showSpinner) {
+      setIsLoading(true);
+      setLoadingText("Fetching subjects...");
+    }
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/subjects`,
+        {
+          headers: {
+            Authorization: `Bearer ${getAuthToken()}`,
+          },
+          params: {
+            search: searchQuery,
+            filterStrand: filterStrand,
+            filterGrade: filterGrade,
+            filterSemester: filterSemester,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setSubjects(response.data);
+      // Galing na sa server ang naka-paginate na data
+      setSubjects(response.data.data || []);
+      setTotalPages(response.data.last_page || 1);
+      setTotalRecords(response.data.total || 0);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -80,7 +129,6 @@ const Subjects = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // CONFIRM UPDATE MUNA BAGO FORM
   const handleConfirmUpdateClick = (subject) => {
     setSelectedSubject(subject);
     const modalElement = document.getElementById("updateConfirmModal");
@@ -88,7 +136,6 @@ const Subjects = () => {
     modal.show();
   };
 
-  // KAPAG YES SA CONFIRMATION, LALABAS ANG FORM
   const proceedToUpdateForm = () => {
     setTimeout(() => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -153,6 +200,9 @@ const Subjects = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/subjects`,
           formData,
+          {
+            headers: { Authorization: `Bearer ${getAuthToken()}` },
+          },
         );
         sileo.success({
           title: "Success",
@@ -163,6 +213,9 @@ const Subjects = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/subjects/${selectedSubject.id}`,
           formData,
+          {
+            headers: { Authorization: `Bearer ${getAuthToken()}` },
+          },
         );
         sileo.success({
           title: "Updated",
@@ -206,11 +259,17 @@ const Subjects = () => {
         if (selectedSubject) {
           await axios.delete(
             `${import.meta.env.VITE_API_BASE_URL}/subjects/${selectedSubject.id}`,
+            {
+              headers: { Authorization: `Bearer ${getAuthToken()}` },
+            },
           );
         } else {
           await axios.post(
             `${import.meta.env.VITE_API_BASE_URL}/subjects/bulk-delete`,
             { ids: selectedIds },
+            {
+              headers: { Authorization: `Bearer ${getAuthToken()}` },
+            },
           );
           setSelectedIds([]);
         }
@@ -219,6 +278,7 @@ const Subjects = () => {
           description: "Moved to recycle bin.",
           ...darkToast,
         });
+        setCurrentPage(1); // Balik page 1 kapag nakadelete
         fetchSubjects();
       } catch (error) {
         sileo.error({
@@ -232,31 +292,8 @@ const Subjects = () => {
     }, 400);
   };
 
-  // FILTERING LOGIC
-  const filteredSubjects = subjects.filter((s) => {
-    const matchesSearch =
-      s.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStrand =
-      filterStrand === "all" || s.strand_id === filterStrand;
-    const matchesGrade = filterGrade === "all" || s.grade_level === filterGrade;
-    const matchesSemester =
-      filterSemester === "all" || s.semester === filterSemester;
-
-    return matchesSearch && matchesStrand && matchesGrade && matchesSemester;
-  });
-
-  // PAGINATION LOGIC
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentItems = filteredSubjects.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredSubjects.length / entriesPerPage);
-
   const handleSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(currentItems.map((s) => s.id));
+    if (e.target.checked) setSelectedIds(subjects.map((s) => s.id));
     else setSelectedIds([]);
   };
 
@@ -286,8 +323,8 @@ const Subjects = () => {
 
       {/* FILTER TOOLBAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -306,7 +343,7 @@ const Subjects = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "220px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -320,7 +357,7 @@ const Subjects = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "100px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-journal-text"></i>
               </span>
@@ -338,7 +375,7 @@ const Subjects = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "140px" }}>
+            <div className="input-group" style={{ minWidth: "100px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-bar-chart-steps"></i>
               </span>
@@ -353,7 +390,7 @@ const Subjects = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "100px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-clock-history"></i>
               </span>
@@ -395,8 +432,8 @@ const Subjects = () => {
                     className="form-check-input"
                     onChange={handleSelectAll}
                     checked={
-                      selectedIds.length === currentItems.length &&
-                      currentItems.length > 0
+                      selectedIds.length === subjects.length &&
+                      subjects.length > 0
                     }
                   />
                 </th>
@@ -409,7 +446,7 @@ const Subjects = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((subject, index) => (
+              {subjects.map((subject, index) => (
                 <tr key={subject.id}>
                   <td className="ps-4">
                     <input
@@ -427,16 +464,14 @@ const Subjects = () => {
                     />
                   </td>
                   <td className="fw-bold text-muted">
-                    {indexOfFirstItem + index + 1}
+                    {(currentPage - 1) * entriesPerPage + index + 1}
                   </td>
                   <td>
-                    <span className="badge bg-light text-dark border px-3 py-2 shadow-sm">
-                      {subject.code}
-                    </span>
+                    <span className="text-dark fw-bold">{subject.code}</span>
                   </td>
                   <td>
                     <span
-                      className="text-dark text-truncate d-inline-block"
+                      className="text-dark text-truncate d-inline-block fst-italic"
                       style={{ maxWidth: "250px" }}
                     >
                       {subject.description}
@@ -444,7 +479,7 @@ const Subjects = () => {
                   </td>
                   <td>
                     <span
-                      className="badge rounded-pill text-dark px-3 py-2"
+                      className="badge rounded-3 text-dark px-3 py-2"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {subject.strand?.name || "N/A"}
@@ -462,7 +497,7 @@ const Subjects = () => {
                       <div className="vr"></div>
                       <span className="fw-bold text-muted small">
                         <i className="bi bi-clock me-1 text-secondary"></i>{" "}
-                        {subject.semester} Sem
+                        {subject.semester} Semester
                       </span>
                     </div>
                   </td>
@@ -489,20 +524,21 @@ const Subjects = () => {
                   </td>
                 </tr>
               ))}
-              {currentItems.length === 0 && !isLoading && (
+              {subjects.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="7" className="text-center py-5 text-muted">
-                    {subjects.length === 0 ? (
-                      <>
-                        <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                        No records found.
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        No matching records found.
-                      </>
-                    )}
+                  <td colSpan="7" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery
+                          ? "No matching subjects for your search."
+                          : "Click the 'New Subject' button to get started."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -512,12 +548,12 @@ const Subjects = () => {
       </div>
 
       {/* PAGINATION CONTROLS */}
-      {filteredSubjects.length > 0 && (
+      {totalRecords > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
           <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredSubjects.length)} of{" "}
-            {filteredSubjects.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">
@@ -569,115 +605,11 @@ const Subjects = () => {
         handleInputChange={handleInputChange}
         handleFormSubmit={handleFormSubmit}
         strandsList={strandsList}
+        selectedSubject={selectedSubject}
+        proceedToUpdateForm={proceedToUpdateForm}
+        executeDelete={executeDelete}
+        selectedIdsCount={selectedIds.length}
       />
-
-      {/* UPDATE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="updateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-pencil-square"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Edit Subject Details</h4>
-              <p className="text-muted mb-0">
-                You are about to edit the information for{" "}
-                <b>{selectedSubject?.code}</b>. Do you want to proceed to the
-                update form?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={proceedToUpdateForm}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* DELETE CONFIRMATION MODAL (Single & Bulk) [cite: 245] */}
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Deletion</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move{" "}
-                {selectedSubject ? (
-                  <b>{selectedSubject.code}</b>
-                ) : (
-                  <b>{selectedIds.length} selected subjects</b>
-                )}{" "}
-                to the Recycle Bin? This action can be undone later.
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
