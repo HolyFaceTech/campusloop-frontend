@@ -14,7 +14,7 @@ const darkToast = {
 const AdminClassrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState("Loading Classrooms...");
+  const [loadingText, setLoadingText] = useState("Fetching Classrooms...");
 
   // Selection, Search, and Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,14 +22,30 @@ const AdminClassrooms = () => {
   const [filterGradeLevel, setFilterGradeLevel] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // PAGINATION STATES
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const navigate = useNavigate();
 
+  // Reset to page 1 kapag nagbago ang mga filters
   useEffect(() => {
-    fetchClassrooms();
-  }, []);
+    setCurrentPage(1);
+  }, [searchQuery, sortOrder, filterGradeLevel, entriesPerPage]);
 
-  const fetchClassrooms = async () => {
-    setIsLoading(true);
+  // DEBOUNCE EFFECT
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchClassrooms(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, sortOrder, filterGradeLevel, currentPage, entriesPerPage]);
+
+  const fetchClassrooms = async (showSpinner = true) => {
+    if (showSpinner) setIsLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/classrooms`,
@@ -37,12 +53,27 @@ const AdminClassrooms = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            filterGradeLevel: filterGradeLevel,
+            sortOrder: sortOrder,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setClassrooms(res.data);
-      setSelectedIds([]);
+      // Galing na sa server ang naka-paginate na data
+      setClassrooms(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
+      setSelectedIds([]); // Clear selection when data changes
     } catch (error) {
       console.error("Error fetching classrooms", error);
+      sileo.error({
+        title: "Error",
+        description: "Failed to fetch classrooms.",
+        ...darkToast,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +86,7 @@ const AdminClassrooms = () => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(filteredClassrooms.map((c) => c.id));
+      setSelectedIds(classrooms.map((c) => c.id));
     } else {
       setSelectedIds([]);
     }
@@ -84,6 +115,7 @@ const AdminClassrooms = () => {
         description: "Classrooms moved to recycle bin.",
         ...darkToast,
       });
+      setCurrentPage(1);
       fetchClassrooms();
     } catch (error) {
       sileo.error({
@@ -131,31 +163,6 @@ const AdminClassrooms = () => {
     }
   };
 
-  // KUKUNIN LAHAT NG UNIQUE GRADE LEVELS MULA SA CLASSROOMS PARA SA DROPDOWN
-  const uniqueGradeLevels = [...new Set(classrooms.map((c) => c.grade_level))]
-    .filter(Boolean)
-    .sort((a, b) => a - b);
-
-  // FILTER & SORT LOGIC
-  let filteredClassrooms = classrooms.filter((c) => {
-    const matchesSearch =
-      `${c.subject?.description} ${c.section} ${c.creator?.first_name} ${c.creator?.last_name} ${c.code}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-
-    const matchesGradeLevel =
-      filterGradeLevel === "all" ||
-      String(c.grade_level) === String(filterGradeLevel);
-
-    return matchesSearch && matchesGradeLevel;
-  });
-
-  filteredClassrooms.sort((a, b) => {
-    const dateA = new Date(a.created_at).getTime();
-    const dateB = new Date(b.created_at).getTime();
-    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-  });
-
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -178,8 +185,8 @@ const AdminClassrooms = () => {
 
       {/* UNIFIED TOP CONTROL BAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SELECT ALL CHECKBOX WITH PRIMARY PILL COUNTER */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
@@ -188,8 +195,8 @@ const AdminClassrooms = () => {
                   className="form-check-input mt-0 shadow-sm"
                   id="selectAll"
                   checked={
-                    selectedIds.length === filteredClassrooms.length &&
-                    filteredClassrooms.length > 0
+                    selectedIds.length === classrooms.length &&
+                    classrooms.length > 0
                   }
                   onChange={handleSelectAll}
                   style={{
@@ -204,7 +211,7 @@ const AdminClassrooms = () => {
                   style={{ cursor: "pointer" }}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-pill ms-2">
+                  <span className="badge bg-primary rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>
@@ -214,7 +221,7 @@ const AdminClassrooms = () => {
             {/* EXPANDED SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "100px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -231,7 +238,7 @@ const AdminClassrooms = () => {
             {/* GRADE LEVEL FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "250px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-bar-chart-steps"></i>
@@ -250,7 +257,7 @@ const AdminClassrooms = () => {
             {/* SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "250px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -281,7 +288,7 @@ const AdminClassrooms = () => {
 
       {/* GRID CARDS */}
       <div className="row g-4">
-        {filteredClassrooms.map((item) => (
+        {classrooms.map((item) => (
           <div className="col-12 col-md-6 col-xl-4" key={item.id}>
             <div
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
@@ -305,6 +312,7 @@ const AdminClassrooms = () => {
                     backgroundColor: "rgba(255,255,255,0.1)",
                     top: "-20px",
                     right: "-20px",
+                    pointerEvents: "none",
                   }}
                 ></div>
                 <div
@@ -315,20 +323,21 @@ const AdminClassrooms = () => {
                     backgroundColor: "rgba(255,255,255,0.05)",
                     bottom: "-10px",
                     left: "20%",
+                    pointerEvents: "none",
                   }}
                 ></div>
 
                 {/* YUNG DATING DROPDOWN MENU PINALITAN NATIN NG CHECKBOX */}
                 <div
-                  className="dropdown position-absolute top-0 end-0 mt-3 me-3"
+                  className="dropdown position-absolute top-0 end-0 mt-3 me-3 z-3"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div
                     className="d-flex justify-content-center align-items-center rounded-circle"
                     style={{
                       backgroundColor: "rgba(0,0,0,0.2)",
-                      width: "32px",
-                      height: "32px",
+                      width: "35px",
+                      height: "35px",
                     }}
                   >
                     <input
@@ -336,7 +345,11 @@ const AdminClassrooms = () => {
                       className="form-check-input m-0 shadow-none border-0"
                       checked={selectedIds.includes(item.id)}
                       onChange={(e) => handleSelect(e, item.id)}
-                      style={{ cursor: "pointer" }}
+                      style={{
+                        cursor: "pointer",
+                        width: "1.1rem",
+                        height: "1.1rem",
+                      }}
                     />
                   </div>
                 </div>
@@ -462,7 +475,8 @@ const AdminClassrooms = () => {
                     onClick={() => enterClassroom(item.id)}
                     className="btn btn-campusloop rounded-3 fw-bold px-4 shadow-sm"
                   >
-                    Enter <i className="bi bi-arrow-right ms-1"></i>
+                    <span className="d-none d-sm-inline">Enter</span>{" "}
+                    <i className="bi bi-arrow-right ms-1"></i>
                   </button>
                 </div>
               </div>
@@ -471,21 +485,75 @@ const AdminClassrooms = () => {
         ))}
 
         {/* EMPTY STATE */}
-        {filteredClassrooms.length === 0 && !isLoading && (
+        {classrooms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-easel text-muted d-block mb-3"
+                className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
               <h5 className="fw-bold text-dark">No Classrooms Found.</h5>
               <p className="text-muted small mb-0">
-                No active classes available matching your query.
+                {searchQuery
+                  ? "No matching classrooms for your search."
+                  : "No active classes available."}
               </p>
             </div>
           </div>
         )}
       </div>
+
+      {/* PAGINATION CONTROLS */}
+      {totalRecords > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-4 mb-4">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+              {[...Array(totalPages)].map((_, i) => (
+                <li
+                  key={i}
+                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link page-link-summer"
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
 
       {/* ADMIN CLASSROOM MODAL */}
       <AdminClassroomsModal
