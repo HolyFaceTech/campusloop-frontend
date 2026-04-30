@@ -76,8 +76,7 @@ const AdminStreamModals = ({
               </div>
               <h4 className="fw-bold text-dark mt-2">Delete Comment</h4>
               <p className="text-muted mb-4">
-                Are you sure you want to delete this comment/reply? This action
-                cannot be undone.
+                Are you sure you want to delete this comment/reply?
               </p>
               <div className="d-flex justify-content-center gap-2">
                 <button

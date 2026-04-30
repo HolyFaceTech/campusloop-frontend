@@ -6,13 +6,32 @@ const AdminRespondentsModal = ({ selectedItem }) => {
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
 
+  // SEARCH AT PAGINATION STATES
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  // Kapag nagpalit ng Modal (Item), I-reset ang page sa 1
   useEffect(() => {
     if (selectedItem && selectedItem.type !== "material") {
+      setCurrentPage(1);
       fetchRespondents();
     }
   }, [selectedItem]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT AT PAGINATION TRACKER
+  useEffect(() => {
+    if (selectedItem && selectedItem.type !== "material") {
+      const delayDebounceFn = setTimeout(() => {
+        fetchRespondents();
+      }, 500); // 500ms bago mag-fetch
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchTerm, currentPage, entriesPerPage]);
 
   const fetchRespondents = async () => {
     setIsLoading(true);
@@ -23,28 +42,20 @@ const AdminRespondentsModal = ({ selectedItem }) => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchTerm,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
 
-      const data = res.data;
-      if (Array.isArray(data)) {
-        setRespondents(data);
-      } else if (data && typeof data === "object") {
-        setRespondents(Object.values(data));
-      } else {
-        setRespondents([]);
-      }
+      // Sasaluhin natin yung binato ng backend na nakapaloob sa 'data' array
+      setRespondents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Failed to fetch respondents", error);
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        alert(
-          "MAY ERROR SA LARAVEL BACKEND: \n\n" + error.response.data.message,
-        );
-      }
       setRespondents([]);
     } finally {
       setIsLoading(false);
@@ -111,53 +122,37 @@ const AdminRespondentsModal = ({ selectedItem }) => {
         icon: "bi-file-earmark-pdf-fill",
         color: "#dc3545",
         bg: "#f8d7da",
-        label: "PDF",
       };
     if (["doc", "docx"].includes(ext))
       return {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
-        label: "WORD",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
         icon: "bi-file-earmark-excel-fill",
         color: "#198754",
         bg: "#d1e7dd",
-        label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
         bg: "#e0cffc",
-        label: "IMAGE",
       };
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
         color: "#fd7e14",
         bg: "#ffe5d0",
-        label: "VIDEO",
       };
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
       bg: "#e2e3e5",
-      label: "FILE",
     };
   };
-
-  const safeRespondents = Array.isArray(respondents) ? respondents : [];
-
-  const filteredRespondents = safeRespondents.filter((s) => {
-    if (!s) return false;
-    const fullName = `${s.first_name || ""} ${s.last_name || ""}`.toLowerCase();
-    const lrn = s.lrn ? String(s.lrn).toLowerCase() : "";
-    const search = (searchTerm || "").toLowerCase();
-    return fullName.includes(search) || lrn.includes(search);
-  });
 
   return (
     <>
@@ -191,74 +186,109 @@ const AdminRespondentsModal = ({ selectedItem }) => {
               ></button>
             </div>
 
-            <div className="p-3 bg-white border-bottom d-flex justify-content-end align-items-center">
-              <div className="input-group" style={{ width: "350px" }}>
-                <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                  placeholder="Search Name or LRN..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+            <div className="modal-body p-4 bg-light">
+              <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+                <div className="card-body p-0">
+                  <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+                    <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+                      Show
+                      <select
+                        className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                        style={{ width: "70px" }}
+                        value={entriesPerPage}
+                        onChange={(e) => {
+                          setEntriesPerPage(Number(e.target.value));
+                          setCurrentPage(1); // Reset page on change
+                        }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                      entries
+                    </div>
 
-            <div className="modal-body p-3 bg-light">
-              <div className="border rounded-3 overflow-hidden shadow-sm">
+                    {/* RIGHT SIDE: Search Bar */}
+                    <div
+                      className="input-group"
+                      style={{ maxWidth: "350px", minWidth: "300px" }}
+                    >
+                      <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                        placeholder="Search Name or LRN..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* TABLE BODY */}
+              <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
-                  className="table-responsive custom-scrollbar bg-white"
+                  className="table-responsive custom-scrollbar"
                   style={{ maxHeight: "400px" }}
                 >
-                  <table className="table table-hover align-middle mb-0 custom-table">
-                    <thead className="bg-light sticky-top">
+                  <table
+                    className="table table-summer align-middle mb-0"
+                    style={{ minWidth: "900px" }}
+                  >
+                    <thead className="sticky-top bg-white z-1 shadow-sm">
                       <tr>
-                        <th className="small fw-bold text-muted px-4 py-3 text-uppercase">
+                        <th style={{ width: "60px" }} className="ps-4">
                           #
                         </th>
-                        <th className="small fw-bold text-muted py-3 text-uppercase">
-                          Student Details
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Status
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Date & Time
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Grade
-                        </th>
-                        <th className="small fw-bold text-muted py-3 pe-4 text-center text-uppercase">
-                          Action
-                        </th>
+                        <th>Student Details</th>
+                        <th className="text-center">Status</th>
+                        <th className="text-center">Date & Time</th>
+                        <th className="text-center">Grade</th>
+                        <th className="text-center pe-4">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="border-top-0">
+                    <tbody>
                       {isLoading ? (
                         <tr>
                           <td
                             colSpan="6"
-                            className="text-center py-5 text-muted"
+                            className="text-center py-5 text-muted bg-white"
                           >
+                            <div
+                              className="spinner-border spinner-border-sm text-primary me-2"
+                              role="status"
+                            ></div>
                             Loading respondents...
                           </td>
                         </tr>
-                      ) : filteredRespondents.length === 0 ? (
+                      ) : respondents.length === 0 ? (
                         <tr>
                           <td
                             colSpan="6"
-                            className="text-center py-5 text-muted"
+                            className="p-4 bg-light border-bottom-0"
                           >
-                            <i className="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
-                            <span className="fw-medium">
-                              No matching records found.
-                            </span>
+                            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                              <i
+                                className="bi bi-inbox text-muted d-block mb-3"
+                                style={{ fontSize: "3rem", opacity: 0.5 }}
+                              ></i>
+                              <h5 className="fw-bold text-dark">
+                                No records found.
+                              </h5>
+                              <p className="text-muted small mb-0">
+                                {searchTerm
+                                  ? "No matching students for your search."
+                                  : "No respondents for this classwork yet."}
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       ) : (
-                        filteredRespondents.map((student, index) => {
+                        respondents.map((student, index) => {
                           const sub = student.submission;
                           const hasSubmission =
                             sub !== null && sub !== undefined;
@@ -266,24 +296,41 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                             hasSubmission &&
                             sub.grade !== null &&
                             sub.grade !== undefined;
-                          // LOGIC PARA SA RETURNED: Kapag walang grade pero may teacher_feedback o naka-tag na returned
                           const isReturned =
                             hasSubmission &&
                             !isGraded &&
                             (sub.teacher_feedback || sub.status === "returned");
+                          const hasDeadline = selectedItem?.deadline;
+                          const deadlineTime = hasDeadline
+                            ? new Date(selectedItem.deadline).getTime()
+                            : null;
+                          const submitTime =
+                            hasSubmission && sub.submitted_at
+                              ? new Date(sub.submitted_at).getTime()
+                              : null;
+                          const currentTime = new Date().getTime();
+
+                          const isDoneLate =
+                            hasDeadline &&
+                            hasSubmission &&
+                            submitTime > deadlineTime;
+                          const isMissing =
+                            hasDeadline &&
+                            !hasSubmission &&
+                            currentTime > deadlineTime;
 
                           return (
                             <tr key={student.id || index}>
-                              <td className="px-4 text-muted fw-medium text-center">
-                                {index + 1}
+                              <td className="ps-4 fw-bold text-muted">
+                                {(currentPage - 1) * entriesPerPage + index + 1}
                               </td>
                               <td>
-                                <div className="d-flex align-items-center gap-2">
+                                <div className="d-flex align-items-center py-1">
                                   <div
-                                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0"
+                                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
                                     style={{
-                                      width: "38px",
-                                      height: "38px",
+                                      width: "40px",
+                                      height: "40px",
                                       backgroundColor: "var(--secondary-color)",
                                     }}
                                   >
@@ -291,52 +338,60 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                       ? student.first_name.charAt(0)
                                       : "U"}
                                   </div>
-                                  <div>
-                                    <span
-                                      className="d-block fw-bold text-dark lh-sm"
-                                      style={{ fontSize: "0.9rem" }}
-                                    >
-                                      {student.last_name || ""},{" "}
-                                      {student.first_name || "Unknown"}
-                                    </span>
-                                    <span
-                                      className="text-muted"
-                                      style={{ fontSize: "0.75rem" }}
+                                  <div className="overflow-hidden">
+                                    <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                      <span
+                                        className="fw-bold text-dark text-truncate"
+                                        style={{ maxWidth: "250px" }}
+                                      >
+                                        {student.last_name || ""},{" "}
+                                        {student.first_name || "Unknown"}
+                                      </span>
+                                    </div>
+                                    <p
+                                      className="mb-0 text-muted text-truncate"
+                                      style={{
+                                        fontSize: "0.80rem",
+                                        maxWidth: "250px",
+                                      }}
                                     >
                                       LRN: {student.lrn || "N/A"}
-                                    </span>
+                                    </p>
                                   </div>
                                 </div>
                               </td>
                               <td className="text-center">
-                                {/* NA-UPDATE NA LOGIC NG STATUS BADGE */}
                                 {isGraded ? (
-                                  <span className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1">
+                                  <span className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1 shadow-sm">
                                     Graded
                                   </span>
                                 ) : isReturned ? (
-                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1">
+                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1 shadow-sm">
                                     Returned
                                   </span>
+                                ) : isDoneLate ? (
+                                  <span className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1">
+                                    Done Late
+                                  </span>
                                 ) : hasSubmission ? (
-                                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-3 px-2 py-1">
+                                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-3 px-2 py-1 shadow-sm">
                                     Turned In
                                   </span>
+                                ) : isMissing ? (
+                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1 shadow-sm">
+                                    Missing
+                                  </span>
                                 ) : (
-                                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-3 px-2 py-1">
+                                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-3 px-2 py-1 shadow-sm">
                                     Pending
                                   </span>
                                 )}
                               </td>
-                              <td
-                                className="text-muted text-center"
-                                style={{
-                                  fontSize: "0.80rem",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                {sub?.submitted_at
-                                  ? new Date(sub.submitted_at).toLocaleString(
+                              <td className="text-muted text-center small">
+                                {sub?.submitted_at ? (
+                                  <>
+                                    <i className="bi bi-clock me-1"></i>{" "}
+                                    {new Date(sub.submitted_at).toLocaleString(
                                       [],
                                       {
                                         month: "short",
@@ -344,8 +399,11 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                         hour: "2-digit",
                                         minute: "2-digit",
                                       },
-                                    )
-                                  : "-"}
+                                    )}
+                                  </>
+                                ) : (
+                                  "-"
+                                )}
                               </td>
                               <td className="text-center fw-bolder fs-6">
                                 {isGraded ? (
@@ -356,11 +414,11 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                   <span className="text-muted small">-</span>
                                 )}
                               </td>
-                              <td className="pe-4 text-center">
+                              <td className="text-center pe-4">
                                 {hasSubmission ? (
                                   <button
-                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center transition-all hover-primary"
-                                    style={{ width: "32px", height: "32px" }}
+                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle"
+                                    style={{ width: "35px", height: "35px" }}
                                     onClick={() => openViewSubmission(student)}
                                     title="View Submission"
                                   >
@@ -370,7 +428,13 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                     ></i>
                                   </button>
                                 ) : (
-                                  <i className="bi bi-lock-fill text-muted opacity-50"></i>
+                                  <button
+                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle opacity-50"
+                                    style={{ width: "35px", height: "35px" }}
+                                    disabled
+                                  >
+                                    <i className="bi bi-lock-fill text-muted"></i>
+                                  </button>
                                 )}
                               </td>
                             </tr>
@@ -381,6 +445,60 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                   </table>
                 </div>
               </div>
+
+              {/* PAGINATION METADATA FOOTER */}
+              {totalRecords > 0 && (
+                <div className="d-flex justify-content-between align-items-center mt-3 px-2">
+                  <p className="text-muted small mb-0">
+                    Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+                    {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+                    {totalRecords} entries
+                  </p>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0">
+                      <li
+                        className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                        >
+                          Previous
+                        </button>
+                      </li>
+                      {[...Array(totalPages)].map((_, i) => (
+                        <li
+                          key={i}
+                          className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                        >
+                          <button
+                            className="page-link page-link-summer"
+                            onClick={() => setCurrentPage(i + 1)}
+                          >
+                            {i + 1}
+                          </button>
+                        </li>
+                      ))}
+                      <li
+                        className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages),
+                            )
+                          }
+                        >
+                          Next
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
             </div>
 
             <div className="modal-footer border-top bg-light p-3 d-flex justify-content-end">
@@ -424,7 +542,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
             </div>
 
             <div className="modal-body p-4 bg-white custom-scrollbar">
-              <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded-4 border border-light-subtle shadow-sm">
+              <div className="d-flex justify-content-between align-items-center mb-4 p-3">
                 <div className="d-flex align-items-center gap-3">
                   <div
                     className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold fs-5 shadow-sm"
@@ -450,17 +568,18 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
                 <div className="text-end">
                   <span
-                    className="d-block text-muted small fw-bold text-uppercase mb-1"
+                    className="d-block text-muted small fw-bold text-uppercase mb-2"
                     style={{ letterSpacing: "0.5px", fontSize: "0.65rem" }}
                   >
-                    Date Submitted
+                    Date Submitted :
                   </span>
-                  <span className="badge bg-white text-dark border shadow-sm px-3 py-2 fw-medium">
-                    <i className="bi bi-calendar-check me-1 text-primary"></i>
+                  <span className="text-dark px-3 py-2 fw-medium small">
+                    <i className="bi bi-calendar-check me-2 text-primary"></i>
                     {selectedStudent?.submission?.submitted_at
                       ? new Date(
                           selectedStudent.submission.submitted_at,
                         ).toLocaleString([], {
+                          year: "numeric",
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
@@ -471,7 +590,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               </div>
 
-              <h6 className="fw-bold text-dark mb-3">
+              <h6 className="fw-bold small text-dark mb-3">
                 <i className="bi bi-paperclip me-2 text-muted"></i>Attached
                 Files
               </h6>
@@ -508,8 +627,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                               className="mb-0 text-muted"
                               style={{ fontSize: "0.75rem" }}
                             >
-                              {formatBytes(file.file_size)} •{" "}
-                              {style.label || "FILE"}
+                              {formatBytes(file.file_size)} {style.label}
                             </p>
                           </div>
                         </div>
@@ -528,7 +646,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               ) : (
                 <div className="text-center p-4 bg-light rounded-4 border border-light-subtle mb-4">
-                  <p className="text-muted small mb-0 fw-medium fst-italic">
+                  <p className="text-muted small mb-0 fw-medium">
                     No files attached to this submission.
                   </p>
                 </div>
@@ -543,8 +661,8 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                     border: "1px solid #f5c2c7",
                   }}
                 >
-                  <h6 className="fw-bold text-danger mb-2">
-                    <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
+                  <h6 className="fw-bold text-danger small mb-3">
+                    <i className="bi bi-exclamation-triangle me-2"></i>{" "}
                     Teacher's Feedback
                   </h6>
                   <p
@@ -563,7 +681,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                   border: "1px solid rgba(98, 111, 71, 0.2)",
                 }}
               >
-                {/* NA-UPDATE NA GRADE LAYOUT (LEFT AND RIGHT) */}
                 <div className="d-flex justify-content-between align-items-center w-100">
                   <label className="form-label fw-bold text-dark mb-0 fs-6">
                     <i className="bi bi-award-fill text-warning me-2"></i>
