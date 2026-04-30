@@ -18,7 +18,7 @@ const AdminTabStream = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Stream...");
 
-  // FILTER & SEARCH STATES
+  // SEARCH AT FILTERS (Nandito na ulit ang sortOrder!)
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
@@ -27,13 +27,19 @@ const AdminTabStream = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [commentToDelete, setCommentToDelete] = useState(null);
 
+  // SERVER-SIDE DEBOUNCE EFFECT (Para sa Search Lang)
   useEffect(() => {
     if (classroom && classroom.id) {
-      fetchClassworks();
+      const delayDebounceFn = setTimeout(() => {
+        fetchClassworks();
+      }, 500); // 500ms delay bago pumutok ang API request
+
+      return () => clearTimeout(delayDebounceFn);
     }
-  }, [classroom]);
+  }, [classroom?.id, searchQuery]);
 
   const fetchClassworks = async () => {
+    setIsLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/classrooms/${classroom.id}/classworks`,
@@ -41,43 +47,33 @@ const AdminTabStream = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+          },
         },
       );
 
-      // BULLETPROOF STATE SETTER: Sinisiguro natin na array ang papasok sa state para hindi mag-undefined
+      // Sinasalo natin ang data mula sa backend
       if (Array.isArray(res.data)) {
         setClassworks(res.data);
-      } else if (res.data && Array.isArray(res.data.data)) {
-        setClassworks(res.data.data);
       } else {
         setClassworks([]);
       }
       setSelectedIds([]);
     } catch (error) {
       console.error(error);
-      setClassworks([]); // Fallback kapag nag-error
+      setClassworks([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // EXTREME SAFETY CHECK: Pinipilit natin na maging array ito bago i-filter para iwas crash!
-  const safeClassworks = Array.isArray(classworks) ? classworks : [];
-
-  // FILTER AND SORT LOGIC
-  let filteredClassworks = safeClassworks.filter((cw) => {
-    if (!cw) return false; // Safety catch kung may empty object
-    const title = cw.title || "";
-    const instruction = cw.instruction || "";
-    const description = cw.description || "";
-    const searchString = `${title} ${instruction} ${description}`.toLowerCase();
-
-    const matchesSearch = searchString.includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || cw.type === filterType;
-
-    return matchesSearch && matchesType;
+  // CLIENT-SIDE FILTERING AT SORTING
+  let filteredClassworks = classworks.filter((cw) => {
+    return filterType === "all" || cw.type === filterType;
   });
 
+  // IBINALIK ANG SORTING LOGIC
   filteredClassworks.sort((a, b) => {
     const dateA = new Date(a?.created_at || 0).getTime();
     const dateB = new Date(b?.created_at || 0).getTime();
@@ -122,7 +118,7 @@ const AdminTabStream = () => {
         description: "Classworks moved to recycle bin.",
         ...darkToast,
       });
-      fetchClassworks();
+      fetchClassworks(); // Re-fetch para ma-refresh ang list
     } catch (error) {
       sileo.error({
         title: "Failed",
@@ -180,7 +176,6 @@ const AdminTabStream = () => {
     }, 100);
   };
 
-  // UI HELPERS
   const getBadgeStyle = (type) => {
     switch (type) {
       case "assignment":
@@ -264,7 +259,7 @@ const AdminTabStream = () => {
         bg: "#d1e7dd",
         label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -298,14 +293,33 @@ const AdminTabStream = () => {
     }
   };
 
+  // Sanitizes link to prevent XSS Attacks
+  const getSafeLink = (url) => {
+    if (!url) return "#";
+    try {
+      const parsedUrl = new URL(url);
+      if (["http:", "https:"].includes(parsedUrl.protocol)) {
+        return parsedUrl.href;
+      }
+    } catch (e) {
+      if (
+        !url.startsWith("http") &&
+        !url.toLowerCase().startsWith("javascript:")
+      ) {
+        return `https://${url}`;
+      }
+    }
+    return "#";
+  };
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       {/* UNIFIED TOP CONTROL BAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SELECT ALL CHECKBOX */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
@@ -331,7 +345,7 @@ const AdminTabStream = () => {
                 >
                   Select All
                   <span
-                    className="badge bg-primary rounded-pill ms-2"
+                    className="badge bg-primary rounded-3 ms-2"
                     style={{ fontSize: "0.75rem" }}
                   >
                     {selectedIds.length}
@@ -360,7 +374,7 @@ const AdminTabStream = () => {
             {/* CLASSWORK TYPE FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "220px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
@@ -379,10 +393,10 @@ const AdminTabStream = () => {
               </select>
             </div>
 
-            {/* SORT FILTER */}
+            {/* IBINALIK NATIN ANG SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "220px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -544,12 +558,14 @@ const AdminTabStream = () => {
             <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
               <div className="card-body p-5 text-center">
                 <i
-                  className="bi bi-inbox text-muted d-block mb-3 opacity-50"
-                  style={{ fontSize: "4rem" }}
+                  className="bi bi-inbox text-muted d-block mb-3"
+                  style={{ fontSize: "3rem", opacity: 0.5 }}
                 ></i>
                 <h5 className="fw-bold text-dark">No classworks found.</h5>
                 <p className="text-muted small mb-0">
-                  Try adjusting your search or filters.
+                  {searchQuery || filterType !== "all"
+                    ? "Try adjusting your search or filters."
+                    : "There are no classworks posted in this classroom yet."}
                 </p>
               </div>
             </div>
@@ -602,6 +618,7 @@ const AdminTabStream = () => {
                               <i className="bi bi-calendar-plus me-1"></i>{" "}
                               Posted:{" "}
                               {new Date(cw.created_at).toLocaleString([], {
+                                year: "numeric",
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",
@@ -616,6 +633,7 @@ const AdminTabStream = () => {
                                 <span className="text-danger fw-bold">
                                   <i className="bi bi-clock me-1"></i> Due:{" "}
                                   {new Date(cw.deadline).toLocaleString([], {
+                                    year: "numeric",
                                     month: "short",
                                     day: "numeric",
                                     hour: "2-digit",
@@ -689,14 +707,44 @@ const AdminTabStream = () => {
                               </p>
                             </div>
                             <a
-                              href={cw.link}
-                              target="_blank"
+                              href={getSafeLink(cw.link)}
+                              target={
+                                getSafeLink(cw.link) === "#"
+                                  ? "_self"
+                                  : "_blank"
+                              }
                               rel="noreferrer"
-                              className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
-                              style={{ width: "35px", height: "35px" }}
-                              title="Visit Link"
+                              className={`btn btn-sm ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0 ${
+                                getSafeLink(cw.link) === "#"
+                                  ? "btn-secondary opacity-50"
+                                  : "btn-campusloop"
+                              }`}
+                              style={{
+                                width: "35px",
+                                height: "35px",
+                                pointerEvents:
+                                  getSafeLink(cw.link) === "#"
+                                    ? "none"
+                                    : "auto",
+                              }}
+                              title={
+                                getSafeLink(cw.link) === "#"
+                                  ? "Unsafe Link Blocked"
+                                  : "Visit Link"
+                              }
+                              onClick={(e) => {
+                                if (getSafeLink(cw.link) === "#") {
+                                  e.preventDefault(); // Pipigilang mag-click kung unsafe
+                                }
+                              }}
                             >
-                              <i className="bi bi-box-arrow-up-right"></i>
+                              <i
+                                className={
+                                  getSafeLink(cw.link) === "#"
+                                    ? "bi bi-shield-lock-fill"
+                                    : "bi bi-box-arrow-up-right"
+                                }
+                              ></i>
                             </a>
                           </div>
                         )}
