@@ -70,7 +70,7 @@ const AdminStreamModals = ({
                 style={{ width: "80px", height: "80px" }}
               >
                 <i
-                  className="bi bi-chat-right-quote-fill text-danger"
+                  className="bi bi-exclamation-triangle-fill text-danger"
                   style={{ fontSize: "2.5rem" }}
                 ></i>
               </div>

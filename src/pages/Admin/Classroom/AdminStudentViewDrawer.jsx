@@ -63,7 +63,7 @@ const AdminStudentViewDrawer = ({
               </div>
               <div className="col-md-6">
                 <label className="form-label small fw-bold text-dark">
-                  Last Name
+                  <i className="bi bi-person me-1 text-muted"></i> Last Name
                 </label>
                 <input
                   type="text"
@@ -168,11 +168,8 @@ const AdminStudentViewDrawer = ({
                 </h6>
               </div>
               <div className="col-md-6">
-                <label
-                  className="form-label small fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="bi bi-123 me-1"></i> LRN
+                <label className="form-label small fw-bold">
+                  <i className="bi bi-123 me-1 text-muted"></i> LRN
                 </label>
                 <input
                   type="text"
@@ -182,11 +179,8 @@ const AdminStudentViewDrawer = ({
                 />
               </div>
               <div className="col-md-6">
-                <label
-                  className="form-label small fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="bi bi-journal-text me-1"></i> Strand
+                <label className="form-label small fw-bold">
+                  <i className="bi bi-journal-text me-1 text-muted"></i> Strand
                 </label>
                 <input
                   type="text"
@@ -225,11 +219,11 @@ const AdminStudentViewDrawer = ({
           <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div className="modal-body text-center p-4">
               <div
-                className={`rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 ${actionType === "approve" ? "bg-success" : "bg-danger"} bg-opacity-10`}
+                className={`rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3 ${actionType === "approve" ? "bg-success" : actionType === "decline" ? "bg-warning" : "bg-danger"} bg-opacity-10`}
                 style={{ width: "80px", height: "80px" }}
               >
                 <i
-                  className={`bi ${actionType === "approve" ? "bi-person-check-fill text-success" : actionType === "decline" ? "bi-person-x-fill text-warning" : "bi-trash3-fill text-danger"}`}
+                  className={`bi ${actionType === "approve" ? "bi-person-check-fill text-success" : actionType === "decline" ? "bi-person-x-fill text-warning" : "bi-exclamation-triangle-fill text-danger"}`}
                   style={{ fontSize: "2.5rem" }}
                 ></i>
               </div>

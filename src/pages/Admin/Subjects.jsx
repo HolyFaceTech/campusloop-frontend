@@ -410,7 +410,7 @@ const Subjects = () => {
               disabled={selectedIds.length === 0}
               onClick={() => confirmDelete(null)}
             >
-              <i className="bi bi-trash3-fill"></i> Delete{" "}
+              <i className="bi bi-trash-fill"></i> Delete{" "}
               {selectedIds.length > 0 && `(${selectedIds.length})`}
             </button>
           </div>

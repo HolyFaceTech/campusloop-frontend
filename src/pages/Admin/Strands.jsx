@@ -373,7 +373,7 @@ const Strands = () => {
                         className="dropdown-item py-2 fw-bold text-danger"
                         onClick={() => confirmDelete(strand)}
                       >
-                        <i className="bi bi-trash3-fill me-2"></i> Delete
+                        <i className="bi bi-trash-fill me-2"></i> Delete
                       </button>
                     </li>
                   </ul>
