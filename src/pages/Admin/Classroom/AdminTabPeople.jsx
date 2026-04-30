@@ -22,23 +22,39 @@ const AdminTabPeople = () => {
   const [filterGender, setFilterGender] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // PAGINATION STATES
+  // SERVER-SIDE PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [actionType, setActionType] = useState(""); // 'approve', 'decline', 'remove'
 
-  useEffect(() => {
-    if (classroom) fetchStudents();
-  }, [classroom]);
-
-  // RESET PAGE TO 1 PAG MAY GINAGALAW NA FILTER O ENTRIES PER PAGE
+  // RESET PAGE TO 1 KAPAG MAY NAGBAGONG FILTER O SEARCH
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterGender, filterStatus, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT
+  useEffect(() => {
+    if (classroom && classroom.id) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchStudents();
+      }, 500); // 500ms delay para sa debounce
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [
+    classroom?.id,
+    searchQuery,
+    filterGender,
+    filterStatus,
+    currentPage,
+    entriesPerPage,
+  ]);
 
   const fetchStudents = async () => {
     setIsLoading(true);
@@ -50,12 +66,24 @@ const AdminTabPeople = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            gender: filterGender,
+            status: filterStatus,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setStudents(res.data);
-      setSelectedIds([]); // Reset selection
+
+      // Saluhin ang array mula sa backend pagination object
+      setStudents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
+      setSelectedIds([]); // Reset selection tuwing naglo-load ng bagong page
     } catch (error) {
       console.error("Error fetching students", error);
+      setStudents([]);
     } finally {
       setIsLoading(false);
     }
@@ -122,28 +150,8 @@ const AdminTabPeople = () => {
     }
   };
 
-  // LOGIC PARA SA FILTERS
-  const filteredStudents = students.filter((s) => {
-    const matchesSearch = `${s.first_name} ${s.last_name} ${s.email} ${s.lrn}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesGender = filterGender === "all" || s.gender === filterGender;
-    const matchesStatus =
-      filterStatus === "all" || s.pivot?.status === filterStatus;
-    return matchesSearch && matchesGender && matchesStatus;
-  });
-
-  // LOGIC PARA SA PAGINATION
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentItems = filteredStudents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
-
   const handleSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(currentItems.map((s) => s.id));
+    if (e.target.checked) setSelectedIds(students.map((s) => s.id));
     else setSelectedIds([]);
   };
 
@@ -160,8 +168,8 @@ const AdminTabPeople = () => {
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* ENTRIES PER PAGE DROPDOWN */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
@@ -248,7 +256,7 @@ const AdminTabPeople = () => {
                 disabled={!hasApprovedSelected}
                 onClick={() => confirmAction("remove")}
               >
-                <i className="bi bi-trash3-fill"></i> Remove
+                <i className="bi bi-trash-fill"></i> Remove
               </button>
             </div>
           </div>
@@ -269,8 +277,8 @@ const AdminTabPeople = () => {
                     className="form-check-input"
                     onChange={handleSelectAll}
                     checked={
-                      selectedIds.length === currentItems.length &&
-                      currentItems.length > 0
+                      selectedIds.length === students.length &&
+                      students.length > 0
                     }
                   />
                 </th>
@@ -284,150 +292,164 @@ const AdminTabPeople = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((student, index) => (
-                <tr
-                  key={student.id}
-                  className={
-                    selectedIds.includes(student.id) ? "table-active-row" : ""
-                  }
-                >
-                  <td className="ps-4">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedIds.includes(student.id)}
-                      onChange={(e) => {
-                        const checked = e.target.checked;
-                        setSelectedIds((prev) =>
-                          checked
-                            ? [...prev, student.id]
-                            : prev.filter((id) => id !== student.id),
-                        );
-                      }}
-                    />
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan="8"
+                    className="text-center py-5 text-muted bg-white"
+                  >
+                    <div
+                      className="spinner-border spinner-border-sm text-primary me-2"
+                      role="status"
+                    ></div>
+                    Loading students...
                   </td>
-                  <td className="fw-bold text-muted">
-                    {indexOfFirstItem + index + 1}
-                  </td>
-
-                  <td>
-                    <div className="d-flex align-items-center py-1">
-                      <div
-                        className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
-                        style={{
-                          width: "40px",
-                          height: "40px",
-                          backgroundColor: "var(--secondary-color)",
-                        }}
-                      >
-                        {student.first_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
-                          <span className="fw-bold text-dark">
-                            {student.first_name} {student.last_name}
-                          </span>
-                        </div>
-                        <p
-                          className="mb-0 text-muted"
-                          style={{ fontSize: "0.80rem" }}
-                        >
-                          {student.email}
-                        </p>
-                      </div>
+                </tr>
+              ) : students.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery ||
+                        filterGender !== "all" ||
+                        filterStatus !== "all"
+                          ? "No matching students for your search or filters."
+                          : "There are no students in this classroom yet."}
+                      </p>
                     </div>
                   </td>
-
-                  <td>
-                    <span
-                      className="fw-bold font-monospace tracking-wide text-dark"
-                      style={{ fontSize: "0.90rem" }}
-                    >
-                      {student.lrn || "N/A"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span
-                      className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
-                      style={{
-                        maxWidth: "150px",
-                        backgroundColor: "var(--accent-color)",
-                      }}
-                    >
-                      {student.strand?.name || "N/A"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="text-muted small fw-bold">
-                      {student.gender || "N/A"}
-                    </span>
-                  </td>
-
-                  <td>
-                    {student.pivot?.status === "approved" ? (
-                      <span
-                        className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1"
-                        style={{ fontSize: "0.65rem" }}
-                      >
-                        <i
-                          className="bi bi-circle-fill me-1"
-                          style={{ fontSize: "0.4rem" }}
-                        ></i>{" "}
-                        Enrolled
-                      </span>
-                    ) : (
-                      <span
-                        className="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1"
-                        style={{ fontSize: "0.65rem" }}
-                      >
-                        <i
-                          className="bi bi-circle-fill me-1"
-                          style={{ fontSize: "0.4rem" }}
-                        ></i>{" "}
-                        Pending
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="text-center pe-4">
-                    <button
-                      onClick={() => openViewDrawer(student)}
-                      className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center"
-                      style={{ width: "35px", height: "35px" }}
-                      title="View Profile"
-                    >
-                      <i
-                        className="bi bi-eye-fill"
-                        style={{
-                          color: "var(--primary-color)",
-                          fontSize: "0.9rem",
+                </tr>
+              ) : (
+                students.map((student, index) => (
+                  <tr
+                    key={student.id}
+                    className={
+                      selectedIds.includes(student.id) ? "table-active-row" : ""
+                    }
+                  >
+                    <td className="ps-4">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={selectedIds.includes(student.id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setSelectedIds((prev) =>
+                            checked
+                              ? [...prev, student.id]
+                              : prev.filter((id) => id !== student.id),
+                          );
                         }}
-                      ></i>
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                      />
+                    </td>
+                    <td className="fw-bold text-muted">
+                      {(currentPage - 1) * entriesPerPage + index + 1}
+                    </td>
 
-              {currentItems.length === 0 && !isLoading && (
-                <tr>
-                  <td colSpan="8" className="text-center py-5 text-muted">
-                    {students.length === 0 ? (
-                      <>
-                        <i className="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
-                        <span className="fw-medium">No students found.</span>
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        <span className="fw-medium">
-                          No matching records found.
+                    <td>
+                      <div className="d-flex align-items-center py-1">
+                        <div
+                          className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            backgroundColor: "var(--secondary-color)",
+                          }}
+                        >
+                          {student.first_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                            <span
+                              className="fw-bold text-dark text-truncate"
+                              style={{ maxWidth: "250px" }}
+                            >
+                              {student.first_name} {student.last_name}
+                            </span>
+                          </div>
+                          <p
+                            className="mb-0 text-muted text-truncate"
+                            style={{ fontSize: "0.80rem", maxWidth: "250px" }}
+                          >
+                            {student.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td>
+                      <span
+                        className="fw-bold font-monospace tracking-wide text-dark"
+                        style={{ fontSize: "0.90rem" }}
+                      >
+                        {student.lrn || "N/A"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                        style={{ backgroundColor: "var(--accent-color)" }}
+                      >
+                        {student.strand?.name || "N/A"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className="text-muted small fw-bold">
+                        {student.gender || "N/A"}
+                      </span>
+                    </td>
+
+                    <td>
+                      {student.pivot?.status === "approved" ? (
+                        <span
+                          className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1 shadow-sm"
+                          style={{ fontSize: "0.65rem" }}
+                        >
+                          <i
+                            className="bi bi-circle-fill me-1"
+                            style={{ fontSize: "0.4rem" }}
+                          ></i>{" "}
+                          Enrolled
                         </span>
-                      </>
-                    )}
-                  </td>
-                </tr>
+                      ) : (
+                        <span
+                          className="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1 shadow-sm"
+                          style={{ fontSize: "0.65rem" }}
+                        >
+                          <i
+                            className="bi bi-circle-fill me-1"
+                            style={{ fontSize: "0.4rem" }}
+                          ></i>{" "}
+                          Pending
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="text-center pe-4">
+                      <button
+                        onClick={() => openViewDrawer(student)}
+                        className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center"
+                        style={{ width: "35px", height: "35px" }}
+                        title="View Profile"
+                      >
+                        <i
+                          className="bi bi-eye-fill"
+                          style={{
+                            color: "var(--primary-color)",
+                            fontSize: "0.9rem",
+                          }}
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -435,12 +457,12 @@ const AdminTabPeople = () => {
       </div>
 
       {/* PAGINATION FOOTER */}
-      {filteredStudents.length > 0 && (
+      {!isLoading && totalRecords > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
           <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredStudents.length)} of{" "}
-            {filteredStudents.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">

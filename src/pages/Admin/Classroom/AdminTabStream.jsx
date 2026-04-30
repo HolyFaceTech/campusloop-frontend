@@ -418,7 +418,7 @@ const AdminTabStream = () => {
                 disabled={selectedIds.length === 0}
                 className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm ms-2"
               >
-                <i className="bi bi-trash3-fill"></i> Delete
+                <i className="bi bi-trash-fill"></i> Delete
               </button>
             </div>
           </div>

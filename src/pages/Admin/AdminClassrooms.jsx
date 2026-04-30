@@ -221,7 +221,7 @@ const AdminClassrooms = () => {
             {/* EXPANDED SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "100px" }}
+              style={{ minWidth: "250px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -238,7 +238,7 @@ const AdminClassrooms = () => {
             {/* GRADE LEVEL FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "250px" }}
+              style={{ width: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-bar-chart-steps"></i>
@@ -257,7 +257,7 @@ const AdminClassrooms = () => {
             {/* SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "250px" }}
+              style={{ width: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -279,7 +279,7 @@ const AdminClassrooms = () => {
                 disabled={selectedIds.length === 0}
                 className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm ms-2"
               >
-                <i className="bi bi-trash3-fill"></i> Delete
+                <i className="bi bi-trash-fill"></i> Delete
               </button>
             </div>
           </div>

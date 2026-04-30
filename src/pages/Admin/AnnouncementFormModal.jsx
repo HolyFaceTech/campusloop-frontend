@@ -643,7 +643,7 @@ const AnnouncementFormModal = ({
               </div>
             </div>
             <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Confirm Deletion</h4>
+              <h4 className="fw-bold text-dark">Delete Announcement</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to move{" "}
                 {selectedItem ? (
