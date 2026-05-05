@@ -1,7 +1,7 @@
 import React from "react";
 
 // BULK DELETE NG FORMS
-export const DeleteFormsModal = ({ executeBulkDelete }) => {
+export const DeleteFormsModal = ({ selectedIdsCount, executeBulkDelete }) => {
   return (
     <div
       className="modal fade"
@@ -17,11 +17,12 @@ export const DeleteFormsModal = ({ executeBulkDelete }) => {
               className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center mx-auto mb-3"
               style={{ width: "80px", height: "80px" }}
             >
-              <i className="bi bi-trash3-fill text-danger fs-1"></i>
+              <i className="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
             </div>
             <h4 className="fw-bold text-dark mt-2">Delete Forms</h4>
             <p className="text-muted mb-4">
-              Are you sure you want to delete the selected forms?
+              Are you sure you want to move the{" "}
+              <b>{selectedIdsCount} selected form(s)</b> to the recycle bin?
             </p>
             <div className="d-flex justify-content-center gap-2">
               <button

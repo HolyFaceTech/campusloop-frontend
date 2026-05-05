@@ -444,7 +444,7 @@ const Announcements = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "180px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -458,7 +458,7 @@ const Announcements = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "140px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-calendar-event"></i>
               </span>
@@ -472,7 +472,7 @@ const Announcements = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-paperclip"></i>
               </span>
@@ -489,7 +489,7 @@ const Announcements = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "140px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -713,7 +713,7 @@ const Announcements = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} announcements
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">

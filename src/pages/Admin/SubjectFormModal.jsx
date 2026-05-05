@@ -251,9 +251,9 @@ const SubjectFormModal = ({
                 {selectedSubject ? (
                   <b>{selectedSubject.code}</b>
                 ) : (
-                  <b>{selectedIdsCount} selected subjects</b>
+                  <b>{selectedIdsCount} selected subject(s)</b>
                 )}{" "}
-                to the Recycle Bin? This action can be undone later.
+                to the Recycle Bin?
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
