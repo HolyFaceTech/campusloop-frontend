@@ -455,7 +455,7 @@ const UserDrawer = ({
                     "{userToDelete.first_name} {userToDelete.last_name}"
                   </b>
                 ) : (
-                  <b>{selectedIdsCount} selected users</b>
+                  <b>{selectedIdsCount} selected user(s)</b>
                 )}{" "}
                 to the Recycle Bin?
               </p>

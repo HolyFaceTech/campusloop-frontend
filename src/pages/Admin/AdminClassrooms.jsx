@@ -24,7 +24,7 @@ const AdminClassrooms = () => {
 
   // PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
@@ -221,7 +221,7 @@ const AdminClassrooms = () => {
             {/* EXPANDED SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -509,7 +509,7 @@ const AdminClassrooms = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} classrooms
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">

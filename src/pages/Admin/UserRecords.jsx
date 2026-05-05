@@ -382,7 +382,7 @@ const UserRecords = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -396,7 +396,7 @@ const UserRecords = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-shield-lock"></i>
               </span>
@@ -412,7 +412,7 @@ const UserRecords = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -642,7 +642,7 @@ const UserRecords = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} users
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">

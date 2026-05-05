@@ -649,7 +649,7 @@ const AnnouncementFormModal = ({
                 {selectedItem ? (
                   <b>"{selectedItem.title}"</b>
                 ) : (
-                  <b>{selectedIds.length} selected announcements</b>
+                  <b>{selectedIds.length} selected announcement(s)</b>
                 )}{" "}
                 to the Recycle Bin?
               </p>

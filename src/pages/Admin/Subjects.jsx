@@ -357,7 +357,7 @@ const Subjects = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "100px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-journal-text"></i>
               </span>
@@ -375,7 +375,7 @@ const Subjects = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "100px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-bar-chart-steps"></i>
               </span>
@@ -390,7 +390,7 @@ const Subjects = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "100px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-clock-history"></i>
               </span>
@@ -553,7 +553,7 @@ const Subjects = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} subjects
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">

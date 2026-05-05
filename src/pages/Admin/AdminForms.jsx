@@ -13,20 +13,37 @@ const darkToast = {
 
 const AdminForms = () => {
   const [forms, setForms] = useState([]);
+  const [uniqueTeachers, setUniqueTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading forms...");
 
-  // States para sa Unified Control Bar
+  // STATES PARA SA SERVER-SIDE SEARCH AT FILTERS
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterTeacher, setFilterTeacher] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // STATES PARA SA PAGINATION (Fixed at 12 items per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const entriesPerPage = 12;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const navigate = useNavigate();
 
+  // RESET PAGE TO 1 KAPAG NAGBAGO ANG SEARCH O FILTER
   useEffect(() => {
-    fetchForms();
-  }, []);
+    setCurrentPage(1);
+  }, [searchQuery, filterTeacher, sortOrder]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchForms();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, filterTeacher, sortOrder, currentPage]);
 
   const fetchForms = async () => {
     setIsLoading(true);
@@ -37,10 +54,25 @@ const AdminForms = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            teacher: filterTeacher,
+            sort: sortOrder,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setForms(res.data);
-      setSelectedIds([]);
+
+      const data = res.data;
+      setForms(data.data || []);
+      setTotalPages(data.last_page || 1);
+      setTotalRecords(data.total || 0);
+
+      if (data.teachers) {
+        setUniqueTeachers(data.teachers);
+      }
+      setSelectedIds([]); // Reset selection on page load
     } catch (error) {
       console.error(error);
     } finally {
@@ -55,7 +87,7 @@ const AdminForms = () => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(filteredForms.map((f) => f.id));
+      setSelectedIds(forms.map((f) => f.id));
     } else {
       setSelectedIds([]);
     }
@@ -95,40 +127,6 @@ const AdminForms = () => {
     }
   };
 
-  // KUKUNIN ANG MGA UNIQUE TEACHERS PARA SA DROPDOWN
-  const uniqueTeachersMap = new Map();
-  forms.forEach((f) => {
-    if (f.creator) {
-      uniqueTeachersMap.set(
-        f.creator.id,
-        `${f.creator.first_name} ${f.creator.last_name}`,
-      );
-    }
-  });
-  const uniqueTeachers = Array.from(uniqueTeachersMap.entries());
-
-  // FILTER & SORT LOGIC
-  let filteredForms = forms.filter((f) => {
-    const matchesSearch =
-      f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (f.creator &&
-        `${f.creator.first_name} ${f.creator.last_name}`
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()));
-
-    const matchesTeacher =
-      filterTeacher === "all" ||
-      (f.creator && String(f.creator.id) === String(filterTeacher));
-
-    return matchesSearch && matchesTeacher;
-  });
-
-  filteredForms.sort((a, b) => {
-    const dateA = new Date(a.created_at).getTime();
-    const dateB = new Date(b.created_at).getTime();
-    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
-  });
-
   return (
     <div className="container-fluid px-0">
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -151,18 +149,17 @@ const AdminForms = () => {
 
       {/* UNIFIED TOP CONTROL BAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SELECT ALL CHECKBOX */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
                 <input
                   type="checkbox"
-                  className="form-check-input mt-0 shadow-sm"
+                  className="form-check-input mt-0 shadow-sm border-secondary"
                   id="selectAll"
                   checked={
-                    selectedIds.length === filteredForms.length &&
-                    filteredForms.length > 0
+                    selectedIds.length === forms.length && forms.length > 0
                   }
                   onChange={handleSelectAll}
                   style={{
@@ -177,7 +174,7 @@ const AdminForms = () => {
                   style={{ cursor: "pointer" }}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-pill ms-2">
+                  <span className="badge bg-primary rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>
@@ -187,7 +184,7 @@ const AdminForms = () => {
             {/* EXPANDED SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -195,7 +192,7 @@ const AdminForms = () => {
               <input
                 type="text"
                 className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                placeholder="Search by Form Name or Teacher..."
+                placeholder="Search Form or Teacher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -204,7 +201,7 @@ const AdminForms = () => {
             {/* FILTER BY TEACHER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-person-badge"></i>
@@ -215,9 +212,9 @@ const AdminForms = () => {
                 onChange={(e) => setFilterTeacher(e.target.value)}
               >
                 <option value="all">All Teachers</option>
-                {uniqueTeachers.map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
+                {uniqueTeachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.first_name} {t.last_name}
                   </option>
                 ))}
               </select>
@@ -226,7 +223,7 @@ const AdminForms = () => {
             {/* SORT ORDER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -236,8 +233,8 @@ const AdminForms = () => {
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
               </select>
             </div>
 
@@ -248,7 +245,7 @@ const AdminForms = () => {
                 disabled={selectedIds.length === 0}
                 className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm ms-2"
               >
-                <i className="bi bi-trash3-fill"></i> Delete
+                <i className="bi bi-trash-fill"></i> Delete
               </button>
             </div>
           </div>
@@ -257,7 +254,7 @@ const AdminForms = () => {
 
       {/* GRID CARDS */}
       <div className="row g-4">
-        {filteredForms.map((item) => (
+        {forms.map((item) => (
           <div className="col-12 col-md-6 col-xl-4" key={item.id}>
             <div
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
@@ -498,7 +495,8 @@ const AdminForms = () => {
                     onClick={() => navigate(`/admin/forms/${item.id}`)}
                     className="btn btn-campusloop rounded-3 fw-bold px-4 shadow-sm"
                   >
-                    Enter <i className="bi bi-arrow-right ms-1"></i>
+                    <span className="d-none d-sm-inline">Enter</span>{" "}
+                    <i className="bi bi-arrow-right ms-1"></i>
                   </button>
                 </div>
               </div>
@@ -507,11 +505,11 @@ const AdminForms = () => {
         ))}
 
         {/* EMPTY STATE */}
-        {filteredForms.length === 0 && !isLoading && (
+        {forms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-ui-radios text-muted d-block mb-3"
+                className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
               <h5 className="fw-bold text-dark">No Forms Found.</h5>
@@ -525,7 +523,62 @@ const AdminForms = () => {
         )}
       </div>
 
-      <DeleteFormsModal executeBulkDelete={executeBulkDelete} />
+      {/* PAGINATION FOOTER */}
+      {!isLoading && totalRecords > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-4 mb-5 px-2">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} forms
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+              {[...Array(totalPages)].map((_, i) => (
+                <li
+                  key={i}
+                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link page-link-summer"
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
+      <DeleteFormsModal
+        selectedIdsCount={selectedIds.length}
+        executeBulkDelete={executeBulkDelete}
+      />
     </div>
   );
 };
