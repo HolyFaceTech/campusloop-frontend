@@ -132,9 +132,9 @@ const AdminReviewSubmissionModal = ({
                         className="d-block text-muted small fw-bold text-uppercase mb-1"
                         style={{ letterSpacing: "0.5px", fontSize: "0.65rem" }}
                       >
-                        Total Score
+                        Total Score:
                       </span>
-                      <span className="badge bg-light text-dark border shadow-sm px-3 py-2 fw-medium fs-5">
+                      <span className="text-dark px-3 py-2 fw-medium fs-5">
                         <span
                           className={
                             respondent.score < totalPoints / 2
@@ -458,7 +458,7 @@ const AdminReviewSubmissionModal = ({
 
               <button
                 type="button"
-                className="btn btn-primary px-4 fw-bold d-flex align-items-center gap-2 shadow-sm transition-all"
+                className="btn btn-campusloop px-4 fw-bold d-flex align-items-center gap-2 shadow-sm transition-all"
                 onClick={confirmStudentPDF}
               >
                 <i className="bi bi-printer-fill"></i> Print Form

@@ -62,10 +62,17 @@ export const ConfirmTeacherPDFModal = ({ form, executeGenerateTeacherPDF }) => {
         <div className="modal-content border-0 shadow-lg rounded-4">
           <div className="modal-body text-center p-4 pt-5">
             <div
-              className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center mx-auto mb-3"
-              style={{ width: "80px", height: "80px" }}
+              className="rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3"
+              style={{
+                width: "80px",
+                height: "80px",
+                backgroundColor: "rgba(98, 111, 71, 0.1)",
+              }}
             >
-              <i className="bi bi-file-earmark-pdf-fill text-primary fs-1"></i>
+              <i
+                className="bi bi-file-earmark-pdf-fill fs-1"
+                style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
+              ></i>
             </div>
             <h4 className="fw-bold text-dark mt-2">Print Form</h4>
             <p className="text-muted mb-4">
@@ -82,7 +89,7 @@ export const ConfirmTeacherPDFModal = ({ form, executeGenerateTeacherPDF }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-primary px-4"
+                className="btn btn-campusloop px-4"
                 onClick={executeGenerateTeacherPDF}
               >
                 Yes, Print
@@ -113,10 +120,17 @@ export const ConfirmStudentPDFModal = ({
         <div className="modal-content border-0 shadow-lg rounded-4">
           <div className="modal-body text-center p-4 pt-5">
             <div
-              className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center mx-auto mb-3"
-              style={{ width: "80px", height: "80px" }}
+              className="rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3"
+              style={{
+                width: "80px",
+                height: "80px",
+                backgroundColor: "rgba(98, 111, 71, 0.1)",
+              }}
             >
-              <i className="bi bi-file-earmark-pdf-fill text-primary fs-1"></i>
+              <i
+                className="bi bi-file-earmark-pdf-fill s-1"
+                style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
+              ></i>
             </div>
             <h4 className="fw-bold text-dark mt-2">Print Form</h4>
             <p className="text-muted mb-4">
@@ -132,7 +146,7 @@ export const ConfirmStudentPDFModal = ({
               </button>
               <button
                 type="button"
-                className="btn btn-primary px-4"
+                className="btn btn-campusloop px-4"
                 onClick={executeGenerateStudentPDF}
               >
                 Yes, Print

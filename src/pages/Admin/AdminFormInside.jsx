@@ -21,21 +21,36 @@ const AdminFormInside = () => {
   const [loadingText, setLoadingText] = useState("Loading Form Details...");
   const [activeTab, setActiveTab] = useState("questionnaire");
 
+  // SERVER-SIDE SEARCH & PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedRespondent, setSelectedRespondent] = useState(null);
   const [respondentToUnsubmit, setRespondentToUnsubmit] = useState(null);
 
+  // KUNIN ANG DATA NG FORM SA INITIAL LOAD
   useEffect(() => {
     fetchFormData();
-    fetchRespondents();
   }, [id]);
 
+  // RESET PAGE TO 1 KAPAG NAGBAGO ANG SEARCH O ENTRIES
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms) PARA SA RESPONDENTS
+  useEffect(() => {
+    if (id) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchRespondents();
+      }, 500);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [id, searchQuery, currentPage, entriesPerPage]);
 
   const fetchFormData = async () => {
     try {
@@ -54,6 +69,9 @@ const AdminFormInside = () => {
   };
 
   const fetchRespondents = async () => {
+    setIsLoading(true);
+    setLoadingText("Loading records...");
+
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/forms/${id}/respondents`,
@@ -61,12 +79,21 @@ const AdminFormInside = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setRespondents(res.data);
+      const data = res.data;
+      setRespondents(data.data || []);
+      setTotalPages(data.last_page || 1);
+      setTotalRecords(data.total || 0);
       setIsLoading(false);
     } catch (error) {
       console.error(error);
+      setRespondents([]);
       setIsLoading(false);
     }
   };
@@ -145,20 +172,6 @@ const AdminFormInside = () => {
     }
   };
 
-  const filteredRespondents = respondents.filter((r) =>
-    `${r.student?.first_name} ${r.student?.last_name} ${r.student?.lrn} ${r.student?.strand?.name}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()),
-  );
-
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentRespondents = filteredRespondents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredRespondents.length / entriesPerPage);
-
   if (isLoading && !form)
     return <GlobalSpinner isLoading={true} text={loadingText} />;
 
@@ -233,7 +246,7 @@ const AdminFormInside = () => {
 
             <button
               onClick={confirmTeacherPDF}
-              className="btn btn-primary shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 transition-all"
+              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 transition-all"
             >
               <i className="bi bi-printer-fill"></i> Print Form
             </button>
@@ -389,8 +402,9 @@ const AdminFormInside = () => {
           onClick={() => setActiveTab("respondents")}
         >
           <i className="bi bi-people-fill"></i> Respondents
+          {/* UPDATED: Dito sa badge, totalRecords na ang ipapakita para accurate kahit naka-paginate */}
           <span
-            className="badge rounded-pill shadow-sm ms-1"
+            className="badge rounded-3 shadow-sm ms-1"
             style={{
               backgroundColor:
                 activeTab === "respondents"
@@ -399,7 +413,7 @@ const AdminFormInside = () => {
               color: activeTab === "respondents" ? "white" : "#6c757d",
             }}
           >
-            {respondents.length}
+            {totalRecords}
           </span>
         </button>
       </div>
@@ -629,11 +643,12 @@ const AdminFormInside = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentRespondents.length > 0 ? (
-                    currentRespondents.map((sub, index) => (
+                  {respondents.length > 0 ? (
+                    respondents.map((sub, index) => (
                       <tr key={sub.id} className="hover-bg-light">
                         <td className="text-center fw-bold text-muted px-4 py-2">
-                          {indexOfFirstItem + index + 1}
+                          {/* UPDATED: Dynamic Index Calculation based on Page */}
+                          {(currentPage - 1) * entriesPerPage + index + 1}
                         </td>
                         <td className="py-2">
                           <div className="d-flex align-items-center py-1">
@@ -755,22 +770,23 @@ const AdminFormInside = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center py-5 text-muted">
-                        {respondents.length === 0 ? (
-                          <i className="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
-                        ) : (
-                          <i className="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
-                        )}
-                        <span className="fw-bolder text-dark d-block">
-                          {respondents.length === 0
-                            ? "No submissions yet"
-                            : "No matching records found"}
-                        </span>
-                        <span className="small">
-                          {respondents.length === 0
-                            ? "Students haven't taken this form."
-                            : "Try adjusting your search criteria."}
-                        </span>
+                      <td colSpan="7" className="p-4 bg-light border-bottom-0">
+                        <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                          <i
+                            className="bi bi-inbox text-muted d-block mb-3"
+                            style={{ fontSize: "3rem", opacity: 0.5 }}
+                          ></i>
+                          <h5 className="fw-bold text-dark">
+                            {totalRecords === 0 && !searchQuery
+                              ? "No submissions yet"
+                              : "No matching records found"}
+                          </h5>
+                          <p className="text-muted small mb-0">
+                            {totalRecords === 0 && !searchQuery
+                              ? "Students haven't taken this form."
+                              : "Try adjusting your search criteria."}
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -780,12 +796,12 @@ const AdminFormInside = () => {
           </div>
 
           {/* PAGINATION BUTTONS */}
-          {filteredRespondents.length > 0 && (
+          {totalRecords > 0 && (
             <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-1">
               <span className="text-muted small">
-                Showing {indexOfFirstItem + 1} to{" "}
-                {Math.min(indexOfLastItem, filteredRespondents.length)} of{" "}
-                {filteredRespondents.length} entries
+                Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+                {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+                {totalRecords} respondents
               </span>
               <nav>
                 <ul className="pagination pagination-sm mb-0">

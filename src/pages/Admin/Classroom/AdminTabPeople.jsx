@@ -189,7 +189,7 @@ const AdminTabPeople = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "200px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -203,7 +203,7 @@ const AdminTabPeople = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -218,7 +218,7 @@ const AdminTabPeople = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
