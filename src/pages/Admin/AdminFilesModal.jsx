@@ -72,7 +72,7 @@ export const AdminDeleteFilesModal = ({ selectedIds, executeBulkDelete }) => {
               style={{ width: "80px", height: "80px" }}
             >
               <i
-                className="bi bi-trash3-fill text-danger"
+                className="bi bi-exclamation-triangle-fill text-danger"
                 style={{ fontSize: "2.5rem" }}
               ></i>
             </div>
@@ -80,8 +80,12 @@ export const AdminDeleteFilesModal = ({ selectedIds, executeBulkDelete }) => {
           <div className="modal-body text-center p-4">
             <h4 className="fw-bold text-dark mt-2">Delete Files</h4>
             <p className="text-muted mb-0">
-              Are you sure you want to move <b>{selectedIds.length}</b> selected
-              file{selectedIds.length > 1 ? "s" : ""} to the recycle bin?
+              Are you sure you want to move{" "}
+              <b>
+                {selectedIds.length} selected file
+                {selectedIds.length > 1 ? "s" : ""}
+              </b>{" "}
+              to the recycle bin?
             </p>
           </div>
           <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">

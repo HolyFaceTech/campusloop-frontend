@@ -259,6 +259,13 @@ const AdminTabStream = () => {
         bg: "#d1e7dd",
         label: "EXCEL",
       };
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
+      };
     if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
@@ -269,10 +276,11 @@ const AdminTabStream = () => {
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
-        color: "#fd7e14",
-        bg: "#ffe5d0",
+        color: "#0dcaf0",
+        bg: "#cff4fc",
         label: "VIDEO",
       };
+
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
