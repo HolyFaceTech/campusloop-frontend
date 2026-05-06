@@ -15,7 +15,7 @@ const AdminForms = () => {
   const [forms, setForms] = useState([]);
   const [uniqueTeachers, setUniqueTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState("Loading forms...");
+  const [loadingText, setLoadingText] = useState("Fetching forms...");
 
   // STATES PARA SA SERVER-SIDE SEARCH AT FILTERS
   const [searchQuery, setSearchQuery] = useState("");

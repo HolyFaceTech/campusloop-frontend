@@ -357,7 +357,7 @@ const AdminTabStream = () => {
             {/* SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -374,7 +374,7 @@ const AdminTabStream = () => {
             {/* CLASSWORK TYPE FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "220px" }}
+              style={{ width: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
@@ -396,7 +396,7 @@ const AdminTabStream = () => {
             {/* IBINALIK NATIN ANG SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "220px" }}
+              style={{ width: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>

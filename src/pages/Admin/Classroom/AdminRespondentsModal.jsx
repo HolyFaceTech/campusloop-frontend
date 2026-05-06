@@ -452,7 +452,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                   <p className="text-muted small mb-0">
                     Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
                     {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-                    {totalRecords} entries
+                    {totalRecords} respondents
                   </p>
                   <nav>
                     <ul className="pagination pagination-sm mb-0">
