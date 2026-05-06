@@ -140,21 +140,7 @@ const AnnouncementViewModal = ({
         bg: "#f8d7da",
         label: "PDF",
       };
-    if (["doc", "docx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "#0d6efd",
-        bg: "#cfe2ff",
-        label: "WORD",
-      };
-    if (["xls", "xlsx", "csv"].includes(ext))
-      return {
-        icon: "bi-file-earmark-excel-fill",
-        color: "#198754",
-        bg: "#d1e7dd",
-        label: "EXCEL",
-      };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -168,6 +154,7 @@ const AnnouncementViewModal = ({
         bg: "#ffe5d0",
         label: "VIDEO",
       };
+
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
