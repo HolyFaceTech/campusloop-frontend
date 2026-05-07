@@ -10,7 +10,7 @@ const SettingsFormModal = ({
 }) => {
   return (
     <>
-      {/* 1. SETTINGS FORM MODAL */}
+      {/* SETTINGS FORM MODAL */}
       <div
         className="modal fade"
         id="setSettingsModal"
@@ -93,6 +93,7 @@ const SettingsFormModal = ({
                   type="submit"
                   className="btn btn-campusloop px-4 fw-bold rounded-3"
                 >
+                  <i className="bi bi-plus-circle-fill me-2"></i>
                   Submit
                 </button>
               </div>
@@ -101,7 +102,7 @@ const SettingsFormModal = ({
         </div>
       </div>
 
-      {/* 2. RESET MODAL */}
+      {/* RESET MODAL */}
       <div
         className="modal fade"
         id="resetConfirmModal"
@@ -150,7 +151,7 @@ const SettingsFormModal = ({
         </div>
       </div>
 
-      {/* 3. MAINTENANCE CONFIRMATION MODAL */}
+      {/* MAINTENANCE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="maintenanceConfirmModal"
