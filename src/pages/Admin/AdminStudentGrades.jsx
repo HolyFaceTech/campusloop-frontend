@@ -13,13 +13,18 @@ const darkToast = {
 const AdminStudentGrades = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingText, setLoadingText] = useState("Loading Student Records...");
+  const [loadingText, setLoadingText] = useState("Fetching Student Records...");
 
-  // Filters & Pagination
+  // Filters, Sorting, & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [strandFilter, setStrandFilter] = useState("all");
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("az");
+
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   // State para ma-populate yung dropdown ng Strands dynamically
   const [strands, setStrands] = useState([]);
@@ -27,34 +32,66 @@ const AdminStudentGrades = () => {
   // States for Modals
   const [activeStudent, setActiveStudent] = useState(null);
   const [studentGrades, setStudentGrades] = useState([]);
+  const [isLoadingGrades, setIsLoadingGrades] = useState(false);
 
   // States for Approve/Decline actions
   const [selectedGradeId, setSelectedGradeId] = useState(null);
   const [declineFeedback, setDeclineFeedback] = useState("");
 
   useEffect(() => {
-    fetchStudents();
     fetchStrands();
   }, []);
 
-  // Reset page pag nagbago search or filter
+  // Reset page kapag nagbago ang search o filter
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, entriesPerPage, strandFilter]);
+  }, [searchQuery, entriesPerPage, strandFilter, genderFilter, sortOrder]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchStudents();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    searchQuery,
+    strandFilter,
+    genderFilter,
+    sortOrder,
+    currentPage,
+    entriesPerPage,
+  ]);
 
   const fetchStudents = async () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+          params: {
+            search: searchQuery,
+            strand: strandFilter,
+            gender: genderFilter,
+            sort: sortOrder,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setStudents(res.data);
+      setStudents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       sileo.error({
         title: "Fetch Error",
         description: "Failed to load student records.",
         ...darkToast,
       });
+      setStudents([]);
     } finally {
       setIsLoading(false);
     }
@@ -72,17 +109,23 @@ const AdminStudentGrades = () => {
   };
 
   const handleViewGrades = async (student) => {
-    setIsLoading(true);
-    setLoadingText("Fetching Grades...");
+    setActiveStudent(student);
+    setStudentGrades([]);
+
+    const modalEl = document.getElementById("studentGradesModal");
+    if (modalEl) Modal.getOrCreateInstance(modalEl).show();
+
+    setIsLoadingGrades(true); // loading sa loob ng table
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${student.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setStudentGrades(res.data);
-      setActiveStudent(student);
-
-      const modal = new Modal(document.getElementById("studentGradesModal"));
-      modal.show();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -90,15 +133,13 @@ const AdminStudentGrades = () => {
         ...darkToast,
       });
     } finally {
-      setIsLoading(false);
+      setIsLoadingGrades(false);
     }
   };
 
   const triggerApprove = (gradeId) => {
     setSelectedGradeId(gradeId);
-
     Modal.getInstance(document.getElementById("studentGradesModal"))?.hide();
-
     setTimeout(() => {
       new Modal(document.getElementById("confirmApproveGradeModal")).show();
     }, 400);
@@ -107,9 +148,7 @@ const AdminStudentGrades = () => {
   const triggerDecline = (gradeId) => {
     setSelectedGradeId(gradeId);
     setDeclineFeedback("");
-
     Modal.getInstance(document.getElementById("studentGradesModal"))?.hide();
-
     setTimeout(() => {
       new Modal(document.getElementById("confirmDeclineGradeModal")).show();
     }, 400);
@@ -131,6 +170,11 @@ const AdminStudentGrades = () => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/approve`,
         { grade_id: selectedGradeId },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       sileo.success({
         title: "Approved",
@@ -140,9 +184,13 @@ const AdminStudentGrades = () => {
 
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${activeStudent.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setStudentGrades(res.data);
-
       fetchStudents();
     } catch (error) {
       sileo.error({
@@ -172,6 +220,11 @@ const AdminStudentGrades = () => {
           grade_id: selectedGradeId,
           feedback: declineFeedback,
         },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       sileo.success({
         title: "Declined",
@@ -181,9 +234,13 @@ const AdminStudentGrades = () => {
 
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${activeStudent.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setStudentGrades(res.data);
-
       fetchStudents();
     } catch (error) {
       sileo.error({
@@ -199,25 +256,6 @@ const AdminStudentGrades = () => {
     }
   };
 
-  // FILTERING LOGIC
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch =
-      `${student.first_name} ${student.last_name} ${student.lrn}`
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-    const matchesStrand =
-      strandFilter === "all" || student.strand_id === strandFilter;
-    return matchesSearch && matchesStrand;
-  });
-
-  // PAGINATION LOGIC
-  const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
-  const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredStudents.slice(
-    startIndex,
-    startIndex + entriesPerPage,
-  );
-
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -228,7 +266,7 @@ const AdminStudentGrades = () => {
             className="fw-bold mb-1"
             style={{ color: "var(--primary-color)" }}
           >
-            Final Grade Records <i className="bi bi-award-fill"></i>
+            Final Grade Records <i className="bi bi-award"></i>
           </h3>
           <p className="text-muted small mb-0">
             Review, approve, and lock final grades submitted by teachers.
@@ -236,247 +274,287 @@ const AdminStudentGrades = () => {
         </div>
       </div>
 
-      {/* CONTROLS TRAY */}
+      {/* UNIFIED CONTROLS TRAY */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-4">
-          <div className="row g-3 align-items-center">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SHOW ENTRIES */}
-            <div className="col-auto">
-              <div className="d-flex align-items-center text-muted small fw-medium">
-                Show
-                <select
-                  className="form-select form-select-sm mx-2 toolbar-input rounded-3 shadow-none"
-                  style={{ width: "70px" }}
-                  value={entriesPerPage}
-                  onChange={(e) => setEntriesPerPage(Number(e.target.value))}
-                >
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-                entries
-              </div>
-            </div>
-
-            {/* STRAND FILTER */}
-            <div className="col-12 col-md-auto ms-xl-auto">
-              <div className="input-group" style={{ width: "300px" }}>
-                <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                  <i className="bi bi-funnel"></i>
-                </span>
-                <select
-                  className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                  value={strandFilter}
-                  onChange={(e) => setStrandFilter(e.target.value)}
-                >
-                  <option value="all">All Strands</option>
-                  {strands.map((strand) => (
-                    <option key={strand.id} value={strand.id}>
-                      {strand.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              entries
             </div>
 
             {/* SEARCH BAR */}
-            <div className="col-12 col-md-auto">
-              <div className="input-group" style={{ width: "300px" }}>
-                <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                  placeholder="Search Name or LRN..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+            <div
+              className="input-group flex-grow-1"
+              style={{ minWidth: "400px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search by Name or LRN..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* STRAND FILTER */}
+            <div
+              className="input-group flex-shrink-0"
+              style={{ width: "200px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i className="bi bi-diagram-3"></i>
+              </span>
+              <select
+                className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
+                value={strandFilter}
+                onChange={(e) => setStrandFilter(e.target.value)}
+              >
+                <option value="all">All Strands</option>
+                {strands.map((strand) => (
+                  <option key={strand.id} value={strand.id}>
+                    {strand.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* GENDER FILTER */}
+            <div
+              className="input-group flex-shrink-0"
+              style={{ width: "200px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i className="bi bi-gender-ambiguous"></i>
+              </span>
+              <select
+                className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+              >
+                <option value="all">Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            {/* SORTING A-Z */}
+            <div
+              className="input-group flex-shrink-0"
+              style={{ width: "200px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i className="bi bi-sort-alpha-down"></i>
+              </span>
+              <select
+                className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+              >
+                <option value="az">Sort A-Z</option>
+                <option value="za">Sort Z-A</option>
+              </select>
             </div>
           </div>
         </div>
       </div>
 
-      {/* GRID CARDS PARA SA MGA ESTUDYANTE */}
-      <div className="row g-4 mb-4">
-        {currentData.length > 0 ? (
-          currentData.map((student) => (
-            <div className="col-md-6 col-xl-4 col-xxl-3" key={student.id}>
-              <div className="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all bg-white premium-hover-card">
-                {/* Header Background */}
-                <div
-                  className="p-4 position-relative overflow-hidden"
-                  style={{
-                    backgroundColor: "var(--primary-color)",
-                    minHeight: "110px",
-                    borderTopLeftRadius: "1rem",
-                    borderTopRightRadius: "1rem",
-                  }}
+      {/* DATATABLE LAYOUT */}
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+        <div className="table-responsive custom-scrollbar">
+          <table
+            className="table table-summer align-middle mb-0"
+            style={{ minWidth: "1100px" }}
+          >
+            <thead className="bg-light sticky-top" style={{ zIndex: 10 }}>
+              <tr>
+                <th
+                  className="ps-4"
+                  style={{ width: "60px", borderTop: "none" }}
                 >
-                  {/* Decorative Circles */}
-                  <div
-                    className="position-absolute rounded-circle"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      backgroundColor: "rgba(255,255,255,0.1)",
-                      top: "-20px",
-                      right: "-20px",
-                    }}
-                  ></div>
-                  <div
-                    className="position-absolute rounded-circle"
-                    style={{
-                      width: "60px",
-                      height: "60px",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      bottom: "-10px",
-                      left: "20%",
-                    }}
-                  ></div>
+                  #
+                </th>
+                <th style={{ borderTop: "none" }}>Student Details</th>
+                <th style={{ borderTop: "none" }}>LRN</th>
+                <th style={{ borderTop: "none" }}>Strand</th>
+                <th style={{ borderTop: "none" }}>Gender</th>
+                <th className="text-center" style={{ borderTop: "none" }}>
+                  Status
+                </th>
+                <th className="text-center" style={{ borderTop: "none" }}>
+                  Encoded Grades
+                </th>
+                <th
+                  className="text-center pe-4"
+                  style={{ borderTop: "none", width: "150px" }}
+                >
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.length > 0 ? (
+                students.map((student, index) => (
+                  <tr key={student.id} className="hover-bg-light">
+                    <td className="fw-bold text-muted ps-4 py-2">
+                      {(currentPage - 1) * entriesPerPage + index + 1}
+                    </td>
 
-                  {/* Header Content */}
-                  <div className="pe-5 position-relative z-1">
-                    <h4
-                      className="fw-bold text-white mb-2"
-                      style={{ wordBreak: "break-word" }}
-                    >
-                      {student.first_name} {student.last_name}
-                    </h4>
-                    <span className="badge bg-white text-dark bg-opacity-25 px-2 py-1 fw-semibold shadow-sm">
-                      <i className="bi bi-person-badge me-1"></i>{" "}
-                      {student.lrn || "No LRN"}
-                    </span>
-                  </div>
-                </div>
+                    <td className="py-2">
+                      <div className="d-flex align-items-center py-1">
+                        <div
+                          className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            backgroundColor: "var(--secondary-color)",
+                          }}
+                        >
+                          {student.first_name?.charAt(0)}
+                        </div>
+                        <div className="overflow-hidden">
+                          <span
+                            className="fw-bold text-dark text-truncate d-block mb-1"
+                            style={{ maxWidth: "250px" }}
+                          >
+                            {student.last_name}, {student.first_name}
+                          </span>
+                          <p
+                            className="mb-0 text-muted text-truncate"
+                            style={{ fontSize: "0.80rem", maxWidth: "250px" }}
+                          >
+                            {student.email || "No Email"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
 
-                {/* Beautified Card Body */}
-                <div className="card-body p-4 d-flex flex-column position-relative">
-                  <div
-                    className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white"
-                    style={{
-                      width: "45px",
-                      height: "45px",
-                      top: "-22px",
-                      right: "24px",
-                      backgroundColor: "var(--secondary-color)",
-                      border: "3px solid white",
-                      fontSize: "1.2rem",
-                    }}
-                  >
-                    {student.first_name?.charAt(0)}
-                  </div>
-
-                  <div className="mb-3 mt-1 flex-grow-1">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
+                    <td className="py-2">
                       <span
-                        className="text-muted text-uppercase mb-0"
-                        style={{
-                          fontSize: "0.65rem",
-                          letterSpacing: "1px",
-                          fontWeight: "700",
-                        }}
+                        className="d-block fw-bold font-monospace text-dark tracking-wide"
+                        style={{ fontSize: "0.90rem" }}
                       >
-                        Student Details
+                        {student.lrn || "N/A"}
                       </span>
-                      {student.has_pending_grades && (
+                    </td>
+
+                    <td className="py-2">
+                      <span
+                        className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                        style={{ backgroundColor: "var(--accent-color)" }}
+                      >
+                        {student.strand?.name || "N/A"}
+                      </span>
+                    </td>
+
+                    <td className="py-2">
+                      <span className="text-muted small fw-bold">
+                        {student.gender ? student.gender.toUpperCase() : "N/A"}
+                      </span>
+                    </td>
+
+                    <td className="text-center py-2">
+                      {student.has_pending_grades ? (
                         <span
-                          className="badge bg-warning text-dark shadow-sm rounded-pill px-2 py-1"
+                          className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           <i
-                            className="bi bi-circle-fill text-danger me-1"
-                            style={{
-                              fontSize: "0.4rem",
-                              verticalAlign: "middle",
-                            }}
+                            className="bi bi-circle-fill me-1"
+                            style={{ fontSize: "0.4rem" }}
                           ></i>{" "}
                           Action Needed
                         </span>
+                      ) : (
+                        <span
+                          className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1"
+                          style={{ fontSize: "0.65rem" }}
+                        >
+                          <i
+                            className="bi bi-check-circle-fill me-1"
+                            style={{ fontSize: "0.5rem" }}
+                          ></i>{" "}
+                          Cleared
+                        </span>
                       )}
-                    </div>
+                    </td>
 
-                    <div className="d-flex align-items-center mb-3">
-                      <div
-                        className="rounded-circle bg-light d-flex justify-content-center align-items-center me-3 flex-shrink-0"
-                        style={{ width: "38px", height: "38px" }}
+                    <td className="text-center py-2">
+                      <div className="d-flex flex-column align-items-center justify-content-center">
+                        <span className="fw-bolder fs-5 text-primary">
+                          {student.grades_count}
+                        </span>
+                        <span
+                          className="text-muted fw-bold d-block text-uppercase"
+                          style={{ fontSize: "0.6rem", letterSpacing: "1px" }}
+                        >
+                          Records
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="text-center pe-4 py-2">
+                      <button
+                        onClick={() => handleViewGrades(student)}
+                        className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                        style={{ width: "35px", height: "35px" }}
+                        title="View Grades"
                       >
-                        <i className="bi bi-diagram-3 text-secondary fs-5"></i>
-                      </div>
-                      <div className="overflow-hidden">
-                        <span
-                          className="d-block small text-muted fw-bold"
-                          style={{ fontSize: "0.65rem" }}
-                        >
-                          STRAND
-                        </span>
-                        <span
-                          className="d-block text-dark fw-bold small text-truncate"
-                          title={student.strand?.name || "N/A"}
-                        >
-                          {student.strand?.name || "N/A"}
-                        </span>
-                      </div>
+                        <i
+                          className="bi bi-folder-fill"
+                          style={{ color: "var(--primary-color)" }}
+                        ></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery ||
+                        strandFilter !== "all" ||
+                        genderFilter !== "all"
+                          ? "Try adjusting your search or filters."
+                          : "No student grade records available."}
+                      </p>
                     </div>
-
-                    <div className="d-flex align-items-center">
-                      <div
-                        className="rounded-circle bg-light d-flex justify-content-center align-items-center me-3 flex-shrink-0"
-                        style={{ width: "38px", height: "38px" }}
-                      >
-                        <i className="bi bi-award text-primary fs-5"></i>
-                      </div>
-                      <div>
-                        <span
-                          className="d-block small text-muted fw-bold"
-                          style={{ fontSize: "0.65rem" }}
-                        >
-                          ENCODED GRADES
-                        </span>
-                        <span className="d-block text-primary fw-bolder small">
-                          {student.grades_count} Records
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto pt-3 border-top border-light-subtle d-flex gap-2">
-                    <button
-                      className="btn btn-campusloop fw-bold w-100 rounded-3 shadow-sm d-flex justify-content-center align-items-center"
-                      onClick={() => handleViewGrades(student)}
-                    >
-                      <i className="bi bi-folder2-open me-2"></i> Open Grades
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="col-12">
-            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
-              <i
-                className="bi bi-inbox text-muted d-block mb-3"
-                style={{ fontSize: "3rem", opacity: 0.5 }}
-              ></i>
-              <h5 className="fw-bold text-dark">No records found.</h5>
-              <p className="text-muted small mb-0">
-                No matching records found.
-              </p>
-            </div>
-          </div>
-        )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* PAGINATION */}
-      {filteredStudents.length > 0 && (
+      {totalRecords > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-1">
           <span className="text-muted small">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(startIndex + entriesPerPage, filteredStudents.length)} of{" "}
-            {filteredStudents.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} students
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0">
@@ -526,6 +604,7 @@ const AdminStudentGrades = () => {
       <AdminStudentGradesModals
         activeStudent={activeStudent}
         studentGrades={studentGrades}
+        isLoadingGrades={isLoadingGrades}
         triggerApprove={triggerApprove}
         triggerDecline={triggerDecline}
         proceedToFeedback={proceedToFeedback}
