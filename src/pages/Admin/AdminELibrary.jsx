@@ -13,64 +13,76 @@ const darkToast = {
 const AdminELibrary = () => {
   const [libraries, setLibraries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingText, setLoadingText] = useState("Loading E-Library...");
+  const [loadingText, setLoadingText] = useState("Fetching E-Library...");
 
+  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Pagination States (Default 12 para sakto sa grid 3-columns or 2-columns)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [viewItem, setViewItem] = useState(null);
   const [declineFeedback, setDeclineFeedback] = useState("");
 
+  // Reset page kapag nagbago ang filters
   useEffect(() => {
-    fetchLibraries();
-  }, []);
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, sortOrder, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms delay)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchLibraries();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, statusFilter, sortOrder, currentPage, entriesPerPage]);
 
   const fetchLibraries = async () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/e-libraries`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+          params: {
+            search: searchQuery,
+            status: statusFilter,
+            sort: sortOrder,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setLibraries(res.data);
+      setLibraries(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
+      setSelectedIds([]); // Clear selection pagka-lipat ng page
     } catch (error) {
       sileo.error({
         title: "Fetch Error",
         description: "Failed to load E-Library materials.",
         ...darkToast,
       });
+      setLibraries([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredLibraries = libraries
-    .filter((lib) => {
-      const matchesSearch =
-        `${lib.title} ${lib.creator?.first_name} ${lib.creator?.last_name}`
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || lib.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      if (sortOrder === "newest") {
-        return new Date(b.created_at) - new Date(a.created_at);
-      } else {
-        return new Date(a.created_at) - new Date(b.created_at);
-      }
-    });
-
   const toggleSelectAll = () => {
-    if (
-      selectedIds.length === filteredLibraries.length &&
-      filteredLibraries.length > 0
-    ) {
+    if (selectedIds.length === libraries.length && libraries.length > 0) {
       setSelectedIds([]); // Unselect all
     } else {
-      setSelectedIds(filteredLibraries.map((lib) => lib.id)); // Select all
+      setSelectedIds(libraries.map((lib) => lib.id)); // Select all current page
     }
   };
 
@@ -111,6 +123,11 @@ const AdminELibrary = () => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/admin/e-libraries/approve`,
         { ids: selectedIds },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       sileo.success({
         title: "Approved",
@@ -142,6 +159,11 @@ const AdminELibrary = () => {
           ids: selectedIds,
           feedback: declineFeedback,
         },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       sileo.success({
         title: "Declined",
@@ -168,6 +190,11 @@ const AdminELibrary = () => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/admin/e-libraries/delete`,
         { ids: selectedIds },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       sileo.success({
         title: "Deleted",
@@ -207,10 +234,10 @@ const AdminELibrary = () => {
 
       {/* CONTROLS & BULK ACTIONS TRAY */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-4">
-          <div className="row g-3 align-items-center">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SELECT ALL & COUNT */}
-            <div className="col-auto pe-xl-2">
+            <div className="col-auto pe-xl-2 ps-1">
               <div className="d-flex align-items-center">
                 <input
                   type="checkbox"
@@ -218,8 +245,8 @@ const AdminELibrary = () => {
                   style={{ width: "20px", height: "20px", cursor: "pointer" }}
                   onChange={toggleSelectAll}
                   checked={
-                    selectedIds.length === filteredLibraries.length &&
-                    filteredLibraries.length > 0
+                    selectedIds.length === libraries.length &&
+                    libraries.length > 0
                   }
                 />
                 <label
@@ -228,7 +255,7 @@ const AdminELibrary = () => {
                   onClick={toggleSelectAll}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-pill ms-2">
+                  <span className="badge bg-primary rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>
@@ -236,58 +263,57 @@ const AdminELibrary = () => {
             </div>
 
             {/* SEARCH BAR */}
-            <div className="col-12 col-md-6 col-xl-4">
-              <div className="input-group">
-                <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                  placeholder="Search Title or Creator..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+            <div
+              className="input-group flex-grow-1"
+              style={{ minWidth: "400px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search Title or Creator..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
 
             {/* FILTER DROPDOWNS */}
-            <div className="col-12 col-xl-auto d-flex flex-wrap gap-2">
-              <div
-                className="input-group flex-nowrap"
-                style={{ width: "240px" }}
+            <div
+              className="input-group flex-shrink-0"
+              style={{ width: "300px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i className="bi bi-funnel"></i>
+              </span>
+              <select
+                className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
               >
-                <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
-                  <i className="bi bi-funnel"></i>
-                </span>
-                <select
-                  className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="declined">Declined</option>
-                </select>
-              </div>
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
 
-              <div
-                className="input-group flex-nowrap"
-                style={{ width: "240px" }}
+            <div
+              className="input-group flex-shrink-0"
+              style={{ width: "200px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i className="bi bi-sort-down"></i>
+              </span>
+              <select
+                className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
               >
-                <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
-                  <i className="bi bi-sort-down"></i>
-                </span>
-                <select
-                  className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(e.target.value)}
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                </select>
-              </div>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
             </div>
 
             {/* BUTTON COLORS */}
@@ -297,21 +323,24 @@ const AdminELibrary = () => {
                 disabled={selectedIds.length === 0}
                 onClick={triggerApprove}
               >
-                <i className="bi bi-check-circle-fill me-2"></i> Approve
+                <i className="bi bi-check-circle-fill me-xl-2"></i>{" "}
+                <span className="d-none d-xl-inline">Approve</span>
               </button>
               <button
                 className="btn btn-warning text-dark fw-bold rounded-3 shadow-sm d-flex align-items-center"
                 disabled={selectedIds.length === 0}
                 onClick={triggerDecline}
               >
-                <i className="bi bi-x-circle-fill me-2"></i> Decline
+                <i className="bi bi-x-circle-fill me-xl-2"></i>{" "}
+                <span className="d-none d-xl-inline">Decline</span>
               </button>
               <button
                 className="btn btn-danger text-white fw-bold rounded-3 shadow-sm d-flex align-items-center"
                 disabled={selectedIds.length === 0}
                 onClick={triggerDelete}
               >
-                <i className="bi bi-trash3-fill me-2"></i> Delete
+                <i className="bi bi-trash-fill me-xl-2"></i>{" "}
+                <span className="d-none d-xl-inline">Delete</span>
               </button>
             </div>
           </div>
@@ -320,8 +349,8 @@ const AdminELibrary = () => {
 
       {/* GRID CARDS */}
       <div className="row g-4 mb-4">
-        {filteredLibraries.length > 0 ? (
-          filteredLibraries.map((item) => (
+        {libraries.length > 0 ? (
+          libraries.map((item) => (
             <div className="col-md-6 col-xl-4" key={item.id}>
               <div
                 className={`card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all bg-white premium-hover-card ${selectedIds.includes(item.id) ? "border border-success border-opacity-50" : ""}`}
@@ -350,7 +379,6 @@ const AdminELibrary = () => {
                     />
                   </div>
 
-                  {/* Ibinalik natin ang z-1 para hindi takpan ng title ang mismong checkbox */}
                   <div
                     className="pe-5 position-relative z-1"
                     style={{ pointerEvents: "none" }}
@@ -438,7 +466,7 @@ const AdminELibrary = () => {
                     <div className="text-end flex-shrink-0">
                       {item.status === "pending" && (
                         <span
-                          className="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-1 shadow-sm"
+                          className="badge bg-warning bg-opacity-25 text-warning border border-warning px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Pending
@@ -484,12 +512,66 @@ const AdminELibrary = () => {
               ></i>
               <h5 className="fw-bold text-dark">No records found.</h5>
               <p className="text-muted small mb-0">
-                No matching records found.
+                {searchQuery || statusFilter !== "all"
+                  ? "No matching records found."
+                  : "No materials have been uploaded yet."}
               </p>
             </div>
           </div>
         )}
       </div>
+
+      {/* PAGINATION CONTROLS */}
+      {totalRecords > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-2">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} materials
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+              {[...Array(totalPages)].map((_, i) => (
+                <li
+                  key={i}
+                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                >
+                  <button
+                    className="page-link page-link-summer"
+                    onClick={() => setCurrentPage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                </li>
+              ))}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
 
       <AdminELibraryModals
         viewItem={viewItem}

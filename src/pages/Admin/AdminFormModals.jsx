@@ -34,7 +34,7 @@ export const DeleteFormsModal = ({ selectedIdsCount, executeBulkDelete }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-danger px-4"
+                className="btn btn-danger px-4 fw-medium shadow-sm"
                 data-bs-dismiss="modal"
                 onClick={executeBulkDelete}
               >
@@ -89,7 +89,7 @@ export const ConfirmTeacherPDFModal = ({ form, executeGenerateTeacherPDF }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-campusloop px-4"
+                className="btn btn-campusloop px-4 fw-medium shadow-sm"
                 onClick={executeGenerateTeacherPDF}
               >
                 Yes, Print
@@ -146,7 +146,7 @@ export const ConfirmStudentPDFModal = ({
               </button>
               <button
                 type="button"
-                className="btn btn-campusloop px-4"
+                className="btn btn-campusloop px-4 fw-medium shadow-sm"
                 onClick={executeGenerateStudentPDF}
               >
                 Yes, Print
@@ -197,7 +197,7 @@ export const UnsubmitFormModal = ({ respondent, executeUnsubmit }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-danger px-4 fw-bold"
+                className="btn btn-danger px-4 fw-medium shadow-sm"
                 onClick={executeUnsubmit}
               >
                 Yes, Unsubmit

@@ -123,6 +123,7 @@ const AdminStudentGradesModals = ({
                         <option value={10}>10</option>
                         <option value={25}>25</option>
                         <option value={50}>50</option>
+                        <option value={100}>100</option>
                       </select>
                       entries
                     </div>
@@ -286,7 +287,7 @@ const AdminStudentGradesModals = ({
                             </td>
                             <td className="text-center py-2">
                               {record.status === "pending" && (
-                                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-1 rounded-3">
+                                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-3">
                                   Pending
                                 </span>
                               )}
@@ -296,7 +297,7 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                               {record.status === "declined" && (
-                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-3 py-1 rounded-3">
+                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-3">
                                   Declined
                                 </span>
                               )}
@@ -308,13 +309,15 @@ const AdminStudentGradesModals = ({
                                     className="btn btn-sm btn-success fw-bold px-3 rounded-3 shadow-sm"
                                     onClick={() => triggerApprove(record.id)}
                                   >
-                                    <i className="bi bi-check-lg"></i> Approve
+                                    <i className="bi bi-check-circle-fill"></i>{" "}
+                                    Approve
                                   </button>
                                   <button
                                     className="btn btn-sm btn-warning text-dark fw-bold px-3 rounded-3 shadow-sm"
                                     onClick={() => triggerDecline(record.id)}
                                   >
-                                    <i className="bi bi-x-lg"></i> Decline
+                                    <i className="bi bi-x-circle-fill"></i>{" "}
+                                    Decline
                                   </button>
                                 </div>
                               ) : (
@@ -467,7 +470,7 @@ const AdminStudentGradesModals = ({
               </button>
               <button
                 type="button"
-                className="btn btn-success px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-success px-4 fw-medium shadow-sm rounded-3"
                 data-bs-dismiss="modal"
                 onClick={executeApprove}
               >
@@ -517,7 +520,7 @@ const AdminStudentGradesModals = ({
               </button>
               <button
                 type="button"
-                className="btn btn-warning text-dark px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-warning text-dark px-4 fw-medium shadow-sm rounded-3"
                 onClick={proceedToFeedback}
               >
                 Yes, Proceed
@@ -590,7 +593,7 @@ const AdminStudentGradesModals = ({
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
+                  className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
                 >
                   <i className="bi bi-plus-circle-fill me-2"></i>
                   Submit

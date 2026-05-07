@@ -236,7 +236,7 @@ const AdminTabPeople = () => {
             {/* ACTION BUTTONS */}
             <div className="d-flex gap-2 flex-shrink-0">
               <button
-                className="btn btn-success text-dark  d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
+                className="btn btn-success text-light  d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
                 disabled={!hasPendingSelected}
                 onClick={() => confirmAction("approve")}
               >
@@ -409,24 +409,16 @@ const AdminTabPeople = () => {
                     <td>
                       {student.pivot?.status === "approved" ? (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1 shadow-sm"
+                          className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1 border border-success-subtle"
                           style={{ fontSize: "0.65rem" }}
                         >
-                          <i
-                            className="bi bi-circle-fill me-1"
-                            style={{ fontSize: "0.4rem" }}
-                          ></i>{" "}
                           Enrolled
                         </span>
                       ) : (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1 shadow-sm"
+                          className="badge bg-warning bg-opacity-10 text-warning rounded-3 px-2 py-1 border border-warning-subtle"
                           style={{ fontSize: "0.65rem" }}
                         >
-                          <i
-                            className="bi bi-circle-fill me-1"
-                            style={{ fontSize: "0.4rem" }}
-                          ></i>{" "}
                           Pending
                         </span>
                       )}

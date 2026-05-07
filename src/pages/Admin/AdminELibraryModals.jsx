@@ -180,8 +180,9 @@ const AdminELibraryModals = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark mt-2">Approve Materials</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to approve <b>{selectedCount}</b> selected
-                material(s)? They will become visible to all students.
+                Are you sure you want to approve{" "}
+                <b>{selectedCount} selected material(s)</b>? They will become
+                visible to all students.
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -194,7 +195,7 @@ const AdminELibraryModals = ({
               </button>
               <button
                 type="button"
-                className="btn btn-success px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-success px-4 fw-medium shadow-sm rounded-3"
                 data-bs-dismiss="modal"
                 onClick={executeApprove}
               >
@@ -228,8 +229,8 @@ const AdminELibraryModals = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark mt-2">Decline Materials</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to decline <b>{selectedCount}</b> selected
-                material(s)?
+                Are you sure you want to decline{" "}
+                <b>{selectedCount} selected material(s)</b>?
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -242,7 +243,7 @@ const AdminELibraryModals = ({
               </button>
               <button
                 type="button"
-                className="btn btn-warning text-dark px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-warning text-dark px-4 fw-medium shadow-sm rounded-3"
                 onClick={proceedToFeedback}
               >
                 Yes, Proceed
@@ -307,8 +308,9 @@ const AdminELibraryModals = ({
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
+                  className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
                 >
+                  <i className="bi bi-plus-circle-fill me-2"></i>
                   Submit
                 </button>
               </div>
@@ -332,7 +334,7 @@ const AdminELibraryModals = ({
                 style={{ width: "80px", height: "80px" }}
               >
                 <i
-                  className="bi bi-trash3-fill text-danger"
+                  className="bi bi-exclamation-triangle-fill text-danger"
                   style={{ fontSize: "2.5rem" }}
                 ></i>
               </div>
@@ -340,7 +342,8 @@ const AdminELibraryModals = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark mt-2">Delete Materials</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to move <b>{selectedCount}</b> material(s)
+                Are you sure you want to move{" "}
+                <b>{selectedCount} selected material(s)</b>
                 to the Recycle Bin?
               </p>
             </div>
@@ -354,7 +357,7 @@ const AdminELibraryModals = ({
               </button>
               <button
                 type="button"
-                className="btn btn-danger px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
                 data-bs-dismiss="modal"
                 onClick={executeDelete}
               >
