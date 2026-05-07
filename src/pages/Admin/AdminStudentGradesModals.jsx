@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal } from "bootstrap";
 
 const AdminStudentGradesModals = ({
   activeStudent,
   studentGrades,
+  isLoadingGrades,
   triggerApprove,
   triggerDecline,
   proceedToFeedback,
@@ -12,26 +13,62 @@ const AdminStudentGradesModals = ({
   declineFeedback,
   setDeclineFeedback,
 }) => {
+  // Filters & Search
   const [syFilter, setSyFilter] = useState("all");
   const [semFilter, setSemFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Para sa Frontend Debounce
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Pagination
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Get unique school years for the filter dropdown
   const uniqueSYs = [...new Set(studentGrades.map((g) => g.school_year))];
 
-  // Filtering Logic para sa loob ng modal table
+  // DEBOUNCE EFFECT (500ms Delay)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [syFilter, semFilter, debouncedSearch, entriesPerPage]);
+
+  // Filtering Logic
   const filteredGrades = studentGrades.filter((grade) => {
     const matchSy = syFilter === "all" || grade.school_year === syFilter;
     const matchSem = semFilter === "all" || grade.semester === semFilter;
-    return matchSy && matchSem;
+    const matchSearch =
+      `${grade.subject_code} ${grade.subject_description} ${grade.teacher_name}`
+        .toLowerCase()
+        .includes(debouncedSearch.toLowerCase());
+    return matchSy && matchSem && matchSearch;
   });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredGrades.length / entriesPerPage);
+  const startIndex = (currentPage - 1) * entriesPerPage;
+  const currentGrades = filteredGrades.slice(
+    startIndex,
+    startIndex + entriesPerPage,
+  );
 
   const handleCloseMainModal = () => {
     setSyFilter("all");
     setSemFilter("all");
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setCurrentPage(1);
   };
 
   const handleCancelAction = () => {
-    // Ibabalik ang main modal kapag nag-cancel sa confirmation modal
     setTimeout(() => {
       new Modal(document.getElementById("studentGradesModal")).show();
     }, 400);
@@ -46,14 +83,14 @@ const AdminStudentGradesModals = ({
         aria-hidden="true"
         data-bs-backdrop="static"
       >
-        <div className="modal-dialog modal-dialog-centered modal-xl">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div className="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-light">
             <div
-              className="modal-header border-bottom pb-3"
+              className="modal-header border-bottom py-3 d-flex flex-row align-items-center justify-content-between"
               style={{ backgroundColor: "var(--accent-color)" }}
             >
               <h5
-                className="modal-title fw-bold"
+                className="modal-title fw-bold mb-0"
                 style={{ color: "var(--primary-color)" }}
               >
                 <i className="bi bi-journal-bookmark-fill me-2"></i>
@@ -62,99 +99,165 @@ const AdminStudentGradesModals = ({
               </h5>
               <button
                 type="button"
-                className="btn-close shadow-none"
+                className="btn-close shadow-none m-0"
                 data-bs-dismiss="modal"
                 onClick={handleCloseMainModal}
               ></button>
             </div>
 
-            <div className="modal-body p-4 bg-white">
-              <div className="d-flex flex-wrap justify-content-end gap-3 mb-3">
-                {/* SY FILTER */}
-                <div className="col-12 col-md-auto">
-                  <div className="input-group" style={{ width: "300px" }}>
-                    <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                      <i className="bi bi-calendar-event"></i>
-                    </span>
-                    <select
-                      className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                      value={syFilter}
-                      onChange={(e) => setSyFilter(e.target.value)}
-                    >
-                      <option value="all">All School Years</option>
-                      {uniqueSYs.map((sy) => (
-                        <option key={sy} value={sy}>
-                          {sy}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+            <div className="modal-body p-4 bg-light">
+              {/* UNIFIED TOOLKIT BAR */}
+              <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+                <div className="card-body p-0">
+                  <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
+                    <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+                      Show
+                      <select
+                        className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                        style={{ width: "70px" }}
+                        value={entriesPerPage}
+                        onChange={(e) =>
+                          setEntriesPerPage(Number(e.target.value))
+                        }
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                      </select>
+                      entries
+                    </div>
 
-                {/* SEM FILTER */}
-                <div className="col-12 col-md-auto">
-                  <div className="input-group" style={{ width: "300px" }}>
-                    <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                      <i className="bi bi-calendar-range"></i>
-                    </span>
-                    <select
-                      className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                      value={semFilter}
-                      onChange={(e) => setSemFilter(e.target.value)}
+                    {/* SEARCH INPUT */}
+                    <div
+                      className="input-group flex-grow-1"
+                      style={{ minWidth: "400px" }}
                     >
-                      <option value="all">All Semesters</option>
-                      <option value="1st">1st Semester</option>
-                      <option value="2nd">2nd Semester</option>
-                    </select>
+                      <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                        placeholder="Search Subject or Teacher..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+
+                    {/* SY FILTER */}
+                    <div className="input-group" style={{ minWidth: "200px" }}>
+                      <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                        <i className="bi bi-calendar-event"></i>
+                      </span>
+                      <select
+                        className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                        value={syFilter}
+                        onChange={(e) => setSyFilter(e.target.value)}
+                      >
+                        <option value="all">All School Years</option>
+                        {uniqueSYs.map((sy) => (
+                          <option key={sy} value={sy}>
+                            {sy}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* SEM FILTER */}
+                    <div className="input-group" style={{ minWidth: "200px" }}>
+                      <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                        <i className="bi bi-calendar-range"></i>
+                      </span>
+                      <select
+                        className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                        value={semFilter}
+                        onChange={(e) => setSemFilter(e.target.value)}
+                      >
+                        <option value="all">All Semesters</option>
+                        <option value="1st">1st Semester</option>
+                        <option value="2nd">2nd Semester</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* GRADES TABLE */}
-              <div className="border rounded-4 overflow-hidden shadow-sm">
+              {/* GRADES DATATABLE */}
+              <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
-                  className="table-responsive custom-scrollbar bg-white"
+                  className="table-responsive custom-scrollbar"
                   style={{ maxHeight: "400px" }}
                 >
-                  <table className="table table-hover align-middle mb-0 custom-table">
-                    <thead className="bg-light sticky-top">
+                  <table
+                    className="table table-summer align-middle mb-0"
+                    style={{ minWidth: "900px" }}
+                  >
+                    <thead className="bg-white sticky-top z-1 shadow-sm">
                       <tr>
-                        <th className="small fw-bold text-muted px-4 py-3 text-uppercase">
-                          SY & Sem
+                        <th
+                          className="ps-4"
+                          style={{ width: "60px", borderTop: "none" }}
+                        >
+                          #
                         </th>
-                        <th className="small fw-bold text-muted py-3 text-uppercase">
-                          Subject Code
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-uppercase">
-                          Encoded By
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
+                        <th style={{ borderTop: "none" }}>SY & Sem</th>
+                        <th style={{ borderTop: "none" }}>Subject Details</th>
+                        <th style={{ borderTop: "none" }}>Encoded By</th>
+                        <th
+                          className="text-center"
+                          style={{ borderTop: "none" }}
+                        >
                           Final Grade
                         </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
+                        <th
+                          className="text-center"
+                          style={{ borderTop: "none" }}
+                        >
                           Status
                         </th>
-                        <th className="small fw-bold text-muted py-3 text-center pe-4 text-uppercase">
+                        <th
+                          className="text-center pe-4"
+                          style={{ borderTop: "none" }}
+                        >
                           Admin Action
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="border-top-0">
-                      {filteredGrades.length > 0 ? (
-                        filteredGrades.map((record) => (
-                          <tr key={record.id}>
-                            <td className="px-4">
+                    <tbody>
+                      {isLoadingGrades ? (
+                        <tr>
+                          <td
+                            colSpan="7"
+                            className="text-center py-5 text-muted bg-white"
+                          >
+                            <div
+                              className="spinner-border spinner-border-sm text-primary me-2"
+                              role="status"
+                            ></div>
+                            Loading grades...
+                          </td>
+                        </tr>
+                      ) : currentGrades.length > 0 ? (
+                        currentGrades.map((record, index) => (
+                          <tr key={record.id} className="hover-bg-light">
+                            <td className="ps-4 fw-bold text-muted py-2">
+                              {startIndex + index + 1}
+                            </td>
+                            <td className="py-2">
                               <span className="d-block fw-bold text-dark small">
                                 {record.school_year}
                               </span>
                               <span
-                                className="d-block text-muted"
-                                style={{ fontSize: "0.75rem" }}
+                                className="d-block text-muted text-uppercase"
+                                style={{
+                                  fontSize: "0.65rem",
+                                  letterSpacing: "0.5px",
+                                }}
                               >
                                 {record.semester} Semester
                               </span>
                             </td>
-                            <td>
+                            <td className="py-2">
                               <span className="d-block fw-bold font-monospace text-primary">
                                 {record.subject_code}
                               </span>
@@ -169,27 +272,27 @@ const AdminStudentGradesModals = ({
                                 {record.subject_description}
                               </span>
                             </td>
-                            {/* TEACHER PANGALAN DITO */}
-                            <td>
-                              <span className="d-block text-dark fw-bold small">
-                                {record.teacher_name || "Unknown Teacher"}
-                              </span>
+                            <td className="py-2">
+                              <div className="d-flex align-items-center py-1">
+                                <span className="d-block text-dark fw-bold small">
+                                  {record.teacher_name || "Unknown Teacher"}
+                                </span>
+                              </div>
                             </td>
                             <td
-                              className={`text-center fw-bolder fs-5 ${record.grade < 75 ? "text-danger" : "text-dark"}`}
+                              className={`text-center fw-bolder fs-5 py-2 ${record.grade < 75 ? "text-danger" : "text-dark"}`}
                             >
                               {record.grade}
                             </td>
-                            <td className="text-center">
+                            <td className="text-center py-2">
                               {record.status === "pending" && (
-                                <span className="badge bg-warning bg-opacity-25 text-dark border border-warning px-3 py-1 rounded-3">
-                                  Pending Review
+                                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning px-3 py-1 rounded-3">
+                                  Pending
                                 </span>
                               )}
                               {record.status === "approved" && (
-                                <span className="badge bg-success bg-opacity-10 text-success border border-success px-3 py-1 rounded-3">
-                                  <i className="bi bi-lock-fill me-1"></i>{" "}
-                                  Locked
+                                <span className="text-success rounded-3">
+                                  <i className="bi bi-lock-fill me-1"></i>
                                 </span>
                               )}
                               {record.status === "declined" && (
@@ -198,7 +301,7 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                             </td>
-                            <td className="text-center pe-4">
+                            <td className="text-center pe-4 py-2">
                               {record.status === "pending" ? (
                                 <div className="d-flex justify-content-center gap-2">
                                   <button
@@ -225,11 +328,25 @@ const AdminStudentGradesModals = ({
                       ) : (
                         <tr>
                           <td
-                            colSpan="6"
-                            className="text-center py-5 text-muted"
+                            colSpan="7"
+                            className="p-4 bg-light border-bottom-0"
                           >
-                            <i className="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
-                            No grade records found for the selected filters.
+                            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                              <i
+                                className="bi bi-inbox text-muted d-block mb-3"
+                                style={{ fontSize: "3rem", opacity: 0.5 }}
+                              ></i>
+                              <h5 className="fw-bold text-dark">
+                                No records found.
+                              </h5>
+                              <p className="text-muted small mb-0">
+                                {searchQuery ||
+                                syFilter !== "all" ||
+                                semFilter !== "all"
+                                  ? "Try adjusting your search or filters."
+                                  : "No student grade records available."}
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -237,7 +354,65 @@ const AdminStudentGradesModals = ({
                   </table>
                 </div>
               </div>
+
+              {/* PAGINATION METADATA FOOTER */}
+              {filteredGrades.length > 0 && !isLoadingGrades && (
+                <div className="d-flex justify-content-between align-items-center mt-3 px-2">
+                  <p className="text-muted small mb-0">
+                    Showing {startIndex + 1} to{" "}
+                    {Math.min(
+                      startIndex + entriesPerPage,
+                      filteredGrades.length,
+                    )}{" "}
+                    of {filteredGrades.length} records
+                  </p>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0">
+                      <li
+                        className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                        >
+                          Previous
+                        </button>
+                      </li>
+                      {[...Array(totalPages)].map((_, i) => (
+                        <li
+                          key={i}
+                          className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                        >
+                          <button
+                            className="page-link page-link-summer"
+                            onClick={() => setCurrentPage(i + 1)}
+                          >
+                            {i + 1}
+                          </button>
+                        </li>
+                      ))}
+                      <li
+                        className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages),
+                            )
+                          }
+                        >
+                          Next
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
             </div>
+
             <div className="modal-footer border-top bg-light p-3 d-flex justify-content-end">
               <button
                 type="button"
@@ -380,7 +555,12 @@ const AdminStudentGradesModals = ({
                 onClick={handleCancelAction}
               ></button>
             </div>
-            <form onSubmit={executeDecline}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                executeDecline(e);
+              }}
+            >
               <div className="modal-body p-4 bg-white">
                 <label className="form-label small fw-bold text-dark">
                   Reason for Declining <span className="text-danger">*</span>
@@ -412,6 +592,7 @@ const AdminStudentGradesModals = ({
                   type="submit"
                   className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
                 >
+                  <i className="bi bi-plus-circle-fill me-2"></i>
                   Submit
                 </button>
               </div>
