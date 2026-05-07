@@ -29,8 +29,12 @@ export const AdminDownloadZipModal = ({ selectedIds, executeDownloadZip }) => {
           <div className="modal-body text-center p-4">
             <h4 className="fw-bold text-dark mt-2">Download Files</h4>
             <p className="text-muted mb-0">
-              Are you sure you want to download <b>{selectedIds.length}</b>{" "}
-              selected file{selectedIds.length > 1 ? "s" : ""} as a ZIP archive?
+              Are you sure you want to download{" "}
+              <b>
+                {selectedIds.length}
+                selected file{selectedIds.length > 1 ? "s" : ""}
+              </b>{" "}
+              as a ZIP archive?
             </p>
           </div>
           <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">

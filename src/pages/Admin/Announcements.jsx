@@ -614,12 +614,12 @@ const Announcements = () => {
                   <td className="py-3">
                     <div className="d-flex flex-wrap gap-2">
                       {item.link && (
-                        <span className="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-3 px-2 py-1">
+                        <span className="badge bg-primary text-light shadow-sm fw-medium rounded-3 px-2 py-1">
                           <i className="bi bi-link-45deg me-1"></i> Link
                         </span>
                       )}
                       {item.files && item.files.length > 0 && (
-                        <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-3 px-2 py-1">
+                        <span className="badge bg-secondary text-light shadow-sm fw-medium rounded-3 px-2 py-1">
                           <i className="bi bi-file-earmark-text me-1"></i>{" "}
                           {item.files.length} Files
                         </span>
@@ -632,19 +632,18 @@ const Announcements = () => {
                   </td>
                   <td className="py-3">
                     {item.status === "Pending" && (
-                      <span className="badge bg-warning text-dark rounded-3 px-3 py-2 shadow-sm fw-medium">
-                        <i className="bi bi-hourglass-split me-1"></i> Pending
+                      <span className="badge bg-warning bg-opacity-10 text-warning rounded-3 px-2 py-1 border border-warning-subtle">
+                        Pending
                       </span>
                     )}
                     {item.status === "Published" && (
-                      <span className="badge bg-success text-white rounded-3 px-3 py-2 shadow-sm fw-medium">
-                        <i className="bi bi-check-circle-fill me-1"></i>{" "}
+                      <span className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1 border border-success-subtle">
                         Published
                       </span>
                     )}
                     {item.status === "Done" && (
-                      <span className="badge bg-secondary text-white rounded-3 px-3 py-2 shadow-sm fw-medium">
-                        <i className="bi bi-dash-circle-fill me-1"></i> Done
+                      <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-3 px-2 py-1 border border-secondary-subtle">
+                        Done
                       </span>
                     )}
                   </td>

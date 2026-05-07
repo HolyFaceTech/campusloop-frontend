@@ -347,7 +347,7 @@ const AdminStudentGrades = () => {
                 value={genderFilter}
                 onChange={(e) => setGenderFilter(e.target.value)}
               >
-                <option value="all">Gender</option>
+                <option value="all">All Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
               </select>
@@ -474,10 +474,6 @@ const AdminStudentGrades = () => {
                           className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
-                          <i
-                            className="bi bi-circle-fill me-1"
-                            style={{ fontSize: "0.4rem" }}
-                          ></i>{" "}
                           Action Needed
                         </span>
                       ) : (
@@ -485,10 +481,6 @@ const AdminStudentGrades = () => {
                           className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
-                          <i
-                            className="bi bi-check-circle-fill me-1"
-                            style={{ fontSize: "0.5rem" }}
-                          ></i>{" "}
                           Cleared
                         </span>
                       )}

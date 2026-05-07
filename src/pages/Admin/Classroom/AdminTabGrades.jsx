@@ -319,7 +319,7 @@ const AdminTabGrades = () => {
                           </div>
                           <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
                             <span
-                              className="badge bg-white text-dark border fw-semibold shadow-sm"
+                              className="text-dark fw-semibold "
                               style={{
                                 fontSize: "0.65rem",
                                 padding: "0.25rem 0.4rem",
