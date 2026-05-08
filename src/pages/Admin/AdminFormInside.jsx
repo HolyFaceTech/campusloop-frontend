@@ -246,7 +246,7 @@ const AdminFormInside = () => {
 
             <button
               onClick={confirmTeacherPDF}
-              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 transition-all"
+              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-medium flex-shrink-0 transition-all"
             >
               <i className="bi bi-printer-fill"></i> Print Form
             </button>
@@ -301,11 +301,11 @@ const AdminFormInside = () => {
                   Security Mode
                 </span>
                 {form?.is_focus_mode ? (
-                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1">
                     Focus Mode ON
                   </span>
                 ) : (
-                  <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1">
                     Normal
                   </span>
                 )}
@@ -333,11 +333,11 @@ const AdminFormInside = () => {
                   Question Order
                 </span>
                 {form?.is_shuffle_questions ? (
-                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1">
                     Shuffled
                   </span>
                 ) : (
-                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1">
                     Default Order
                   </span>
                 )}
@@ -686,7 +686,7 @@ const AdminFormInside = () => {
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                            className="badge border text-dark fw-medium text-uppercase rounded-3 px-3 py-2"
                             style={{
                               maxWidth: "150px",
                               backgroundColor: "var(--accent-color)",

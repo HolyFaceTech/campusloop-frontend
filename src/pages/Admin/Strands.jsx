@@ -254,7 +254,7 @@ const Strands = () => {
         <div className="flex-shrink-0">
           <button
             onClick={() => openFormModal("create")}
-            className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2 w-100 justify-content-center"
+            className="btn btn-campusloop fw-medium shadow-sm px-4 rounded-3 d-flex align-items-center gap-2 w-100 justify-content-center"
           >
             <i className="bi bi-plus-lg fs-5"></i> New Strand
           </button>
@@ -370,7 +370,7 @@ const Strands = () => {
                     </li>
                     <li>
                       <button
-                        className="dropdown-item py-2 fw-bold text-danger"
+                        className="dropdown-item py-2 fw-medium text-danger"
                         onClick={() => confirmDelete(strand)}
                       >
                         <i className="bi bi-trash-fill me-2"></i> Delete

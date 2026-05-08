@@ -455,7 +455,7 @@ const AdminStudentGrades = () => {
 
                     <td className="py-2">
                       <span
-                        className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                        className="badge border text-dark fw-medium text-uppercase rounded-3 px-3 py-2"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {student.strand?.name || "N/A"}
@@ -471,14 +471,14 @@ const AdminStudentGrades = () => {
                     <td className="text-center py-2">
                       {student.has_pending_grades ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Action Needed
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success rounded-3 px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Cleared

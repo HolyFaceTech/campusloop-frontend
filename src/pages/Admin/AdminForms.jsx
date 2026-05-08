@@ -174,7 +174,7 @@ const AdminForms = () => {
                   style={{ cursor: "pointer" }}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-3 ms-2">
+                  <span className="badge bg-primary fw-medium rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>
@@ -383,7 +383,7 @@ const AdminForms = () => {
                       </span>
                       {item.timer > 0 ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25"
+                          className="badge bg-warning bg-opacity-10 text-dark fw-medium border border-warning border-opacity-25"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -417,7 +417,7 @@ const AdminForms = () => {
                       </span>
                       {item.is_focus_mode ? (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -427,7 +427,7 @@ const AdminForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -451,7 +451,7 @@ const AdminForms = () => {
                       </span>
                       {item.is_shuffle_questions ? (
                         <span
-                          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"
+                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -461,7 +461,7 @@ const AdminForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",

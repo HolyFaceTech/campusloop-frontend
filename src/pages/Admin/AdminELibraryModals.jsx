@@ -112,10 +112,11 @@ const AdminELibraryModals = ({
                                 {file.name}
                               </p>
                               <p
-                                className="mb-0 text-muted"
+                                className="mb-0 text-muted text-uppercase"
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                {formatBytes(file.file_size)}
+                                {formatBytes(file.file_size)} •{" "}
+                                {file.file_extension}
                               </p>
                             </div>
                           </div>

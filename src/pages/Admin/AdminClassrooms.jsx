@@ -211,7 +211,7 @@ const AdminClassrooms = () => {
                   style={{ cursor: "pointer" }}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-3 ms-2">
+                  <span className="badge bg-primary fw-medium rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>

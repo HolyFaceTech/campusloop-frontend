@@ -255,7 +255,7 @@ const AdminELibrary = () => {
                   onClick={toggleSelectAll}
                 >
                   Select All
-                  <span className="badge bg-primary rounded-3 ms-2">
+                  <span className="badge bg-primary fw-medium rounded-3 ms-2">
                     {selectedIds.length}
                   </span>
                 </label>
@@ -319,7 +319,7 @@ const AdminELibrary = () => {
             {/* BUTTON COLORS */}
             <div className="col-12 col-xl-auto ms-xl-auto d-flex flex-wrap gap-2">
               <button
-                className="btn btn-success fw-bold rounded-3 shadow-sm d-flex align-items-center"
+                className="btn btn-success fw-medium rounded-3 shadow-sm d-flex align-items-center"
                 disabled={selectedIds.length === 0}
                 onClick={triggerApprove}
               >
@@ -327,7 +327,7 @@ const AdminELibrary = () => {
                 <span className="d-none d-xl-inline">Approve</span>
               </button>
               <button
-                className="btn btn-warning text-dark fw-bold rounded-3 shadow-sm d-flex align-items-center"
+                className="btn btn-warning text-dark fw-medium rounded-3 shadow-sm d-flex align-items-center"
                 disabled={selectedIds.length === 0}
                 onClick={triggerDecline}
               >
@@ -335,7 +335,7 @@ const AdminELibrary = () => {
                 <span className="d-none d-xl-inline">Decline</span>
               </button>
               <button
-                className="btn btn-danger text-white fw-bold rounded-3 shadow-sm d-flex align-items-center"
+                className="btn btn-danger text-white fw-medium rounded-3 shadow-sm d-flex align-items-center"
                 disabled={selectedIds.length === 0}
                 onClick={triggerDelete}
               >
@@ -466,7 +466,7 @@ const AdminELibrary = () => {
                     <div className="text-end flex-shrink-0">
                       {item.status === "pending" && (
                         <span
-                          className="badge bg-warning bg-opacity-25 text-warning border border-warning px-2 py-1 shadow-sm"
+                          className="badge bg-warning bg-opacity-25 text-warning fw-medium border border-warning px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Pending
@@ -474,7 +474,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "approved" && (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 shadow-sm"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Approved
@@ -482,7 +482,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "declined" && (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Declined

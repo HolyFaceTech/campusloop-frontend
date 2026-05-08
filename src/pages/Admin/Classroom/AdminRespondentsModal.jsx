@@ -122,35 +122,48 @@ const AdminRespondentsModal = ({ selectedItem }) => {
         icon: "bi-file-earmark-pdf-fill",
         color: "#dc3545",
         bg: "#f8d7da",
+        label: "PDF",
       };
     if (["doc", "docx"].includes(ext))
       return {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
         icon: "bi-file-earmark-excel-fill",
         color: "#198754",
         bg: "#d1e7dd",
+        label: "EXCEL",
+      };
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
       };
     if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
         bg: "#e0cffc",
+        label: "IMAGE",
       };
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
         color: "#fd7e14",
         bg: "#ffe5d0",
+        label: "VIDEO",
       };
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
       bg: "#e2e3e5",
+      label: "FILE",
     };
   };
 
@@ -362,27 +375,27 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                               </td>
                               <td className="text-center">
                                 {isGraded ? (
-                                  <span className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1 shadow-sm">
+                                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success rounded-3 px-2 py-1 shadow-sm">
                                     Graded
                                   </span>
                                 ) : isReturned ? (
-                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1 shadow-sm">
+                                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger rounded-3 px-2 py-1 shadow-sm">
                                     Returned
                                   </span>
                                 ) : isDoneLate ? (
-                                  <span className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1">
+                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1">
                                     Done Late
                                   </span>
                                 ) : hasSubmission ? (
-                                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-3 px-2 py-1 shadow-sm">
+                                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary rounded-3 px-2 py-1 shadow-sm">
                                     Turned In
                                   </span>
                                 ) : isMissing ? (
-                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1 shadow-sm">
+                                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger rounded-3 px-2 py-1 shadow-sm">
                                     Missing
                                   </span>
                                 ) : (
-                                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-3 px-2 py-1 shadow-sm">
+                                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary rounded-3 px-2 py-1 shadow-sm">
                                     Pending
                                   </span>
                                 )}
@@ -627,7 +640,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                               className="mb-0 text-muted"
                               style={{ fontSize: "0.75rem" }}
                             >
-                              {formatBytes(file.file_size)} {style.label}
+                              {formatBytes(file.file_size)} • {style.label}
                             </p>
                           </div>
                         </div>
@@ -686,7 +699,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                     <i className="bi bi-award-fill text-warning me-2"></i>
                     Assignment Grade:
                   </label>
-                  <div className="bg-white border rounded-3 px-3 py-1 shadow-sm d-inline-flex align-items-baseline">
+                  <div className="d-inline-flex align-items-baseline">
                     <span className="fw-bolder text-primary fs-5 lh-1">
                       {selectedStudent?.submission?.grade ?? "-"}
                     </span>

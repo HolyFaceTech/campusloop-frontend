@@ -417,7 +417,7 @@ const Announcements = () => {
         </div>
         <button
           onClick={openCreateModal}
-          className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
+          className="btn btn-campusloop fw-medium shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
         >
           <i className="bi bi-plus-lg fs-5"></i> New Announcement
         </button>
@@ -510,8 +510,7 @@ const Announcements = () => {
               disabled={selectedIds.length === 0}
               onClick={() => confirmDelete(null)}
             >
-              <i className="bi bi-trash-fill"></i> Delete{" "}
-              {selectedIds.length > 0 && `(${selectedIds.length})`}
+              <i className="bi bi-trash-fill"></i> Delete
             </button>
           </div>
         </div>
@@ -614,13 +613,12 @@ const Announcements = () => {
                   <td className="py-3">
                     <div className="d-flex flex-wrap gap-2">
                       {item.link && (
-                        <span className="badge bg-primary text-light shadow-sm fw-medium rounded-3 px-2 py-1">
-                          <i className="bi bi-link-45deg me-1"></i> Link
+                        <span className="badge bg-primary text-light fw-medium rounded-3 px-2 py-1">
+                          Link
                         </span>
                       )}
                       {item.files && item.files.length > 0 && (
-                        <span className="badge bg-secondary text-light shadow-sm fw-medium rounded-3 px-2 py-1">
-                          <i className="bi bi-file-earmark-text me-1"></i>{" "}
+                        <span className="badge bg-secondary text-light fw-medium rounded-3 px-2 py-1">
                           {item.files.length} Files
                         </span>
                       )}
@@ -632,17 +630,17 @@ const Announcements = () => {
                   </td>
                   <td className="py-3">
                     {item.status === "Pending" && (
-                      <span className="badge bg-warning bg-opacity-10 text-warning rounded-3 px-2 py-1 border border-warning-subtle">
+                      <span className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-2 py-1 border border-warning-subtle">
                         Pending
                       </span>
                     )}
                     {item.status === "Published" && (
-                      <span className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1 border border-success-subtle">
+                      <span className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle">
                         Published
                       </span>
                     )}
                     {item.status === "Done" && (
-                      <span className="badge bg-secondary bg-opacity-10 text-secondary rounded-3 px-2 py-1 border border-secondary-subtle">
+                      <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium rounded-3 px-2 py-1 border border-secondary-subtle">
                         Done
                       </span>
                     )}

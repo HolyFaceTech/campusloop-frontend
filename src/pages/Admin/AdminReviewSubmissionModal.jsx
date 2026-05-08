@@ -103,7 +103,7 @@ const AdminReviewSubmissionModal = ({
                 <>
                   {/* STUDENT SUMMARY BADGE */}
                   <div
-                    className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 border border-light-subtle shadow-sm mx-auto"
+                    className="d-flex justify-content-between align-items-center mb-4 p-3 mx-auto"
                     style={{ maxWidth: "770px" }}
                   >
                     <div className="d-flex align-items-center gap-3">
@@ -266,7 +266,7 @@ const AdminReviewSubmissionModal = ({
                                     </div>
                                     <div className="text-end flex-shrink-0 mt-1">
                                       <span
-                                        className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success border border-success" : "bg-danger bg-opacity-10 text-danger border border-danger"} px-3 py-2 rounded-3`}
+                                        className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3`}
                                       >
                                         {isCorrect ? (
                                           <i className="bi bi-check-circle-fill me-1"></i>
@@ -303,7 +303,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-check-circle-fill text-success";
                                               badge = (
                                                 <span
-                                                  className="badge bg-success ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                  className="badge bg-success fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -323,7 +323,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-x-circle-fill text-danger";
                                               badge = (
                                                 <span
-                                                  className="badge bg-danger ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                  className="badge bg-danger fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -341,7 +341,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-check-circle-fill text-success opacity-75";
                                               badge = (
                                                 <span
-                                                  className="badge bg-success bg-opacity-10 text-success border border-success ms-auto rounded-3 px-2 py-1"
+                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -416,7 +416,7 @@ const AdminReviewSubmissionModal = ({
                                               {q.correct_answer}
                                             </span>
                                             <span
-                                              className="badge bg-success bg-opacity-10 text-success border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                              className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                               style={{ fontSize: "0.65rem" }}
                                             >
                                               <i className="bi bi-check-circle-fill me-1"></i>{" "}
