@@ -346,7 +346,7 @@ const UserRecords = () => {
         <div className="flex-shrink-0 d-flex gap-2">
           <button
             onClick={openImportModal}
-            className="btn btn-dark border shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
+            className="btn btn-outline-dark border-dark shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
           >
             <i className="bi bi-file-earmark-arrow-up fs-5"></i>
             <span className="d-none d-sm-inline">Import CSV</span>
@@ -354,7 +354,7 @@ const UserRecords = () => {
 
           <button
             onClick={() => openDrawer("create")}
-            className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
+            className="btn btn-campusloop fw-medium shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
           >
             <i className="bi bi-plus-lg fs-5"></i> New User
           </button>
@@ -432,8 +432,7 @@ const UserRecords = () => {
               disabled={selectedIds.length === 0}
               onClick={confirmBulkDelete}
             >
-              <i className="bi bi-trash-fill"></i> Delete{" "}
-              {selectedIds.length > 0 && `(${selectedIds.length})`}
+              <i className="bi bi-trash-fill"></i> Delete
             </button>
           </div>
         </div>
@@ -506,7 +505,7 @@ const UserRecords = () => {
                           </span>
                           {user.status === "active" ? (
                             <span
-                              className="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1"
+                              className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1"
                               style={{ fontSize: "0.65rem" }}
                             >
                               <i
@@ -517,7 +516,7 @@ const UserRecords = () => {
                             </span>
                           ) : (
                             <span
-                              className="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2 py-1"
+                              className="badge bg-danger bg-opacity-10 text-danger fw-medium rounded-3 px-2 py-1"
                               style={{ fontSize: "0.65rem" }}
                             >
                               <i
@@ -529,7 +528,7 @@ const UserRecords = () => {
                           )}
                           {user.id === currentUser.id && (
                             <span
-                              className="badge bg-secondary rounded-pill px-2 py-1"
+                              className="badge bg-secondary rounded-3 px-2 py-1"
                               style={{ fontSize: "0.65rem" }}
                             >
                               You
@@ -549,7 +548,7 @@ const UserRecords = () => {
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <span
-                        className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                        className="badge border text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {user.role}

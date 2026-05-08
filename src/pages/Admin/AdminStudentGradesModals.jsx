@@ -287,7 +287,7 @@ const AdminStudentGradesModals = ({
                             </td>
                             <td className="text-center py-2">
                               {record.status === "pending" && (
-                                <span className="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 rounded-3">
+                                <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1 rounded-3">
                                   Pending
                                 </span>
                               )}
@@ -297,7 +297,7 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                               {record.status === "declined" && (
-                                <span className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 rounded-3">
+                                <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 rounded-3">
                                   Declined
                                 </span>
                               )}
@@ -306,14 +306,14 @@ const AdminStudentGradesModals = ({
                               {record.status === "pending" ? (
                                 <div className="d-flex justify-content-center gap-2">
                                   <button
-                                    className="btn btn-sm btn-success fw-bold px-3 rounded-3 shadow-sm"
+                                    className="btn btn-sm btn-success fw-medium px-3 rounded-3 shadow-sm"
                                     onClick={() => triggerApprove(record.id)}
                                   >
                                     <i className="bi bi-check-circle-fill"></i>{" "}
                                     Approve
                                   </button>
                                   <button
-                                    className="btn btn-sm btn-warning text-dark fw-bold px-3 rounded-3 shadow-sm"
+                                    className="btn btn-sm btn-warning text-dark fw-medium px-3 rounded-3 shadow-sm"
                                     onClick={() => triggerDecline(record.id)}
                                   >
                                     <i className="bi bi-x-circle-fill"></i>{" "}

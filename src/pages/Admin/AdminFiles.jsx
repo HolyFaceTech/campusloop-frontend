@@ -520,7 +520,7 @@ const AdminFiles = () => {
                         </div>
                         <div className="text-end flex-shrink-0">
                           <span
-                            className="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 shadow-sm"
+                            className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary px-3 py-2 shadow-sm"
                             style={{ fontSize: "0.85rem" }}
                           >
                             {folder.file_count} File
@@ -642,7 +642,7 @@ const AdminFiles = () => {
                     >
                       Select All
                       <span
-                        className="badge bg-primary rounded-3 ms-2"
+                        className="badge bg-primary fw-medium rounded-3 ms-2"
                         style={{ fontSize: "0.75rem" }}
                       >
                         {selectedIds.length}
@@ -723,14 +723,14 @@ const AdminFiles = () => {
                 {/* ACTION BUTTONS (DOWNLOAD & DELETE) */}
                 <div className="d-flex gap-2 flex-shrink-0 ms-auto ps-2">
                   <button
-                    className="btn btn-campusloop fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                    className="btn btn-outline-dark fw-medium rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                     disabled={selectedIds.length === 0}
                     onClick={() => openModal("downloadZipModal")}
                   >
                     <i className="bi bi-download"></i> Download
                   </button>
                   <button
-                    className="btn btn-danger text-white fw-bold rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                    className="btn btn-danger text-white fw-medium rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                     disabled={selectedIds.length === 0}
                     onClick={() => openModal("deleteFilesModal")}
                   >
@@ -814,7 +814,7 @@ const AdminFiles = () => {
                                 {file.file_extension}
                               </span>
                               <span
-                                className={`badge ${badgeStyle} bg-opacity-10 border`}
+                                className={`badge ${badgeStyle} bg-opacity-10 fw-medium border`}
                                 style={{
                                   fontSize: "0.60rem",
                                   letterSpacing: "0.5px",

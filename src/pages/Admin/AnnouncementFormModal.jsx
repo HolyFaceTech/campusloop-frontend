@@ -39,20 +39,28 @@ const AnnouncementFormModal = ({
         icon: "bi-file-earmark-pdf-fill",
         color: "#dc3545",
         bg: "#f8d7da",
+        label: "PDF",
       };
     if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
         bg: "#e0cffc",
+        label: "IMAGE",
       };
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
         color: "#fd7e14",
         bg: "#ffe5d0",
+        label: "VIDEO",
       };
-    return { icon: "bi-file-earmark-fill", color: "#6c757d", bg: "#e2e3e5" };
+    return {
+      icon: "bi-file-earmark-fill",
+      color: "#6c757d",
+      bg: "#e2e3e5",
+      label: "FILE",
+    };
   };
 
   const onDragOver = (e) => e.preventDefault();
@@ -356,7 +364,7 @@ const AnnouncementFormModal = ({
                                     className="mb-0 text-muted"
                                     style={{ fontSize: "0.75rem" }}
                                   >
-                                    {formatSize(file.file_size)}
+                                    {formatSize(file.file_size)} • {style.label}
                                   </p>
                                 </div>
                               </div>
@@ -407,7 +415,7 @@ const AnnouncementFormModal = ({
                                     className="mb-0 text-muted"
                                     style={{ fontSize: "0.75rem" }}
                                   >
-                                    {formatSize(file.size)}
+                                    {formatSize(file.size)} • {style.label}
                                   </p>
                                 </div>
                               </div>

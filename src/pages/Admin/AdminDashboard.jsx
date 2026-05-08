@@ -125,7 +125,7 @@ const AdminDashboard = () => {
   }
 
   if (isLoading || !data) {
-    return <GlobalSpinner isLoading={true} text="Loading Dashboard Data..." />;
+    return <GlobalSpinner isLoading={true} text="Fetching Dashboard Data..." />;
   }
 
   return (
@@ -209,7 +209,7 @@ const AdminDashboard = () => {
                 <i className="bi bi-megaphone fs-5 me-2"></i>
                 Announcements
               </h6>
-              <span className="badge bg-primary rounded-3 shadow-sm">
+              <span className="badge bg-primary fw-medium rounded-3 shadow-sm">
                 {data.recent_announcements?.length || 0}
               </span>
             </div>
@@ -680,17 +680,17 @@ const AdminDashboard = () => {
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-danger rounded-3 px-3 shadow-sm">
+                        <span className="badge bg-danger fw-medium rounded-3 px-3 shadow-sm">
                           {teacher.classrooms}
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-primary rounded-3 px-3 shadow-sm">
+                        <span className="badge bg-primary fw-medium rounded-3 px-3 shadow-sm">
                           {teacher.classworks}
                         </span>
                       </td>
                       <td className="py-2 align-middle text-center">
-                        <span className="badge bg-success rounded-3 px-3 shadow-sm">
+                        <span className="badge bg-success fw-medium rounded-3 px-3 shadow-sm">
                           {teacher.forms}
                         </span>
                       </td>

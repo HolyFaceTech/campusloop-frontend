@@ -180,32 +180,32 @@ const AdminTabStream = () => {
     switch (type) {
       case "assignment":
         return {
-          badge: "text-primary bg-primary border-primary",
+          badge: "text-primary fw-medium bg-primary border-primary",
           hex: "var(--bs-primary)",
         };
       case "activity":
         return {
-          badge: "text-success bg-success border-success",
+          badge: "text-success fw-medium bg-success border-success",
           hex: "var(--bs-success)",
         };
       case "quiz":
         return {
-          badge: "text-warning bg-warning border-warning",
+          badge: "text-warning fw-medium bg-warning border-warning",
           hex: "var(--bs-warning)",
         };
       case "exam":
         return {
-          badge: "text-danger bg-danger border-danger",
+          badge: "text-danger fw-medium bg-danger border-danger",
           hex: "var(--bs-danger)",
         };
       case "material":
         return {
-          badge: "text-info bg-info border-info",
+          badge: "text-info fw-medium bg-info border-info",
           hex: "var(--bs-info)",
         };
       default:
         return {
-          badge: "text-secondary bg-secondary border-secondary",
+          badge: "text-secondary fw-medium bg-secondary border-secondary",
           hex: "var(--bs-secondary)",
         };
     }
@@ -250,7 +250,7 @@ const AdminTabStream = () => {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
-        label: "WORD",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
@@ -353,7 +353,7 @@ const AdminTabStream = () => {
                 >
                   Select All
                   <span
-                    className="badge bg-primary rounded-3 ms-2"
+                    className="badge bg-primary fw-medium rounded-3 ms-2"
                     style={{ fontSize: "0.75rem" }}
                   >
                     {selectedIds.length}
@@ -658,7 +658,7 @@ const AdminTabStream = () => {
                       <div className="d-flex align-items-center gap-3 position-relative ms-3">
                         {!isMaterial && (
                           <button
-                            className="btn btn-sm btn-campusloop fw-bold rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
+                            className="btn btn-sm btn-campusloop fw-medium rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
                             onClick={() => openRespondentsModal(cw)}
                           >
                             <i className="bi bi-people-fill me-2"></i>{" "}
