@@ -38,9 +38,15 @@ const RecycleBinModals = ({ actionType, selectedCount, executeAction }) => {
               {actionType === "restore" ? "restore" : "permanently delete"}{" "}
               <b>{selectedCount} selected item(s)</b>?
               <br />
-              {actionType === "restore"
-                ? "They will be returned to their active status."
-                : "WARNING: This action cannot be undone."}
+              {actionType === "restore" ? (
+                "They will be returned to their active status."
+              ) : (
+                <>
+                  <b className="text-danger fw-medium">
+                    This action cannot be undone.
+                  </b>
+                </>
+              )}
             </p>
           </div>
           <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
