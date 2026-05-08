@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -15,20 +15,33 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+// HELPER PARA SA AUTH HEADER
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const AdminCalendar = () => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = async (startStr, endStr) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/calendar/admin/events`,
+        {
+          ...getAuthHeader(),
+          params: {
+            start: startStr,
+            end: endStr,
+          },
+        },
       );
       setEvents(response.data);
     } catch (error) {
@@ -40,6 +53,11 @@ const AdminCalendar = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // FullCalendar trigger kapag nag-iba ang month o week view
+  const handleDatesSet = (dateInfo) => {
+    fetchEvents(dateInfo.startStr, dateInfo.endStr);
   };
 
   const handleEventClick = (clickInfo) => {
@@ -75,9 +93,9 @@ const AdminCalendar = () => {
           </p>
         </div>
 
-        {/* LEGEND COLOR INDICATORS SA UPPER RIGHT */}
-        <div className="d-flex align-items-center gap-3 bg-white px-4 py-2 rounded-3 shadow-sm border">
-          <span className="small fw-bold text-muted me-1 border-end pe-3">
+        {/* LEGEND COLOR INDICATORS */}
+        <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 bg-white px-3 py-2 rounded-3 shadow-sm border">
+          <span className="small fw-bold text-muted me-1 border-end pe-3 d-none d-sm-block">
             Legend
           </span>
           <div className="d-flex align-items-center gap-1 small text-dark fw-medium">
@@ -134,6 +152,7 @@ const AdminCalendar = () => {
             center: "title",
             right: "dayGridMonth,listWeek,listDay",
           }}
+          datesSet={handleDatesSet}
           events={events}
           eventClick={handleEventClick}
           height="auto"
