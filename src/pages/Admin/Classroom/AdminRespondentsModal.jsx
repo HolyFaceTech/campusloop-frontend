@@ -225,7 +225,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                     {/* RIGHT SIDE: Search Bar */}
                     <div
                       className="input-group"
-                      style={{ maxWidth: "350px", minWidth: "300px" }}
+                      style={{ maxWidth: "400px", minWidth: "350px" }}
                     >
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-search"></i>
