@@ -27,13 +27,30 @@ const RecycleBin = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [selectedItems, setSelectedItems] = useState([]); // format: [{id, type}]
+  const [categoryOptions, setCategoryOptions] = useState([]);
 
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-  // Action State (Modal)
+  // Action State
   const [actionType, setActionType] = useState(""); // "restore" or "delete"
+
+  // I-reset sa page 1 kapag nagbago ang filter
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterCategory, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchDeletedItems();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, filterCategory, currentPage, entriesPerPage]);
 
   const fetchDeletedItems = async () => {
     setIsLoading(true);
@@ -41,9 +58,22 @@ const RecycleBin = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/recycle-bin`,
-        getAuthHeader(),
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            category: filterCategory,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setItems(response.data);
+      setItems(response.data.data || []);
+      setTotalPages(response.data.last_page || 1);
+      setTotalRecords(response.data.total || 0);
+      if (response.data.categories) {
+        setCategoryOptions(response.data.categories);
+      }
       setSelectedItems([]);
     } catch (error) {
       sileo.error({
@@ -51,50 +81,17 @@ const RecycleBin = () => {
         description: "Failed to load recycle bin data.",
         ...darkToast,
       });
+      setItems([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initial Load
-  useEffect(() => {
-    fetchDeletedItems();
-  }, []);
-
-  // I-reset sa page 1 kapag nagbago ang filter
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterCategory, entriesPerPage]);
-
-  // Dynamic list of categories for the dropdown filter
-  const categoryOptions = [...new Set(items.map((item) => item.type))];
-
-  // CLIENT-SIDE FILTERING
-  const filteredItems = items.filter((item) => {
-    const matchesSearch = `${item.title} ${item.owner} ${item.id}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    const matchesCategory =
-      filterCategory === "all" || item.type === filterCategory;
-
-    return matchesSearch && matchesCategory;
-  });
-
-  // PAGINATION LOGIC
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredItems.length / entriesPerPage);
-
   const isSelected = (id) => selectedItems.some((item) => item.id === id);
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      // Piliin lang yung mga nasa current page
-      setSelectedItems(
-        currentItems.map((item) => ({ id: item.id, type: item.type })),
-      );
+      setSelectedItems(items.map((item) => ({ id: item.id, type: item.type })));
     } else {
       setSelectedItems([]);
     }
@@ -192,9 +189,10 @@ const RecycleBin = () => {
 
       {/* TOOLBAR SECTION */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
-            <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
+            {/* SHOW ENTRIES DROPDOWN */}
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
               Show
               <select
                 className="form-select form-select-sm mx-2 toolbar-input rounded-3"
@@ -212,7 +210,7 @@ const RecycleBin = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -226,7 +224,7 @@ const RecycleBin = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "180px" }}>
+            <div className="input-group" style={{ minWidth: "400px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -252,8 +250,7 @@ const RecycleBin = () => {
               data-bs-target="#actionConfirmModal"
               onClick={() => setActionType("restore")}
             >
-              <i className="bi bi-arrow-counterclockwise"></i> Restore{" "}
-              {selectedItems.length > 0 && `(${selectedItems.length})`}
+              <i className="bi bi-arrow-counterclockwise"></i> Restore
             </button>
             <button
               className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-4 flex-shrink-0 rounded-3 shadow-sm"
@@ -262,8 +259,7 @@ const RecycleBin = () => {
               data-bs-target="#actionConfirmModal"
               onClick={() => setActionType("delete")}
             >
-              <i className="bi bi-eraser-fill"></i> Permanent Delete{" "}
-              {selectedItems.length > 0 && `(${selectedItems.length})`}
+              <i className="bi bi-eraser-fill"></i> Permanent Delete
             </button>
           </div>
         </div>
@@ -284,19 +280,18 @@ const RecycleBin = () => {
                     className="form-check-input"
                     onChange={handleSelectAll}
                     checked={
-                      selectedItems.length === currentItems.length &&
-                      currentItems.length > 0
+                      selectedItems.length === items.length && items.length > 0
                     }
                   />
                 </th>
                 <th>Deleted Item</th>
-                <th className="text-center">Category</th>
+                <th>Category</th>
                 <th>Item ID</th>
                 <th className="text-end pe-4">Deleted At</th>
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item) => (
+              {items.map((item) => (
                 <tr key={`${item.type}-${item.id}`}>
                   <td className="ps-4">
                     <input
@@ -320,9 +315,9 @@ const RecycleBin = () => {
                       <i className="bi bi-person-circle me-1"></i> {item.owner}
                     </span>
                   </td>
-                  <td className="text-center">
+                  <td>
                     <span
-                      className="badge border text-dark rounded-3 px-2 py-1"
+                      className="badge border text-dark fw-medium rounded-3 px-3 py-2"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {item.type}
@@ -339,20 +334,38 @@ const RecycleBin = () => {
                   </td>
                 </tr>
               ))}
-              {currentItems.length === 0 && !isLoading && (
+              {items.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-muted">
-                    {items.length === 0 ? (
-                      <>
-                        <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                        Recycle Bin is empty.
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        No matching records found.
-                      </>
-                    )}
+                  <td colSpan="5" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      {searchQuery || filterCategory !== "all" ? (
+                        <>
+                          <i
+                            className="bi bi-inbox text-muted d-block mb-3"
+                            style={{ fontSize: "3rem", opacity: 0.5 }}
+                          ></i>
+                          <h5 className="fw-bold text-dark">
+                            No records found.
+                          </h5>
+                          <p className="text-muted small mb-0">
+                            No matching items found for your search or filter.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <i
+                            className="bi bi-inbox text-muted d-block mb-3"
+                            style={{ fontSize: "3rem", opacity: 0.5 }}
+                          ></i>
+                          <h5 className="fw-bold text-dark">
+                            Recycle Bin is empty.
+                          </h5>
+                          <p className="text-muted small mb-0">
+                            There are currently no deleted items in the system.
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}
@@ -362,12 +375,12 @@ const RecycleBin = () => {
       </div>
 
       {/* PAGINATION CONTROLS */}
-      {filteredItems.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
+      {totalRecords > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-2">
           <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredItems.length)} of{" "}
-            {filteredItems.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} records
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">
