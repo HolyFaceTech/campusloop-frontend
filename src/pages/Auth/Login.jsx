@@ -29,7 +29,6 @@ const Login = () => {
   const [loadingText, setLoadingText] = useState("Loading CampusLoop...");
   const [recaptchaToken, setRecaptchaToken] = useState("");
 
-  // 🚨 AUTO-LOGIN CHECKER & INITIAL LOAD EFFECT
   useEffect(() => {
     const checkExistingSession = () => {
       const token =
