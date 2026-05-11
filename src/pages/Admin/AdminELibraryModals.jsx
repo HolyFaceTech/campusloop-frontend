@@ -124,7 +124,7 @@ const AdminELibraryModals = ({
                             className="btn btn-campusloop btn-sm fw-bold px-3 rounded-3 shadow-sm text-nowrap flex-shrink-0"
                             onClick={() => handleViewDocument(file.path)}
                           >
-                            View{" "}
+                            <span className="d-none d-sm-inline">View</span>{" "}
                             <i
                               className="bi bi-box-arrow-up-right ms-1"
                               style={{ fontSize: "0.7rem" }}

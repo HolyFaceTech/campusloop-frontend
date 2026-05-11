@@ -205,6 +205,52 @@ const AdminFormInside = () => {
     ? form.questions.reduce((sum, q) => sum + q.points, 0)
     : 0;
 
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -246,7 +292,7 @@ const AdminFormInside = () => {
 
             <button
               onClick={confirmTeacherPDF}
-              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-medium flex-shrink-0 transition-all"
+              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-medium flex-shrink-0 transition-all justify-content-center"
             >
               <i className="bi bi-printer-fill"></i> Print Form
             </button>
@@ -386,7 +432,8 @@ const AdminFormInside = () => {
           }}
           onClick={() => setActiveTab("questionnaire")}
         >
-          <i className="bi bi-card-list"></i> Questionnaire
+          <i className="bi bi-card-list"></i>{" "}
+          <span className="d-none d-sm-inline">Questionnaire</span>
         </button>
         <button
           className={`btn rounded-0 pb-3 px-3 border-0 d-flex align-items-center gap-2 transition-all ${activeTab === "respondents" ? "fw-bolder" : "text-muted fw-medium"}`}
@@ -401,7 +448,8 @@ const AdminFormInside = () => {
           }}
           onClick={() => setActiveTab("respondents")}
         >
-          <i className="bi bi-people-fill"></i> Respondents
+          <i className="bi bi-people-fill"></i>{" "}
+          <span className="d-none d-sm-inline">Respondents</span>
           {/* UPDATED: Dito sa badge, totalRecords na ang ipapakita para accurate kahit naka-paginate */}
           <span
             className="badge rounded-3 shadow-sm ms-1"
@@ -576,10 +624,10 @@ const AdminFormInside = () => {
       {/* TAB 2: RESPONDENTS */}
       {activeTab === "respondents" && (
         <>
-          <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-            <div className="card-body p-3">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-1">
-                <div className="d-flex align-items-center flex-shrink-0 text-muted small fw-medium">
+          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+            <div className="card-body p-0">
+              <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+                <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
                   Show
                   <select
                     className="form-select form-select-sm mx-2 toolbar-input rounded-3"
@@ -595,7 +643,10 @@ const AdminFormInside = () => {
                   entries
                 </div>
 
-                <div className="input-group" style={{ width: "350px" }}>
+                <div
+                  className="input-group"
+                  style={{ maxWidth: "400px", minWidth: "350px" }}
+                >
                   <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                     <i className="bi bi-search"></i>
                   </span>
@@ -797,14 +848,14 @@ const AdminFormInside = () => {
 
           {/* PAGINATION BUTTONS */}
           {totalRecords > 0 && (
-            <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-1">
+            <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
               <span className="text-muted small">
                 Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
                 {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
                 {totalRecords} respondents
               </span>
               <nav>
-                <ul className="pagination pagination-sm mb-0">
+                <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
                   <li
                     className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
                   >
@@ -817,19 +868,9 @@ const AdminFormInside = () => {
                       Previous
                     </button>
                   </li>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                    >
-                      <button
-                        className="page-link page-link-summer"
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </button>
-                    </li>
-                  ))}
+
+                  {renderPageNumbers()}
+
                   <li
                     className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                   >

@@ -15,7 +15,7 @@ const AdminForms = () => {
   const [forms, setForms] = useState([]);
   const [uniqueTeachers, setUniqueTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingText, setLoadingText] = useState("Fetching forms...");
+  const [loadingText, setLoadingText] = useState("Loading forms...");
 
   // STATES PARA SA SERVER-SIDE SEARCH AT FILTERS
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,6 +125,52 @@ const AdminForms = () => {
       });
       setIsLoading(false);
     }
+  };
+
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
   };
 
   return (
@@ -525,14 +571,14 @@ const AdminForms = () => {
 
       {/* PAGINATION FOOTER */}
       {!isLoading && totalRecords > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-4 mb-5 px-2">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-5 gap-3 px-2">
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
             {totalRecords} forms
           </p>
           <nav>
-            <ul className="pagination pagination-sm mb-0">
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
               <li
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
@@ -545,19 +591,9 @@ const AdminForms = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+
+              {renderPageNumbers()}
+
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >

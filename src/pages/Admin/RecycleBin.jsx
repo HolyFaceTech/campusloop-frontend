@@ -54,7 +54,7 @@ const RecycleBin = () => {
 
   const fetchDeletedItems = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching deleted records...");
+    setLoadingText("Loading deleted records...");
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/recycle-bin`,
@@ -166,6 +166,52 @@ const RecycleBin = () => {
       minute: "2-digit",
     };
     return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
   };
 
   return (
@@ -323,13 +369,10 @@ const RecycleBin = () => {
                       {item.type}
                     </span>
                   </td>
-                  <td
-                    className="text-muted font-monospace small text-break"
-                    style={{ maxWidth: "250px" }}
-                  >
+                  <td className="text-muted font-monospace small text-break text-nowrap">
                     {item.id}
                   </td>
-                  <td className="text-muted small text-end pe-4">
+                  <td className="text-muted small text-end pe-4 text-nowrap">
                     {formatDateTime(item.deleted_at)}
                   </td>
                 </tr>
@@ -376,14 +419,14 @@ const RecycleBin = () => {
 
       {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-2">
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} records
+            {totalRecords} junks
           </p>
           <nav>
-            <ul className="pagination pagination-sm mb-0">
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
               <li
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
@@ -396,19 +439,9 @@ const RecycleBin = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+
+              {renderPageNumbers()}
+
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
