@@ -737,7 +737,7 @@ const AdminFormInside = () => {
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge border text-dark fw-medium text-uppercase rounded-3 px-3 py-2"
+                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
                             style={{
                               maxWidth: "150px",
                               backgroundColor: "var(--accent-color)",

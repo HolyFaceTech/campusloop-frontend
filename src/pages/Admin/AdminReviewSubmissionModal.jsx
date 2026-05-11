@@ -303,7 +303,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-check-circle-fill text-success";
                                               badge = (
                                                 <span
-                                                  className="badge bg-success fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}

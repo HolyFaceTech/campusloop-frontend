@@ -310,7 +310,7 @@ const AdminActivityLogsModal = () => {
                           </td>
                           <td className="py-2">
                             <span
-                              className="badge border text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
                               style={{ backgroundColor: "var(--accent-color)" }}
                             >
                               {log.action}
