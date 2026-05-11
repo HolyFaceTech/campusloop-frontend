@@ -288,7 +288,7 @@ const CalendarEventModal = ({ selectedEvent }) => {
           <div className="modal-footer border-top bg-light p-3 d-flex justify-content-end gap-2">
             <button
               type="button"
-              className="btn btn-light border px-4 fw-medium rounded-3"
+              className="btn btn-light border px-4 fw-medium rounded-3 shadow-sm"
               data-bs-dismiss="modal"
             >
               Close

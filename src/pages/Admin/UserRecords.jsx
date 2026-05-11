@@ -543,7 +543,7 @@ const UserRecords = () => {
                         {user.first_name.charAt(0)}
                       </div>
                       <div className="overflow-hidden">
-                        <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                        <div className="d-flex align-items-center text-nowrap gap-2 mb-1">
                           <span
                             className="fw-bold text-dark text-truncate"
                             style={{ maxWidth: "250px" }}
@@ -552,30 +552,22 @@ const UserRecords = () => {
                           </span>
                           {user.status === "active" ? (
                             <span
-                              className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1"
+                              className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle"
                               style={{ fontSize: "0.65rem" }}
                             >
-                              <i
-                                className="bi bi-circle-fill me-1"
-                                style={{ fontSize: "0.4rem" }}
-                              ></i>{" "}
                               Active
                             </span>
                           ) : (
                             <span
-                              className="badge bg-danger bg-opacity-10 text-danger fw-medium rounded-3 px-2 py-1"
+                              className="badge bg-danger bg-opacity-10 text-danger fw-medium rounded-3 px-2 py-1 border border-danger-subtle"
                               style={{ fontSize: "0.65rem" }}
                             >
-                              <i
-                                className="bi bi-circle-fill me-1"
-                                style={{ fontSize: "0.4rem" }}
-                              ></i>{" "}
                               Inactive
                             </span>
                           )}
                           {user.id === currentUser.id && (
                             <span
-                              className="badge bg-secondary rounded-3 px-2 py-1"
+                              className="badge bg-secondary rounded-3 px-2 py-1 fw-medium"
                               style={{ fontSize: "0.65rem" }}
                             >
                               You
@@ -595,7 +587,7 @@ const UserRecords = () => {
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <span
-                        className="badge border text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                        className="badge bg-opacity-10 border border-dark-subtle text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {user.role}

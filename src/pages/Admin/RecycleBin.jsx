@@ -363,7 +363,7 @@ const RecycleBin = () => {
                   </td>
                   <td>
                     <span
-                      className="badge border text-dark fw-medium rounded-3 px-3 py-2"
+                      className="badge border border-dark-subtle text-dark bg-opacity-10 fw-medium rounded-3 px-2 py-1"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {item.type}

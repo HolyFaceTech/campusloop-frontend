@@ -660,12 +660,12 @@ const Announcements = () => {
                   <td className="py-3 text-nowrap">
                     <div className="d-flex gap-2">
                       {item.link && (
-                        <span className="badge bg-primary text-light fw-medium rounded-3 px-2 py-1">
+                        <span className="badge bg-primary text-light fw-medium rounded-3 px-3 py-2">
                           Link
                         </span>
                       )}
                       {item.files && item.files.length > 0 && (
-                        <span className="badge bg-secondary text-light fw-medium rounded-3 px-2 py-1">
+                        <span className="badge bg-secondary text-light fw-medium rounded-3 px-3 py-2">
                           {item.files.length} Files
                         </span>
                       )}
