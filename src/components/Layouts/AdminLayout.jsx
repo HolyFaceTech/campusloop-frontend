@@ -27,7 +27,7 @@ const AdminLayout = () => {
 
   // MGA STATES PARA SA NOTIFICATIONS
   const [notifications, setNotifications] = useState([]);
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -55,12 +55,11 @@ const AdminLayout = () => {
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAnnouncements);
 
-    // REAL-TIME POLLING (Every 30 seconds)
     const intervalId = setInterval(() => {
       checkTodayAnnouncements();
       fetchActiveIndicator();
       fetchNotifications(); // Real-time notification check
-    }, 30000);
+    }, 60000); // 1 Minute na ang pagitan
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
@@ -77,10 +76,19 @@ const AdminLayout = () => {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/settings`,
       );
-      if (response.data) {
+
+      let settingsData = response.data;
+
+      if (Array.isArray(settingsData)) {
+        settingsData = settingsData[0];
+      } else if (settingsData && settingsData.data) {
+        settingsData = settingsData.data;
+      }
+
+      if (settingsData && settingsData.school_year && settingsData.semester) {
         setActiveSettings({
-          school_year: response.data.school_year,
-          semester: response.data.semester,
+          school_year: settingsData.school_year,
+          semester: settingsData.semester,
         });
       } else {
         setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
@@ -146,7 +154,8 @@ const AdminLayout = () => {
           },
         },
       );
-      setNotifications(response.data);
+      setNotifications(response.data.data || []);
+      setUnreadCount(response.data.unread_count || 0);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
@@ -527,7 +536,7 @@ const AdminLayout = () => {
                   <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
                     ? `SY: ${activeSettings.school_year}`
-                    : "SY: Not Set"}
+                    : "SY Not Set"}
                 </span>
                 <div className="vr"></div>
                 <span className="fw-bold text-muted small">
@@ -597,7 +606,7 @@ const AdminLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-danger">
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
                         {unreadCount} Unread
                       </span>
                     )}
@@ -612,7 +621,7 @@ const AdminLayout = () => {
                         No notifications yet.
                       </div>
                     ) : (
-                      notifications.slice(0, 50).map((notif) => (
+                      notifications.map((notif) => (
                         <div
                           key={notif.id}
                           className="dropdown-item py-3 border-bottom text-wrap"
@@ -647,12 +656,13 @@ const AdminLayout = () => {
                                 {notif.description}
                               </p>
                               <p
-                                className="mb-0 mt-1 fw-bold"
+                                className="mb-0 mt-1 fw-medium"
                                 style={{
                                   fontSize: "0.70rem",
                                   color: "var(--secondary-color)",
                                 }}
                               >
+                                <i className="bi bi-clock me-1"></i>
                                 {formatTimeAgo(notif.created_at)}
                               </p>
                             </div>
@@ -678,7 +688,7 @@ const AdminLayout = () => {
                         setShowNotif(false);
                         navigate("/admin/notifications");
                       }}
-                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-3"
+                      className="btn btn-campusloop fw-medium btn-sm w-100 rounded-3"
                     >
                       View All Notifications
                     </button>
