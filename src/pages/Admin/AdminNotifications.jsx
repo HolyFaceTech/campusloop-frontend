@@ -11,26 +11,47 @@ const darkToast = {
 
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
+
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingText, setLoadingText] = useState("Loading notifications...");
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Initial Load (May kasamang spinner)
-    fetchNotifications(true);
+  // STATES PARA SA DEBOUNCE AT PAGINATION
+  const [searchQuery, setSearchQuery] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-    // REAL-TIME POLLING (Every 30 seconds sa background, walang spinner)
+  // BACKGROUND POLLING Every 60s
+  useEffect(() => {
     const intervalId = setInterval(() => {
       fetchNotifications(false);
-    }, 30000);
-
-    // Cleanup pag umalis sa page
+    }, 60000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [searchQuery, currentPage, entriesPerPage]);
 
-  // Idinagdag natin ang showSpinner parameter para hindi mag-flash ang screen tuwing mag-re-refresh sa background
+  // RESET PAGE PAG NAG-TYPE SA SEARCH
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT (500ms)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchNotifications(true);
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage]);
+
   const fetchNotifications = async (showSpinner = true) => {
-    if (showSpinner) setIsLoading(true);
+    if (showSpinner) {
+      setLoadingText("Fetching notifications...");
+      setIsLoading(true);
+    }
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/notifications`,
@@ -38,9 +59,16 @@ const AdminNotifications = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setNotifications(response.data);
+      setNotifications(response.data.data || []);
+      setTotalPages(response.data.last_page || 1);
+      setTotalRecords(response.data.total || 0);
     } catch (error) {
       console.error("Failed to load notifications", error);
     } finally {
@@ -49,7 +77,6 @@ const AdminNotifications = () => {
   };
 
   const handleNotificationClick = async (notif) => {
-    // Kung hindi pa read, mark as read sa database
     if (!notif.is_read) {
       try {
         await axios.put(
@@ -65,12 +92,13 @@ const AdminNotifications = () => {
         console.error("Failed to mark as read", error);
       }
     }
-    // Redirect sa link
     navigate(notif.link);
   };
 
   const markAllAsRead = async () => {
+    setLoadingText("Marking all as read...");
     setIsLoading(true);
+
     try {
       await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/admin/notifications/mark-all-read`,
@@ -86,7 +114,7 @@ const AdminNotifications = () => {
         description: "All notifications marked as read.",
         ...darkToast,
       });
-      fetchNotifications(false); // Update the list without spinner
+      fetchNotifications(false); // Update table behind the scenes
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -109,14 +137,55 @@ const AdminNotifications = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  // FILTERING LOGIC PARA SA SEARCH BAR
-  const filteredNotifications = notifications.filter((notif) =>
-    notif.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
-      <GlobalSpinner isLoading={isLoading} text="Loading notifications..." />
+      <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -132,101 +201,177 @@ const AdminNotifications = () => {
         </div>
         <button
           onClick={markAllAsRead}
-          className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
+          className="btn btn-campusloop shadow-sm fw-medium px-4 rounded-3 d-flex align-items-center gap-2"
           disabled={!notifications.some((n) => !n.is_read)}
         >
           <i className="bi bi-check2-all fs-5"></i> Mark All as Read
         </button>
       </div>
 
-      {/* SEARCH BAR SECTION */}
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="input-group shadow-sm rounded-3 overflow-hidden">
-            <span className="input-group-text bg-white border-end-0 text-muted px-3">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control border-start-0 ps-0 toolbar-input"
-              placeholder="Search Notifications..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              entries
+            </div>
+
+            <div
+              className="input-group"
+              style={{ maxWidth: "400px", minWidth: "350px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search Notifications..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-        <div className="card-body p-0">
-          {notifications.length === 0 && !isLoading ? (
-            <div className="text-center py-5 text-muted">
-              <i className="bi bi-bell-slash fs-1 d-block mb-2 opacity-50"></i>
-              No notifications yet.
-            </div>
-          ) : filteredNotifications.length === 0 && !isLoading ? (
-            <div className="text-center py-5 text-muted">
-              <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-              No matching notifications found.
-            </div>
-          ) : (
-            <div className="table-responsive custom-scrollbar">
-              <table className="table table-hover align-middle mb-0">
-                <tbody>
-                  {filteredNotifications.map((notif) => (
-                    <tr
-                      key={notif.id}
-                      style={{
-                        cursor: "pointer",
-                        backgroundColor: notif.is_read
-                          ? "transparent"
-                          : "rgba(98, 111, 71, 0.05)",
-                      }}
-                      onClick={() => handleNotificationClick(notif)}
-                    >
-                      <td className="ps-4 py-3" style={{ width: "60px" }}>
-                        <div
-                          className="rounded-circle text-white d-flex align-items-center justify-content-center"
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            backgroundColor: notif.is_read
-                              ? "#adb5bd"
-                              : "var(--primary-color)",
-                          }}
-                        >
-                          <i
-                            className={`bi ${notif.is_read ? "bi-bell" : "bi-bell-fill"}`}
-                          ></i>
-                        </div>
-                      </td>
-                      <td className="py-3">
-                        <span
-                          className={`d-block ${notif.is_read ? "text-muted" : "fw-bold text-dark"}`}
-                        >
-                          {notif.description}
-                        </span>
-                        <span className="small text-muted">
-                          <i className="bi bi-clock me-1"></i>{" "}
-                          {formatDateTime(notif.created_at)}
-                        </span>
-                      </td>
-                      <td
-                        className="pe-4 py-3 text-end"
-                        style={{ width: "120px" }}
+      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+        <div className="table-responsive custom-scrollbar">
+          <table
+            className="table table-hover align-middle mb-0"
+            style={{ minWidth: "700px" }}
+          >
+            <tbody>
+              {notifications.length === 0 && !isLoading ? (
+                <tr>
+                  <td colSpan="3" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">
+                        {searchQuery
+                          ? "No records found."
+                          : "No notifications yet."}
+                      </h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery
+                          ? `No matching notifications found for search.`
+                          : "You have no system activities at the moment."}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                notifications.map((notif) => (
+                  <tr
+                    key={notif.id}
+                    style={{
+                      cursor: "pointer",
+                      backgroundColor: notif.is_read
+                        ? "transparent"
+                        : "rgba(98, 111, 71, 0.05)",
+                    }}
+                    onClick={() => handleNotificationClick(notif)}
+                  >
+                    <td className="ps-4 py-3" style={{ width: "60px" }}>
+                      <div
+                        className="rounded-circle text-white d-flex align-items-center justify-content-center"
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          backgroundColor: notif.is_read
+                            ? "#adb5bd"
+                            : "var(--primary-color)",
+                        }}
                       >
-                        {!notif.is_read && (
-                          <span className="badge bg-danger rounded-3">New</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                        <i
+                          className={`bi ${notif.is_read ? "bi-bell" : "bi-bell-fill"}`}
+                        ></i>
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className={`d-block ${notif.is_read ? "text-muted" : "fw-bold text-dark"}`}
+                      >
+                        {notif.description}
+                      </span>
+                      <span className="small text-muted">
+                        <i className="bi bi-clock me-1"></i>{" "}
+                        {formatDateTime(notif.created_at)}
+                      </span>
+                    </td>
+                    <td
+                      className="pe-4 py-3 text-end"
+                      style={{ width: "120px" }}
+                    >
+                      {!notif.is_read && (
+                        <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle rounded-3">
+                          New
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      {/* SMART PAGINATION */}
+      {!isLoading && totalRecords > 0 && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 mb-4 px-2 gap-3">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} notifications
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+
+              {renderPageNumbers()}
+
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
     </>
   );
 };
