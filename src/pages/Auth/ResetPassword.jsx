@@ -165,8 +165,13 @@ const ResetPassword = () => {
             {email && (
               <div className="mb-3">
                 <p
-                  className="fw-bold text-dark bg-light p-3 rounded-3 border shadow-sm mb-0 text-center"
-                  style={{ wordBreak: "break-all", letterSpacing: "0.5px" }}
+                  className="form-control fw-bold text-dark bg-light py-2 px-3 text-center"
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: "400",
+                    wordBreak: "break-all",
+                    letterSpacing: "0.5px",
+                  }}
                 >
                   {email}
                 </p>
@@ -181,7 +186,8 @@ const ResetPassword = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="form-control form-control-lg bg-light border-end-0"
+                  className="form-control bg-light border-end-0 py-2 px-3"
+                  style={{ fontSize: "0.95rem", fontWeight: "400" }}
                   placeholder="New secure password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -207,7 +213,8 @@ const ResetPassword = () => {
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   name="password_confirmation"
-                  className="form-control form-control-lg bg-light border-end-0"
+                  className="form-control bg-light border-end-0 py-2 px-3"
+                  style={{ fontSize: "0.95rem", fontWeight: "400" }}
                   placeholder="Retype password"
                   value={formData.password_confirmation}
                   onChange={handleInputChange}
@@ -225,10 +232,10 @@ const ResetPassword = () => {
 
             <button
               type="submit"
-              className="btn btn-campusloop btn-lg w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center"
+              className="btn btn-campusloop w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center gap-2"
               disabled={isLoading}
             >
-              Reset Password
+              <i className="bi bi-shield-lock-fill fs-5"></i> Reset Password
             </button>
 
             <div className="text-center">

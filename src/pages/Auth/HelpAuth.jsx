@@ -85,6 +85,10 @@ const HelpAuth = () => {
                 </h4>
               </div>
               <div className="modal-body px-4 pb-5">
+                <p className="text-muted small mb-4">
+                  Welcome to the Help Center. Select a topic below to explore
+                  authentication settings in the CampusLoop system.
+                </p>
                 <div className="accordion accordion-flush" id="helpAccordion">
                   {/* Instruction 1 - ACTIVE BY DEFAULT */}
                   <div className="accordion-item">

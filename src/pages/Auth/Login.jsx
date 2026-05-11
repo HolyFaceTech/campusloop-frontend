@@ -129,7 +129,8 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
-                className="form-control form-control-lg bg-light"
+                className="form-control bg-light py-2 px-3"
+                style={{ fontSize: "0.95rem", fontWeight: "400" }}
                 placeholder="student@school.edu"
                 value={formData.email}
                 onChange={handleInputChange}
@@ -146,7 +147,8 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="form-control form-control-lg bg-light border-end-0"
+                  className="form-control bg-light border-end-0 py-2 px-3"
+                  style={{ fontSize: "0.95rem", fontWeight: "400" }}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -224,10 +226,10 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn btn-campusloop btn-lg w-100 rounded-3 d-flex justify-content-center align-items-center"
+              className="btn btn-campusloop w-100 rounded-3 d-flex justify-content-center align-items-center gap-2"
               disabled={isLoading}
             >
-              Login
+              <i className="bi bi-person-badge fs-5"></i> Login
             </button>
           </form>
         </div>
