@@ -125,7 +125,7 @@ const AdminDashboard = () => {
   }
 
   if (isLoading || !data) {
-    return <GlobalSpinner isLoading={true} text="Fetching Dashboard Data..." />;
+    return <GlobalSpinner isLoading={true} text="Loading Dashboard Data..." />;
   }
 
   return (

@@ -48,7 +48,7 @@ const AdminNotifications = () => {
 
   const fetchNotifications = async (showSpinner = true) => {
     if (showSpinner) {
-      setLoadingText("Fetching notifications...");
+      setLoadingText("Loading notifications...");
       setIsLoading(true);
     }
 
@@ -201,10 +201,11 @@ const AdminNotifications = () => {
         </div>
         <button
           onClick={markAllAsRead}
-          className="btn btn-campusloop shadow-sm fw-medium px-4 rounded-3 d-flex align-items-center gap-2"
+          className="btn btn-campusloop shadow-sm fw-medium px-3 rounded-3 d-flex align-items-center gap-2"
           disabled={!notifications.some((n) => !n.is_read)}
         >
-          <i className="bi bi-check2-all fs-5"></i> Mark All as Read
+          <i className="bi bi-check2-all fs-5"></i>{" "}
+          <span className="d-none d-sm-inline">Mark All as Read</span>
         </button>
       </div>
 

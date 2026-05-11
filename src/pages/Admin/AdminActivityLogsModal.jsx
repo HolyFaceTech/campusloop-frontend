@@ -322,7 +322,7 @@ const AdminActivityLogsModal = () => {
                           >
                             {log.description}
                           </td>
-                          <td className="text-muted small text-end pe-4 py-2">
+                          <td className="text-muted small text-end pe-4 py-2 text-nowrap">
                             {formatDateTime(log.created_at)}
                           </td>
                         </tr>

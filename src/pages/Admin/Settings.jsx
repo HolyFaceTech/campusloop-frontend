@@ -49,7 +49,7 @@ const Settings = () => {
 
   const fetchSettings = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching settings...");
+    setLoadingText("Loading settings...");
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/settings`,
