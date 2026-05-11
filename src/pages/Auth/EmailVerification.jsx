@@ -153,8 +153,13 @@ const EmailVerification = () => {
             {email && (
               <div className="mt-3">
                 <p
-                  className="fw-bold text-dark bg-light p-3 rounded-3 border shadow-sm mb-0"
-                  style={{ wordBreak: "break-all", letterSpacing: "0.5px" }}
+                  className="form-control fw-bold text-dark bg-light py-2 px-3 text-center"
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: "400",
+                    wordBreak: "break-all",
+                    letterSpacing: "0.5px",
+                  }}
                 >
                   {email}
                 </p>
@@ -178,10 +183,11 @@ const EmailVerification = () => {
 
           <button
             onClick={handleResend}
-            className="btn btn-campusloop btn-lg w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center"
+            className="btn btn-campusloop w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center gap-2"
             disabled={isResending || isVerifying}
           >
-            Resend Verification Email
+            <i className="bi bi-envelope-arrow-up fs-5"></i> Resend Verification
+            Email
           </button>
 
           <div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { sileo } from "sileo";
@@ -25,8 +25,44 @@ const Login = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState("Loading CampusLoop...");
   const [recaptchaToken, setRecaptchaToken] = useState("");
+
+  useEffect(() => {
+    const checkExistingSession = () => {
+      const token =
+        localStorage.getItem("campusloop_token") ||
+        sessionStorage.getItem("campusloop_token");
+      const userStr =
+        localStorage.getItem("campusloop_user") ||
+        sessionStorage.getItem("campusloop_user");
+
+      if (token && userStr) {
+        setLoadingText("Resuming session...");
+        try {
+          const user = JSON.parse(userStr);
+          setTimeout(() => {
+            if (user.role === "admin") navigate("/admin/dashboard");
+            else if (user.role === "teacher") navigate("/teacher/home");
+            else if (user.role === "student") navigate("/student/home");
+            else setIsLoading(false);
+          }, 800); // 800ms delay para smooth ang transition
+          return;
+        } catch (error) {
+          localStorage.clear();
+          sessionStorage.clear();
+        }
+      }
+
+      // Kung walang naka-login, patayin ang spinner after 800ms para lumabas ang form
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 800);
+    };
+
+    checkExistingSession();
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -49,6 +85,7 @@ const Login = () => {
     }
 
     setIsLoading(true);
+    setLoadingText("Logging you in...");
 
     try {
       const response = await axios.post(
@@ -109,7 +146,7 @@ const Login = () => {
 
   return (
     <>
-      <GlobalSpinner isLoading={isLoading} text="Logging you in..." />
+      <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       <AuthLayout illustration="/images/login.svg">
         <div className="w-100" style={{ maxWidth: "400px", margin: "0 auto" }}>
@@ -129,7 +166,8 @@ const Login = () => {
               <input
                 type="email"
                 name="email"
-                className="form-control form-control-lg bg-light"
+                className="form-control bg-light py-2 px-3"
+                style={{ fontSize: "0.95rem", fontWeight: "400" }}
                 placeholder="student@school.edu"
                 value={formData.email}
                 onChange={handleInputChange}
@@ -146,7 +184,8 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="form-control form-control-lg bg-light border-end-0"
+                  className="form-control bg-light border-end-0 py-2 px-3"
+                  style={{ fontSize: "0.95rem", fontWeight: "400" }}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -224,10 +263,10 @@ const Login = () => {
 
             <button
               type="submit"
-              className="btn btn-campusloop btn-lg w-100 rounded-3 d-flex justify-content-center align-items-center"
+              className="btn btn-campusloop w-100 rounded-3 d-flex justify-content-center align-items-center gap-2"
               disabled={isLoading}
             >
-              Login
+              <i className="bi bi-person-badge fs-5"></i> Login
             </button>
           </form>
         </div>

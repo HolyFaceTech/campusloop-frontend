@@ -98,7 +98,8 @@ const ForgotPassword = () => {
               </label>
               <input
                 type="email"
-                className="form-control form-control-lg bg-light"
+                className="form-control bg-light py-2 px-3"
+                style={{ fontSize: "0.95rem", fontWeight: "400" }}
                 placeholder="Enter registered email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -117,10 +118,10 @@ const ForgotPassword = () => {
 
             <button
               type="submit"
-              className="btn btn-campusloop btn-lg w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center"
+              className="btn btn-campusloop w-100 rounded-3 mb-3 d-flex justify-content-center align-items-center gap-2"
               disabled={isLoading}
             >
-              Send Reset Link
+              <i className="bi bi-arrow-repeat fs-5"></i> Send Reset Link
             </button>
 
             <div className="text-center">
