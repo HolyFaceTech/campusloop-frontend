@@ -287,7 +287,7 @@ const AdminLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-3 w-100 py-2"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-shield-lock me-1"></i> ADMIN
@@ -532,14 +532,14 @@ const AdminLayout = () => {
               </button>
 
               <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
-                <span className="fw-bold text-muted small">
+                <span className="fw-medium text-dark small">
                   <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
-                    ? `SY: ${activeSettings.school_year}`
+                    ? `SY : ${activeSettings.school_year}`
                     : "SY Not Set"}
                 </span>
                 <div className="vr"></div>
-                <span className="fw-bold text-muted small">
+                <span className="fw-medium text-dark small">
                   <i className="bi bi-clock-history me-2 text-success"></i>{" "}
                   {activeSettings.semester !== "Not Set"
                     ? `${activeSettings.semester} Semester`

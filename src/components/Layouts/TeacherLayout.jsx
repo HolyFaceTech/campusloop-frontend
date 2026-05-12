@@ -28,7 +28,7 @@ const TeacherLayout = () => {
 
   // MGA STATES PARA SA NOTIFICATIONS
   const [notifications, setNotifications] = useState([]);
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
@@ -59,8 +59,8 @@ const TeacherLayout = () => {
     const intervalId = setInterval(() => {
       checkTodayAlerts();
       fetchActiveIndicator();
-      fetchNotifications(); // Realtime polling
-    }, 30000);
+      fetchNotifications();
+    }, 60000);
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
@@ -73,11 +73,26 @@ const TeacherLayout = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/settings`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
-      if (response.data) {
+
+      let settingsData = response.data;
+
+      // Handle arrays or objects seamlessly
+      if (Array.isArray(settingsData)) {
+        settingsData = settingsData[0];
+      } else if (settingsData && settingsData.data) {
+        settingsData = settingsData.data;
+      }
+
+      if (settingsData && settingsData.school_year && settingsData.semester) {
         setActiveSettings({
-          school_year: response.data.school_year,
-          semester: response.data.semester,
+          school_year: settingsData.school_year,
+          semester: settingsData.semester,
         });
       } else {
         setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
@@ -91,6 +106,11 @@ const TeacherLayout = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/calendar/active-indicator`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
       );
       setHasActiveEvent(response.data.has_active_events);
     } catch (error) {
@@ -135,6 +155,7 @@ const TeacherLayout = () => {
     }
   };
 
+  // 🚨 ADMIN-STYLE NOTIFICATION FETCHING
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
@@ -145,7 +166,8 @@ const TeacherLayout = () => {
           },
         },
       );
-      setNotifications(response.data);
+      setNotifications(response.data.data || []);
+      setUnreadCount(response.data.unread_count || 0);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
@@ -221,10 +243,13 @@ const TeacherLayout = () => {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days === 1) return "Yesterday";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  // PROGRAMMATIC MODAL OPENERS (Iwas Illegal Invocation Error)
   const openActivityLogs = () => {
     setShowAvatar(false);
     const modalElement = document.getElementById("teacherActivityLogsModal");
@@ -273,7 +298,7 @@ const TeacherLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-3 w-100 py-2"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-person-video3 me-1"></i> TEACHER
@@ -440,21 +465,15 @@ const TeacherLayout = () => {
               </button>
 
               <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
-                <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-calendar-event me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                <span className="fw-medium text-dark small">
+                  <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
-                    ? `SY: ${activeSettings.school_year}`
-                    : "SY: Not Set"}
+                    ? `SY : ${activeSettings.school_year}`
+                    : "SY Not Set"}
                 </span>
                 <div className="vr"></div>
-                <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-clock-history me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                <span className="fw-medium text-dark small">
+                  <i className="bi bi-clock-history me-2 text-success"></i>{" "}
                   {activeSettings.semester !== "Not Set"
                     ? `${activeSettings.semester} Semester`
                     : "Semester Not Set"}
@@ -520,7 +539,7 @@ const TeacherLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-danger">
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
                         {unreadCount} Unread
                       </span>
                     )}
@@ -535,7 +554,7 @@ const TeacherLayout = () => {
                         No notifications yet.
                       </div>
                     ) : (
-                      notifications.slice(0, 50).map((notif) => (
+                      notifications.map((notif) => (
                         <div
                           key={notif.id}
                           className="dropdown-item py-3 border-bottom text-wrap"
@@ -570,12 +589,13 @@ const TeacherLayout = () => {
                                 {notif.description}
                               </p>
                               <p
-                                className="mb-0 mt-1 fw-bold"
+                                className="mb-0 mt-1 fw-medium"
                                 style={{
                                   fontSize: "0.70rem",
                                   color: "var(--secondary-color)",
                                 }}
                               >
+                                <i className="bi bi-clock me-1"></i>
                                 {formatTimeAgo(notif.created_at)}
                               </p>
                             </div>
@@ -601,7 +621,7 @@ const TeacherLayout = () => {
                         setShowNotif(false);
                         navigate("/teacher/notifications");
                       }}
-                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-3"
+                      className="btn btn-campusloop fw-medium btn-sm w-100 rounded-3"
                     >
                       View All Notifications
                     </button>
