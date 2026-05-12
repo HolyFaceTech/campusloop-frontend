@@ -178,17 +178,17 @@ const AnnouncementViewModal = ({
           ></textarea>
           <div className="d-flex justify-content-end gap-2">
             <button
-              className="btn btn-sm btn-light border"
+              className="btn btn-sm btn-light border rounded-3"
               onClick={() => setEditingCommentId(null)}
             >
               Cancel
             </button>
             <button
-              className="btn btn-sm btn-campusloop"
+              className="btn btn-sm btn-campusloop rounded-3"
               onClick={() => saveEditedComment(comment.id)}
               disabled={isPosting}
             >
-              <i className="bi bi-check-circle-fill me-1"></i>Save Changes
+              <i className="bi bi-check-circle-fill me-1"></i> Save Changes
             </button>
           </div>
         </div>
@@ -238,6 +238,7 @@ const AnnouncementViewModal = ({
             style={{ fontSize: "0.65rem", fontWeight: "500" }}
           >
             {new Date(comment.created_at).toLocaleString([], {
+              year: "numeric",
               month: "short",
               day: "numeric",
               hour: "2-digit",
@@ -335,6 +336,7 @@ const AnnouncementViewModal = ({
                         {new Date(announcement.publish_from).toLocaleString(
                           [],
                           {
+                            year: "numeric",
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",

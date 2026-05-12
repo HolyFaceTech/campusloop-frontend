@@ -400,8 +400,7 @@ const TeacherLayout = () => {
                     className="dropdown-item py-2 fw-medium"
                     onClick={openActivityLogs}
                   >
-                    <i className="bi bi-clock-history text-primary me-2"></i>{" "}
-                    Activity Logs
+                    <i className="bi bi-clock-history me-2"></i> Activity Logs
                   </button>
                 </li>
                 <li>
@@ -409,15 +408,14 @@ const TeacherLayout = () => {
                     className="dropdown-item py-2 fw-medium"
                     onClick={openHelpCenter}
                   >
-                    <i className="bi bi-question-circle text-primary me-2"></i>{" "}
-                    Help Center
+                    <i className="bi bi-question-circle me-2"></i> Help Center
                   </button>
                 </li>
               </ul>
             </div>
             <button
               onClick={handleLogout}
-              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3"
               style={{ transition: "all 0.3s ease" }}
             >
               <i className="bi bi-box-arrow-right me-1"></i> Sign Out
@@ -618,22 +616,24 @@ const TeacherLayout = () => {
               <Outlet />
             </div>
 
-            <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0 px-4">
-              <small className="text-muted fw-medium">
-                &copy; {new Date().getFullYear()} CampusLoop. All rights
-                reserved.
-                <span className="d-none d-md-inline mx-2">|</span>
-                <br className="d-md-none" />
-                <a
-                  href="#"
-                  className="text-decoration-none fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#termsDrawer"
-                >
-                  Terms & Policy
-                </a>
-              </small>
+            <footer className="py-3 bg-white border-top mt-auto flex-shrink-0 px-4 px-md-5">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <small className="text-muted fw-medium mb-2 mb-md-0">
+                  &copy; {new Date().getFullYear()} CampusLoop. All rights
+                  reserved.
+                </small>
+                <small className="text-muted fw-medium">
+                  <a
+                    href="#"
+                    className="text-decoration-none"
+                    style={{ color: "var(--primary-color)" }}
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#termsDrawer"
+                  >
+                    <i className="bi bi-shield-check me-1"></i> Terms & Policy
+                  </a>
+                </small>
+              </div>
             </footer>
           </div>
         </main>
