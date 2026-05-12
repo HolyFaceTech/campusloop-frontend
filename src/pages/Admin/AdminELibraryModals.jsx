@@ -121,14 +121,10 @@ const AdminELibraryModals = ({
                             </div>
                           </div>
                           <button
-                            className="btn btn-campusloop btn-sm fw-bold px-3 rounded-3 shadow-sm text-nowrap flex-shrink-0"
+                            className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                             onClick={() => handleViewDocument(file.path)}
                           >
-                            <span className="d-none d-sm-inline">View</span>{" "}
-                            <i
-                              className="bi bi-box-arrow-up-right ms-1"
-                              style={{ fontSize: "0.7rem" }}
-                            ></i>
+                            <i className="bi bi-box-arrow-up-right"></i>
                           </button>
                         </div>
                       ))

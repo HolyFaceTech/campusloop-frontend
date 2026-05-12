@@ -178,21 +178,7 @@ const TeacherHome = () => {
         bg: "#f8d7da",
         label: "PDF",
       };
-    if (["doc", "docx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "#0d6efd",
-        bg: "#cfe2ff",
-        label: "WORD",
-      };
-    if (["xls", "xlsx", "csv"].includes(ext))
-      return {
-        icon: "bi-file-earmark-excel-fill",
-        color: "#198754",
-        bg: "#d1e7dd",
-        label: "EXCEL",
-      };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -228,17 +214,17 @@ const TeacherHome = () => {
           ></textarea>
           <div className="d-flex justify-content-end gap-2">
             <button
-              className="btn btn-sm btn-light border"
+              className="btn btn-sm btn-light border rounded-3"
               onClick={() => setEditingCommentId(null)}
             >
               Cancel
             </button>
             <button
-              className="btn btn-sm btn-campusloop"
+              className="btn btn-sm btn-campusloop rounded-3"
               onClick={() => saveEditedComment(comment.id)}
               disabled={isPosting}
             >
-              Save
+              <i className="bi bi-check-circle-fill me-1"></i> Save Changes
             </button>
           </div>
         </div>
@@ -288,6 +274,7 @@ const TeacherHome = () => {
             style={{ fontSize: "0.65rem", fontWeight: "500" }}
           >
             {new Date(comment.created_at).toLocaleString([], {
+              year: "numeric",
               month: "short",
               day: "numeric",
               hour: "2-digit",
@@ -338,7 +325,7 @@ const TeacherHome = () => {
         {/* LEFT COLUMN: Feed (Announcements) */}
         <div className="col-12 col-lg-8 d-flex flex-column gap-4">
           <div
-            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative premium-hover-card"
             style={{
               background:
                 "linear-gradient(135deg, var(--primary-color) 0%, #4a5435 100%)",
@@ -371,8 +358,8 @@ const TeacherHome = () => {
                   className="badge bg-white text-dark bg-opacity-25 px-2 py-1 fw-semibold shadow-sm mb-2 text-uppercase"
                   style={{ letterSpacing: "1px" }}
                 >
-                  <i className="bi bi-person-video3 me-1"></i> Instructor
-                  Dashboard
+                  <i className="bi bi-person-video3 me-1"></i> Instructor Home
+                  Page
                 </span>
                 <h2 className="fw-bold mb-2 display-6 text-white">
                   Welcome back, {data.user.first_name}!{" "}
@@ -410,7 +397,7 @@ const TeacherHome = () => {
               return (
                 <div
                   key={announcement.id}
-                  className="card border-0 shadow-sm bg-white mb-2 position-relative"
+                  className="card border-0 shadow-sm bg-white mb-2 position-relative premium-hover-card"
                   style={{
                     borderRadius: "1rem",
                     borderLeft: `5px solid ${statusColor}`,
@@ -441,6 +428,7 @@ const TeacherHome = () => {
                               {new Date(
                                 announcement.publish_from,
                               ).toLocaleString([], {
+                                year: "numeric",
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",
@@ -770,7 +758,7 @@ const TeacherHome = () => {
               </h2>
             </div>
             <div
-              className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
+              className="rounded-4 bg-primary bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
               style={{ width: "60px", height: "60px" }}
             >
               <i className="bi bi-easel-fill text-primary fs-2"></i>
@@ -778,13 +766,16 @@ const TeacherHome = () => {
           </div>
 
           {/* TODAY'S SCHEDULES CARD (LISTAHAN NGAYON) */}
-          <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
+          <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
             <div className="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center">
-                <i className="bi bi-calendar-event-fill fs-5 me-2 text-success"></i>{" "}
-                Today's Schedules
+                <i className="bi bi-calendar-event fs-5 me-2"></i> Today's
+                Schedules
               </h6>
-              <span className="badge bg-success rounded-pill shadow-sm">
+              <span
+                className="badge rounded-3 shadow-sm fw-medium"
+                style={{ background: "var(--bs-purple, #6f42c1)" }}
+              >
                 {data.today_schedules?.length || 0}
               </span>
             </div>
@@ -815,7 +806,11 @@ const TeacherHome = () => {
                         cursor: "pointer",
                         borderLeft: "3px solid transparent",
                       }}
-                      onClick={() => navigate("/teacher/calendar")}
+                      onClick={() =>
+                        navigate(
+                          `/teacher/classrooms/${sched.classroom_id}/stream`,
+                        )
+                      }
                       onMouseEnter={(e) => {
                         e.currentTarget.style.borderLeftColor =
                           sched.type === "deadline"
@@ -874,16 +869,18 @@ const TeacherHome = () => {
           </div>
 
           <div
-            className="card border-0 shadow-sm rounded-4 bg-white sticky-top"
+            className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
             style={{ top: "100px" }}
           >
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center justify-content-between">
                 <span>
-                  <i className="bi bi-list-check fs-5 me-2 text-danger"></i>{" "}
-                  Needs Grading
+                  <i className="bi bi-list-check fs-5 me-2"></i> Needs Grading
                 </span>
-                <span className="badge bg-danger rounded-pill shadow-sm">
+                <span
+                  className="badge rounded-3 shadow-sm fw-medium"
+                  style={{ background: "var(--bs-danger)" }}
+                >
                   {data.todos.length}
                 </span>
               </h6>
@@ -956,14 +953,14 @@ const TeacherHome = () => {
                               </span>
                               {todo.status === "late_submission" ? (
                                 <span
-                                  className="badge bg-warning text-dark px-2 py-1 flex-shrink-0 mt-1"
+                                  className="badge bg-warning bg-opacity-10 text-warning px-2 py-1 flex-shrink-0 mt-1 border border-warning-subtle"
                                   style={{ fontSize: "0.55rem" }}
                                 >
-                                  LATE
+                                  DONE LATE
                                 </span>
                               ) : (
                                 <span
-                                  className="badge bg-primary px-2 py-1 flex-shrink-0 mt-1"
+                                  className="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 flex-shrink-0 mt-1 border border-secondary-subtle"
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   PENDING
