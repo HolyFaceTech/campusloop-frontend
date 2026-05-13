@@ -11,22 +11,52 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  };
+};
+
 const TeacherAdvisoryDetails = () => {
   const { id } = useParams();
   const [advisoryClass, setAdvisoryClass] = useState(null);
-  const [students, setStudents] = useState([]);
-  const [availableStudents, setAvailableStudents] = useState([]);
-  const [subjects, setSubjects] = useState([]);
 
+  // GLOBAL SPINNER
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Class Details...");
 
-  const [searchAvailable, setSearchAvailable] = useState("");
+  // MAIN ENROLLED TABLE STATES
+  const [students, setStudents] = useState([]);
+  const [isFetchingEnrolled, setIsFetchingEnrolled] = useState(false);
+  const [searchEnrolled, setSearchEnrolled] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalEnrolled, setTotalEnrolled] = useState(0);
+
+  // AVAILABLE STUDENTS MODAL STATES
+  const [availableStudents, setAvailableStudents] = useState([]);
+  const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
+  const [availableSearch, setAvailableSearch] = useState("");
+  const [availableEntries, setAvailableEntries] = useState(10);
+  const [availablePage, setAvailablePage] = useState(1);
+  const [availableTotalPages, setAvailableTotalPages] = useState(1);
+  const [availableTotalRecords, setAvailableTotalRecords] = useState(0);
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [studentToRemove, setStudentToRemove] = useState(null);
 
+  // GRADES MODAL STATES
   const [activeStudent, setActiveStudent] = useState(null);
   const [studentGrades, setStudentGrades] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [encodedSubjectIds, setEncodedSubjectIds] = useState([]);
   const [isEditingGrade, setIsEditingGrade] = useState(false);
   const [viewingFeedback, setViewingFeedback] = useState(null);
   const [gradeForm, setGradeForm] = useState({
@@ -36,27 +66,85 @@ const TeacherAdvisoryDetails = () => {
     grade: "",
   });
 
-  const [searchEnrolled, setSearchEnrolled] = useState("");
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingGrades, setIsLoadingGrades] = useState(false);
+  const [gradesSearch, setGradesSearch] = useState("");
+  const [gradesEntries, setGradesEntries] = useState(10);
+  const [gradesPage, setGradesPage] = useState(1);
+  const [gradesTotalPages, setGradesTotalPages] = useState(1);
+  const [gradesTotalRecords, setGradesTotalRecords] = useState(0);
+  const [gradesSyFilter, setGradesSyFilter] = useState("all");
+  const [gradesSemFilter, setGradesSemFilter] = useState("all");
+  const [gradesUniqueSYs, setGradesUniqueSYs] = useState([]);
 
+  // DEBOUNCE EFFECTS
   useEffect(() => {
-    fetchAdvisoryDetails();
-    fetchSubjects();
-  }, [id]);
+    const delayDebounceFn = setTimeout(() => {
+      fetchAdvisoryDetails();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [id, searchEnrolled, currentPage, entriesPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchEnrolled, entriesPerPage]);
 
+  useEffect(() => {
+    if (
+      !document.getElementById("addStudentsModal")?.classList.contains("show")
+    )
+      return;
+    const delayDebounceFn = setTimeout(() => {
+      fetchAvailableStudents(true);
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [availableSearch, availablePage, availableEntries]);
+
+  useEffect(() => {
+    setAvailablePage(1);
+  }, [availableSearch, availableEntries]);
+
+  useEffect(() => {
+    if (!activeStudent) return;
+    const delayDebounceFn = setTimeout(() => {
+      fetchStudentGrades(activeStudent.id, false);
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    activeStudent,
+    gradesSearch,
+    gradesEntries,
+    gradesPage,
+    gradesSyFilter,
+    gradesSemFilter,
+  ]);
+
+  useEffect(() => {
+    setGradesPage(1);
+  }, [gradesSearch, gradesEntries, gradesSyFilter, gradesSemFilter]);
+
+  // --- API CALLS ---
+
   const fetchAdvisoryDetails = async () => {
     setIsLoading(true);
+    setLoadingText("Loading Class Details...");
+
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchEnrolled,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
       setAdvisoryClass(res.data.advisory);
-      setStudents(res.data.students);
+      setStudents(res.data.students || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
+      setTotalEnrolled(res.data.total_enrolled || 0);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -65,50 +153,81 @@ const TeacherAdvisoryDetails = () => {
       });
     } finally {
       setIsLoading(false);
+      setIsFetchingEnrolled(false);
     }
   };
 
-  const fetchAvailableStudents = async () => {
+  const fetchAvailableStudents = async (isBackground = false) => {
+    if (!isBackground) setIsLoading(true);
+    else setIsLoadingAvailable(true);
+
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/available-students`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: availableSearch,
+            entries: availableEntries,
+            page: availablePage,
+          },
+        },
       );
-      setAvailableStudents(res.data);
+      setAvailableStudents(res.data.data || []);
+      setAvailableTotalPages(res.data.last_page || 1);
+      setAvailableTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
+      setIsLoadingAvailable(false);
     }
   };
 
-  const fetchSubjects = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/subjects`,
-      );
-      setSubjects(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const fetchStudentGrades = async (studentId, showGlobalSpinner = true) => {
+    if (showGlobalSpinner) setIsLoading(true);
+    else setIsLoadingGrades(true);
 
-  const fetchStudentGrades = async (studentId) => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/students/${studentId}/grades`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: gradesSearch,
+            entries: gradesEntries,
+            page: gradesPage,
+            syFilter: gradesSyFilter,
+            semFilter: gradesSemFilter,
+          },
+        },
       );
-      setStudentGrades(res.data);
+      setStudentGrades(res.data.data || []);
+      setGradesTotalPages(res.data.last_page || 1);
+      setGradesTotalRecords(res.data.total || 0);
+      setEncodedSubjectIds(res.data.encoded_subject_ids || []);
+      setGradesUniqueSYs(res.data.unique_sys || []);
+      setSubjects(res.data.allowed_subjects || []);
     } catch (error) {
       sileo.error({
         title: "Fetch Error",
         description: error.response?.data?.message || "Server error.",
         ...darkToast,
       });
+    } finally {
+      setIsLoading(false);
+      setIsLoadingGrades(false);
     }
   };
 
+  // --- MODAL ACTIONS ---
+
   const openAddStudentModal = () => {
-    fetchAvailableStudents();
+    setAvailableSearch("");
+    setAvailableEntries(10);
+    setAvailablePage(1);
     setSelectedStudentIds([]);
-    setSearchAvailable("");
+    fetchAvailableStudents(true);
     const modal = new Modal(document.getElementById("addStudentsModal"));
     modal.show();
   };
@@ -136,6 +255,7 @@ const TeacherAdvisoryDetails = () => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/add-students`,
         { student_ids: selectedStudentIds },
+        getAuthHeader(),
       );
       sileo.success({
         title: "Success",
@@ -144,7 +264,6 @@ const TeacherAdvisoryDetails = () => {
       });
       fetchAdvisoryDetails();
     } catch (error) {
-      // Dito natin ipapakita yung capacity error galing sa backend
       sileo.error({
         title: "Failed",
         description: error.response?.data?.message || "Could not add.",
@@ -167,13 +286,14 @@ const TeacherAdvisoryDetails = () => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/students/${studentToRemove.id}`,
+        getAuthHeader(),
       );
       sileo.success({
         title: "Removed",
         description: "Student removed.",
         ...darkToast,
       });
-      fetchAdvisoryDetails();
+      fetchAdvisoryDetails(true);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -190,7 +310,12 @@ const TeacherAdvisoryDetails = () => {
     setIsEditingGrade(false);
     setViewingFeedback(null);
     setGradeForm({ id: null, subject_id: "", semester: "1st", grade: "" });
-    fetchStudentGrades(student.id);
+    setGradesSearch("");
+    setGradesEntries(10);
+    setGradesPage(1);
+    setGradesSyFilter("all");
+    setGradesSemFilter("all");
+    fetchStudentGrades(student.id, false);
     const modal = new Modal(document.getElementById("gradesModal"));
     modal.show();
   };
@@ -212,11 +337,13 @@ const TeacherAdvisoryDetails = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/students/${activeStudent.id}/grades/${gradeForm.id}`,
           gradeForm,
+          getAuthHeader(),
         );
       } else {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${id}/students/${activeStudent.id}/grades`,
           gradeForm,
+          getAuthHeader(),
         );
       }
       sileo.success({
@@ -224,7 +351,7 @@ const TeacherAdvisoryDetails = () => {
         description: "Grade submitted.",
         ...darkToast,
       });
-      fetchStudentGrades(activeStudent.id);
+      fetchStudentGrades(activeStudent.id, false);
       setIsEditingGrade(false);
       setGradeForm({ id: null, subject_id: "", semester: "1st", grade: "" });
     } catch (error) {
@@ -241,50 +368,56 @@ const TeacherAdvisoryDetails = () => {
     }
   };
 
-  const filteredEnrolled = students.filter((s) =>
-    `${s.first_name} ${s.last_name} ${s.lrn} ${s.email}`
-      .toLowerCase()
-      .includes(searchEnrolled.toLowerCase()),
-  );
-  const filteredAvailable = availableStudents.filter((s) =>
-    `${s.first_name} ${s.last_name} ${s.lrn}`
-      .toLowerCase()
-      .includes(searchAvailable.toLowerCase()),
-  );
-
-  const totalPages = Math.ceil(filteredEnrolled.length / entriesPerPage);
-  const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredEnrolled.slice(
-    startIndex,
-    startIndex + entriesPerPage,
-  );
-
-  const currentEnrolledCount = students.length;
   const classCapacity = advisoryClass?.capacity || 0;
-  const isClassFull = currentEnrolledCount >= classCapacity;
-  const remainingCapacity = Math.max(0, classCapacity - currentEnrolledCount);
+  const isClassFull = totalEnrolled >= classCapacity;
+
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
-      <nav aria-label="breadcrumb" className="mb-3 ps-1">
-        <ol className="breadcrumb mb-0">
-          <li className="breadcrumb-item">
-            <Link
-              to="/teacher/advisory"
-              className="text-decoration-none text-muted fw-medium d-flex align-items-center"
-            >
-              Advisory Classes
-            </Link>
-          </li>
-          <li
-            className="breadcrumb-item active fw-bold text-dark"
-            aria-current="page"
-          >
-            {advisoryClass?.section || "Loading..."}
-          </li>
-        </ol>
-      </nav>
 
       <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
         <div className="card-body p-4 p-md-5">
@@ -324,7 +457,7 @@ const TeacherAdvisoryDetails = () => {
             <button
               onClick={openAddStudentModal}
               disabled={isClassFull}
-              className={`btn ${isClassFull ? "btn-secondary opacity-75" : "btn-campusloop shadow-sm"} px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 transition-all`}
+              className={`btn ${isClassFull ? "btn-secondary-outlined opacity-75" : "btn-campusloop shadow-sm"} px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-medium flex-shrink-0 transition-all justify-content-center`}
             >
               {isClassFull ? (
                 <>
@@ -383,9 +516,9 @@ const TeacherAdvisoryDetails = () => {
                   Capacity
                 </span>
                 <span
-                  className={`badge ${isClassFull ? "bg-danger text-danger border-danger" : "bg-success text-success border-success"} bg-opacity-10 border border-opacity-25 mt-1 px-2 py-1`}
+                  className={`badge ${isClassFull ? "bg-danger text-danger border-danger" : "bg-success text-success border-success"} bg-opacity-10 border border-opacity-25 mt-1 px-2 py-1 fw-medium`}
                 >
-                  {currentEnrolledCount} / {classCapacity} Enrolled
+                  {totalEnrolled} / {classCapacity} Enrolled
                 </span>
               </div>
             </div>
@@ -393,11 +526,10 @@ const TeacherAdvisoryDetails = () => {
         </div>
       </div>
 
-      {/* CONTROLS CARD */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-1">
-            <div className="d-flex align-items-center flex-shrink-0 text-muted small fw-medium">
+      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
               Show
               <select
                 className="form-select form-select-sm mx-2 toolbar-input rounded-3"
@@ -408,10 +540,14 @@ const TeacherAdvisoryDetails = () => {
                 <option value={10}>10</option>
                 <option value={25}>25</option>
                 <option value={50}>50</option>
+                <option value={100}>100</option>
               </select>
               entries
             </div>
-            <div className="input-group" style={{ width: "300px" }}>
+            <div
+              className="input-group"
+              style={{ maxWidth: "400px", minWidth: "350px" }}
+            >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
               </span>
@@ -438,21 +574,26 @@ const TeacherAdvisoryDetails = () => {
                 <th className="ps-4" style={{ width: "60px" }}>
                   #
                 </th>
-                <th>STUDENT DETAILS</th>
-                <th>LRN</th>
-                <th>STRAND</th>
-                <th>GENDER</th>
-                <th className="text-center pe-4">ACTION</th>
+                <th style={{ borderTop: "none" }}>STUDENT DETAILS</th>
+                <th style={{ borderTop: "none" }}>LRN</th>
+                <th style={{ borderTop: "none" }}>STRAND</th>
+                <th style={{ borderTop: "none" }}>GENDER</th>
+                <th
+                  className="text-center pe-4"
+                  style={{ borderTop: "none", width: "150px" }}
+                >
+                  ACTION
+                </th>
               </tr>
             </thead>
             <tbody>
-              {currentData.length > 0 ? (
-                currentData.map((student, index) => (
+              {students.length > 0 ? (
+                students.map((student, index) => (
                   <tr key={student.id}>
-                    <td className="ps-4 fw-bold text-muted">
-                      {startIndex + index + 1}
+                    <td className="ps-4 fw-bold text-muted py-2">
+                      {(currentPage - 1) * entriesPerPage + index + 1}
                     </td>
-                    <td>
+                    <td className="py-2">
                       <div className="d-flex align-items-center py-1">
                         <div
                           className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
@@ -466,21 +607,21 @@ const TeacherAdvisoryDetails = () => {
                         </div>
                         <div className="overflow-hidden">
                           <span
-                            className="fw-bold text-dark text-truncate d-block"
-                            style={{ maxWidth: "180px" }}
+                            className="fw-bold text-dark text-truncate d-block mb-1"
+                            style={{ maxWidth: "250px" }}
                           >
                             {student.first_name} {student.last_name}
                           </span>
                           <p
                             className="mb-0 text-muted text-truncate"
-                            style={{ fontSize: "0.80rem", maxWidth: "200px" }}
+                            style={{ fontSize: "0.80rem", maxWidth: "250px" }}
                           >
                             {student.email}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="py-2">
                       <span
                         className="d-block fw-bold font-monospace text-dark tracking-wide"
                         style={{ fontSize: "0.90rem" }}
@@ -488,18 +629,18 @@ const TeacherAdvisoryDetails = () => {
                         {student.lrn || "N/A"}
                       </span>
                     </td>
-                    <td>
+                    <td className="py-2">
                       <span
-                        className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                        className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {student.strand?.name || "N/A"}
                       </span>
                     </td>
-                    <td className="text-muted small text-capitalize fw-bold">
-                      {student.gender}
+                    <td className="text-muted small fw-bold py-2">
+                      {student.gender ? student.gender.toUpperCase() : "N/A"}
                     </td>
-                    <td className="text-center pe-4">
+                    <td className="text-center py-2">
                       <button
                         onClick={() => openGradesModal(student)}
                         className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
@@ -524,18 +665,23 @@ const TeacherAdvisoryDetails = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-5 text-muted">
-                    {students.length === 0 ? (
-                      <>
-                        <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                        No students enrolled yet.
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        No matching records found.
-                      </>
-                    )}
+                  <td colSpan="6" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">
+                        {searchEnrolled
+                          ? "No matching records found."
+                          : "No students enrolled yet."}
+                      </h5>
+                      <p className="text-muted small mb-0">
+                        {searchEnrolled
+                          ? "Try adjusting your search query."
+                          : "Click the 'Add Students' button to enroll students in this class."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -544,12 +690,12 @@ const TeacherAdvisoryDetails = () => {
         </div>
       </div>
 
-      {filteredEnrolled.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-1">
+      {totalRecords > 0 && !isFetchingEnrolled && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 px-1">
           <span className="text-muted small">
-            Showing {startIndex + 1} to{" "}
-            {Math.min(startIndex + entriesPerPage, filteredEnrolled.length)} of{" "}
-            {filteredEnrolled.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0">
@@ -565,19 +711,7 @@ const TeacherAdvisoryDetails = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+              {renderPageNumbers()}
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
@@ -596,9 +730,6 @@ const TeacherAdvisoryDetails = () => {
       )}
 
       <AdvisoryDetailsModals
-        searchAvailable={searchAvailable}
-        setSearchAvailable={setSearchAvailable}
-        filteredAvailable={filteredAvailable}
         selectedStudentIds={selectedStudentIds}
         toggleStudentSelection={toggleStudentSelection}
         confirmAddStudents={confirmAddStudents}
@@ -616,7 +747,31 @@ const TeacherAdvisoryDetails = () => {
         setGradeForm={setGradeForm}
         viewingFeedback={viewingFeedback}
         setViewingFeedback={setViewingFeedback}
-        remainingCapacity={remainingCapacity}
+        encodedSubjectIds={encodedSubjectIds}
+        isLoadingGrades={isLoadingGrades}
+        gradesSearch={gradesSearch}
+        setGradesSearch={setGradesSearch}
+        gradesEntries={gradesEntries}
+        setGradesEntries={setGradesEntries}
+        gradesPage={gradesPage}
+        setGradesPage={setGradesPage}
+        gradesTotalPages={gradesTotalPages}
+        gradesTotalRecords={gradesTotalRecords}
+        gradesSyFilter={gradesSyFilter}
+        setGradesSyFilter={setGradesSyFilter}
+        gradesSemFilter={gradesSemFilter}
+        setGradesSemFilter={setGradesSemFilter}
+        gradesUniqueSYs={gradesUniqueSYs}
+        availableStudents={availableStudents}
+        isLoadingAvailable={isLoadingAvailable}
+        availableSearch={availableSearch}
+        setAvailableSearch={setAvailableSearch}
+        availableEntries={availableEntries}
+        setAvailableEntries={setAvailableEntries}
+        availablePage={availablePage}
+        setAvailablePage={setAvailablePage}
+        availableTotalPages={availableTotalPages}
+        availableTotalRecords={availableTotalRecords}
       />
     </>
   );
