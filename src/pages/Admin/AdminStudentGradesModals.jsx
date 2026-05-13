@@ -305,11 +305,11 @@ const AdminStudentGradesModals = ({
                               </span>
                             </td>
                             <td className="py-2">
-                              <span className="d-block fw-bold font-monospace text-primary">
+                              <span className="d-block fw-bold font-monospace text-dark">
                                 {record.subject_code}
                               </span>
                               <span
-                                className="d-block text-muted text-truncate"
+                                className="d-block text-muted text-truncate fst-italic"
                                 style={{
                                   fontSize: "0.75rem",
                                   maxWidth: "200px",
@@ -338,7 +338,7 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                               {record.status === "approved" && (
-                                <span className="text-success rounded-3">
+                                <span className="text-secondary rounded-3">
                                   <i className="bi bi-lock-fill me-1"></i>
                                 </span>
                               )}

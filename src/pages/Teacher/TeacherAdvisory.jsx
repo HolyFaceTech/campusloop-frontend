@@ -11,11 +11,28 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  };
+};
+
 const TeacherAdvisory = () => {
   const [advisories, setAdvisories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Advisory Classes...");
+
   const [searchQuery, setSearchQuery] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [modalMode, setModalMode] = useState("create");
   const [selectedItem, setSelectedItem] = useState(null);
@@ -28,20 +45,42 @@ const TeacherAdvisory = () => {
     capacity: "",
   });
 
+  // CLOSE DROPDOWN LISTENER
   useEffect(() => {
-    fetchAdvisories();
     const closeDropdown = () => setOpenDropdownId(null);
     document.addEventListener("click", closeDropdown);
     return () => document.removeEventListener("click", closeDropdown);
   }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchAdvisories();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, entriesPerPage]);
 
   const fetchAdvisories = async () => {
     setIsLoading(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setAdvisories(res.data);
+      // SET PAGINATED DATA
+      setAdvisories(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Error fetching advisory classes", error);
     } finally {
@@ -71,7 +110,6 @@ const TeacherAdvisory = () => {
       school_year: item.school_year,
       capacity: item.capacity,
     });
-    // Ipakita ang Intent Confirmation Modal muna
     const modal = new Modal(
       document.getElementById("updateIntentConfirmModal"),
     );
@@ -82,7 +120,7 @@ const TeacherAdvisory = () => {
     setTimeout(() => {
       const formModal = new Modal(document.getElementById("advisoryModal"));
       formModal.show();
-    }, 400); // 400ms delay para maka-fade out ng maayos yung nakaraang modal
+    }, 400);
   };
 
   const handleInitialSubmit = (e) => {
@@ -92,19 +130,7 @@ const TeacherAdvisory = () => {
     const modalElement = document.getElementById("advisoryModal");
     const modal = Modal.getInstance(modalElement);
     if (modal) modal.hide();
-
-    if (modalMode === "update") {
-      // Kung UPDATE, i-save na agad (Wala nang Save Confirm Modal)
-      executeSubmit();
-    } else {
-      // Kung CREATE, idaan muna sa Save Confirm Modal
-      setTimeout(() => {
-        const confirmModal = new Modal(
-          document.getElementById("saveConfirmModal"),
-        );
-        confirmModal.show();
-      }, 400);
-    }
+    executeSubmit();
   };
 
   const executeSubmit = async () => {
@@ -120,6 +146,7 @@ const TeacherAdvisory = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/advisory-classes`,
           formData,
+          getAuthHeader(),
         );
         sileo.success({
           title: "Created",
@@ -130,6 +157,7 @@ const TeacherAdvisory = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${selectedItem.id}`,
           formData,
+          getAuthHeader(),
         );
         sileo.success({
           title: "Updated",
@@ -150,7 +178,6 @@ const TeacherAdvisory = () => {
         ...darkToast,
       });
 
-      // Ibalik agad ang modal kung nagka-error sa validation para ma-edit agad
       const modal = new Modal(document.getElementById("advisoryModal"));
       modal.show();
     } finally {
@@ -171,6 +198,7 @@ const TeacherAdvisory = () => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/advisory-classes/${selectedItem.id}`,
+        getAuthHeader(),
       );
       sileo.success({
         title: "Deleted",
@@ -198,11 +226,50 @@ const TeacherAdvisory = () => {
     }, 1000);
   };
 
-  const filteredAdvisories = advisories.filter((adv) =>
-    `${adv.section} ${adv.school_year}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()),
-  );
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
@@ -223,34 +290,54 @@ const TeacherAdvisory = () => {
         <div className="flex-shrink-0">
           <button
             onClick={() => openFormModal()}
-            className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 w-100 justify-content-center"
+            className="btn btn-campusloop shadow-sm px-4 py-2 fw-medium rounded-3 d-flex align-items-center gap-2 w-100 justify-content-center"
           >
             <i className="bi bi-plus-lg fs-5"></i> New Advisory
           </button>
         </div>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="input-group shadow-sm rounded-3 overflow-hidden">
-            <span className="input-group-text bg-white border-end-0 text-muted px-3">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control border-start-0 ps-0 toolbar-input"
-              placeholder="Search Section or School Year..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              entries
+            </div>
+
+            <div
+              className="input-group"
+              style={{ maxWidth: "400px", minWidth: "350px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search Section or School Year..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="row g-4 mb-4">
-        {filteredAdvisories.length > 0 ? (
-          filteredAdvisories.map((item) => (
+        {advisories.length > 0 ? (
+          advisories.map((item) => (
             <div className="col-md-6 col-xl-4" key={item.id}>
               <div className="card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all bg-white premium-hover-card overflow-hidden">
                 <div
@@ -263,7 +350,29 @@ const TeacherAdvisory = () => {
                   }}
                 >
                   <div
-                    className="dropdown elibrary-card-dropdown position-absolute top-0 end-0 mt-3 me-3"
+                    className="position-absolute rounded-circle"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: "rgba(255,255,255,0.1)",
+                      top: "-20px",
+                      right: "-20px",
+                      pointerEvents: "none",
+                    }}
+                  ></div>
+                  <div
+                    className="position-absolute rounded-circle"
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      bottom: "-10px",
+                      left: "20%",
+                      pointerEvents: "none",
+                    }}
+                  ></div>
+                  <div
+                    className="dropdown strand-card-dropdown position-absolute top-0 end-0 mt-3 me-3 z-3"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -308,10 +417,10 @@ const TeacherAdvisory = () => {
                       </li>
                       <li>
                         <button
-                          className="dropdown-item py-2 fw-bold text-danger"
+                          className="dropdown-item py-2 fw-medium text-danger"
                           onClick={() => confirmDelete(item)}
                         >
-                          <i className="bi bi-trash3-fill me-2"></i> Delete
+                          <i className="bi bi-trash-fill me-2"></i> Delete
                         </button>
                       </li>
                     </ul>
@@ -366,7 +475,7 @@ const TeacherAdvisory = () => {
                           letterSpacing: "0.5px",
                         }}
                       >
-                        Advisory Students
+                        Students
                       </span>
                     </div>
                     <span className="text-dark fw-bolder fs-6">
@@ -408,165 +517,57 @@ const TeacherAdvisory = () => {
         )}
       </div>
 
+      {!isLoading && totalRecords > 0 && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 mb-4 px-2 gap-3">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} records
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+
+              {renderPageNumbers()}
+
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
       <AdvisoryFormModal
         modalMode={modalMode}
         formData={formData}
         handleInputChange={handleInputChange}
         handleInitialSubmit={handleInitialSubmit}
+        selectedItem={selectedItem}
+        proceedToUpdateForm={proceedToUpdateForm}
+        executeSubmit={executeSubmit}
+        executeDelete={executeDelete}
       />
-
-      <div
-        className="modal fade"
-        id="updateIntentConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-pencil-square"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Update Advisory</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to update the details for{" "}
-                <b>{selectedItem?.section}</b>?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={proceedToUpdateForm}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="saveConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-check-circle-fill"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Save Changes</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to proceed and save this advisory class?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() =>
-                  new Modal(document.getElementById("advisoryModal")).show()
-                }
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Delete Advisory</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to remove <b>{selectedItem?.section}</b>?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };

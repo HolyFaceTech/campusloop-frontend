@@ -513,7 +513,9 @@ const Subjects = () => {
                     {(currentPage - 1) * entriesPerPage + index + 1}
                   </td>
                   <td>
-                    <span className="text-dark fw-bold">{subject.code}</span>
+                    <span className="text-dark fw-bold font-monospace">
+                      {subject.code}
+                    </span>
                   </td>
                   <td>
                     <span
