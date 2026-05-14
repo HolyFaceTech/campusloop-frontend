@@ -214,7 +214,7 @@ const AdminTabPeople = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* ENTRIES PER PAGE DROPDOWN */}
@@ -310,7 +310,7 @@ const AdminTabPeople = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -449,7 +449,7 @@ const AdminTabPeople = () => {
 
                     <td>
                       <span className="text-muted small fw-bold">
-                        {student.gender || "N/A"}
+                        {student.gender ? student.gender.toUpperCase() : "N/A"}
                       </span>
                     </td>
 
