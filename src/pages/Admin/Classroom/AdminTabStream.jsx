@@ -325,7 +325,7 @@ const AdminTabStream = () => {
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
       {/* UNIFIED TOP CONTROL BAR */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             {/* SELECT ALL CHECKBOX */}
@@ -437,7 +437,7 @@ const AdminTabStream = () => {
         {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div
-            className="card border-0 shadow-sm rounded-4 bg-white sticky-top"
+            className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
             style={{ top: "100px" }}
           >
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
@@ -523,6 +523,7 @@ const AdminTabStream = () => {
                                     {new Date(task.created_at).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -536,6 +537,7 @@ const AdminTabStream = () => {
                                     {new Date(task.deadline).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -563,7 +565,7 @@ const AdminTabStream = () => {
         {/* FEED / STREAM */}
         <div className="col-12 col-lg-9 pb-5">
           {filteredClassworks.length === 0 ? (
-            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
+            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
               <div className="card-body p-5 text-center">
                 <i
                   className="bi bi-inbox text-muted d-block mb-3"
@@ -586,7 +588,7 @@ const AdminTabStream = () => {
                 <div
                   key={cw.id}
                   id={`classwork-${cw.id}`}
-                  className="card border-0 shadow-sm bg-white mb-4 position-relative"
+                  className="card border-0 shadow-sm bg-white mb-4 position-relative premium-hover-card"
                   style={{
                     borderRadius: "1rem",
                     borderLeft: `5px solid ${typeStyle.hex}`,
@@ -638,7 +640,7 @@ const AdminTabStream = () => {
                                 <span className="d-none d-sm-inline opacity-50">
                                   |
                                 </span>
-                                <span className="text-danger fw-bold">
+                                <span className="text-danger fw-medium">
                                   <i className="bi bi-clock me-1"></i> Due:{" "}
                                   {new Date(cw.deadline).toLocaleString([], {
                                     year: "numeric",

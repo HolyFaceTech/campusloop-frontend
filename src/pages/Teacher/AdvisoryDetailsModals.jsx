@@ -532,13 +532,8 @@ const AdvisoryDetailsModals = ({
                   <div className="card-body p-4 bg-danger bg-opacity-10 border rounded-4 border-danger-subtle">
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <div className="d-flex align-items-center">
-                        <div
-                          className="rounded-circle bg-danger text-white d-flex justify-content-center align-items-center me-2 shadow-sm"
-                          style={{ width: "32px", height: "32px" }}
-                        >
-                          <i className="bi bi-exclamation-triangle-fill small"></i>
-                        </div>
-                        <h6 className="fw-bold text-danger mb-0">
+                        <h6 className="fw-bold text-danger mb-2">
+                          <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
                           Admin Feedback Note
                         </h6>
                       </div>

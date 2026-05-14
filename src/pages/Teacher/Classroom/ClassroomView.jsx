@@ -9,6 +9,19 @@ import {
 import axios from "axios";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 
+// AUTH HEADER HELPER
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  };
+};
+
 const ClassroomView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -30,6 +43,7 @@ const ClassroomView = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/classrooms/${id}`,
+        getAuthHeader(),
       );
       setClassroom(res.data);
     } catch (error) {
@@ -64,7 +78,6 @@ const ClassroomView = () => {
 
   return (
     <div className="classroom-view-container custom-scrollbar">
-      {/* PREMIUM HEADER BANNER */}
       <div
         className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative"
         style={{
@@ -72,7 +85,6 @@ const ClassroomView = () => {
           backgroundColor: classroom.color_bg || "var(--primary-color)",
         }}
       >
-        {/* SVG Background Illustration */}
         <div
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{
@@ -84,7 +96,6 @@ const ClassroomView = () => {
           }}
         ></div>
 
-        {/* Dark Gradient Overlay */}
         <div
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{
@@ -93,7 +104,6 @@ const ClassroomView = () => {
           }}
         ></div>
 
-        {/* HEADER CONTENT */}
         <div className="card-body p-4 p-md-5 d-flex flex-column justify-content-between position-relative z-1 h-100">
           <div className="d-flex justify-content-between align-items-start gap-4">
             <div>
@@ -116,7 +126,6 @@ const ClassroomView = () => {
               </div>
             </div>
 
-            {/* CREATOR AVATAR */}
             <div className="text-center d-none d-sm-block">
               <div
                 className="shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white mx-auto"
@@ -142,7 +151,6 @@ const ClassroomView = () => {
             </div>
           </div>
 
-          {/* BOTTOM SECTION */}
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mt-5 pt-4 border-top border-white border-opacity-10 gap-3">
             <div className="d-flex align-items-center text-white opacity-75 fw-medium">
               <div

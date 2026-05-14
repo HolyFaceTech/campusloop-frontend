@@ -18,14 +18,16 @@ const ClassworkFormDrawer = ({
   existingFiles,
   setExistingFiles,
   setDeletedFileIds,
-  triggerSaveConfirmation,
-  executeSubmit,
+  handleSubmit,
+  executeDelete,
   selectedItem,
   proceedToUpdateForm,
 }) => {
   const [availableForms, setAvailableForms] = useState([]);
   const fileInputRef = useRef(null);
-
+  const formDropdownRef = useRef(null);
+  const [formSearchQuery, setFormSearchQuery] = useState("");
+  const [showFormDropdown, setShowFormDropdown] = useState(false);
   const formatSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -34,39 +36,57 @@ const ClassworkFormDrawer = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const getFileIcon = (extension) => {
+  const getFileDetails = (extension) => {
     const ext = extension?.toLowerCase();
     if (["pdf"].includes(ext))
       return {
         icon: "bi-file-earmark-pdf-fill",
         color: "#dc3545",
         bg: "#f8d7da",
+        label: "PDF",
       };
     if (["doc", "docx"].includes(ext))
       return {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
         icon: "bi-file-earmark-excel-fill",
         color: "#198754",
         bg: "#d1e7dd",
+        label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
+      };
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
         bg: "#e0cffc",
+        label: "IMAGE",
       };
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
-        color: "#fd7e14",
-        bg: "#ffe5d0",
+        color: "#0dcaf0",
+        bg: "#cff4fc",
+        label: "VIDEO",
       };
-    return { icon: "bi-file-earmark-fill", color: "#6c757d", bg: "#e2e3e5" };
+
+    return {
+      icon: "bi-file-earmark-fill",
+      color: "#6c757d",
+      bg: "#e2e3e5",
+      label: "FILE",
+    };
   };
 
   useEffect(() => {
@@ -97,6 +117,19 @@ const ClassworkFormDrawer = ({
       handleInputChange({ target: { name: "link", value: "" } });
   }, [includeLink]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        formDropdownRef.current &&
+        !formDropdownRef.current.contains(event.target)
+      ) {
+        setShowFormDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const onDragOver = (e) => e.preventDefault();
   const onDrop = (e) => {
     e.preventDefault();
@@ -107,8 +140,33 @@ const ClassworkFormDrawer = ({
 
   const validateAndAddFiles = (files) => {
     const maxSizeBytes = 50 * 1024 * 1024;
+    const allowedExtensions = [
+      "pdf",
+      "doc",
+      "docx",
+      "xls",
+      "xlsx",
+      "csv",
+      "ppt",
+      "pptx",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "mp4",
+      "avi",
+      "mov",
+    ];
 
     const validFiles = files.filter((f) => {
+      const ext = f.name.split(".").pop().toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        sileo.error({
+          title: "Invalid file type",
+          description: `${f.name} is not supported.`,
+        });
+        return false;
+      }
       if (f.size > maxSizeBytes) {
         sileo.error({
           title: "File too large",
@@ -128,10 +186,19 @@ const ClassworkFormDrawer = ({
     setDeletedFileIds((prev) => [...prev, file.id]);
   };
 
-  const executeTrigger = (e) => {
-    e.preventDefault();
-    triggerSaveConfirmation();
-  };
+  const searchedForms = availableForms.filter((form) =>
+    form.name.toLowerCase().includes(formSearchQuery.toLowerCase()),
+  );
+
+  const selectedFormObj = availableForms.find(
+    (f) => String(f.id) === String(formData.form_id),
+  );
+
+  const formDisplayValue = showFormDropdown
+    ? formSearchQuery
+    : selectedFormObj
+      ? selectedFormObj.name
+      : "";
 
   return (
     <>
@@ -169,15 +236,21 @@ const ClassworkFormDrawer = ({
         </div>
 
         <div className="offcanvas-body custom-scrollbar p-4 bg-white">
-          <form onSubmit={executeTrigger}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
             <div className="mb-4">
               <label className="form-label small fw-bold text-dark">
-                Classwork Title <span className="text-danger">*</span>
+                <i className="bi bi-fonts me-1 text-muted"></i> Classwork Title{" "}
+                <span className="text-danger">*</span>
               </label>
               <input
                 type="text"
                 name="title"
-                className="form-control form-control-lg bg-light toolbar-input text-dark fw-bold fs-6"
+                className="form-control form-control-lg bg-light toolbar-input text-dark fw-medium fs-6"
                 value={formData.title || ""}
                 onChange={handleInputChange}
                 required
@@ -188,7 +261,8 @@ const ClassworkFormDrawer = ({
             <div className="row g-3 mb-4">
               <div className="col-6">
                 <label className="form-label small fw-bold text-dark">
-                  Type <span className="text-danger">*</span>
+                  <i className="bi bi-tag me-1 text-muted"></i> Type{" "}
+                  <span className="text-danger">*</span>
                 </label>
                 <select
                   name="type"
@@ -209,7 +283,7 @@ const ClassworkFormDrawer = ({
               </div>
               <div className="col-6">
                 <label className="form-label small fw-bold text-dark">
-                  Points
+                  <i className="bi bi-award me-1 text-muted"></i> Points
                 </label>
                 <input
                   type="number"
@@ -225,6 +299,7 @@ const ClassworkFormDrawer = ({
 
             <div className="mb-4">
               <label className="form-label small fw-bold text-dark">
+                <i className="bi bi-calendar-event me-1 text-muted"></i>{" "}
                 Deadline / Due Date
               </label>
               <input
@@ -239,7 +314,8 @@ const ClassworkFormDrawer = ({
 
             <div className="mb-4">
               <label className="form-label small fw-bold text-dark">
-                Instructions <span className="text-danger">*</span>
+                <i className="bi bi-card-text me-1 text-muted"></i> Instructions{" "}
+                <span className="text-danger">*</span>
               </label>
               <textarea
                 name="instruction"
@@ -253,12 +329,12 @@ const ClassworkFormDrawer = ({
             </div>
 
             <div className="mb-4">
-              <label className="form-label small fw-bold text-dark">
+              <label className="form-label small fw-bold text-dark d-block text-center">
                 <i className="bi bi-paperclip me-1 text-muted"></i> Attachment
                 Options
               </label>
               <div
-                className="d-flex flex-wrap gap-4 p-3 rounded-3"
+                className="d-flex flex-wrap gap-4 p-3 rounded-3 justify-content-center"
                 style={{ backgroundColor: "var(--accent-color)" }}
               >
                 <div className="form-check form-switch">
@@ -273,7 +349,7 @@ const ClassworkFormDrawer = ({
                     className="form-check-label small fw-bold text-dark"
                     htmlFor="checkLink"
                   >
-                    Include Link
+                    Link
                   </label>
                 </div>
                 <div className="form-check form-switch">
@@ -288,7 +364,7 @@ const ClassworkFormDrawer = ({
                     className="form-check-label small fw-bold text-dark"
                     htmlFor="checkFiles"
                   >
-                    Attach Files
+                    Files
                   </label>
                 </div>
                 <div className="form-check form-switch">
@@ -303,7 +379,7 @@ const ClassworkFormDrawer = ({
                     className="form-check-label small fw-bold text-dark"
                     htmlFor="checkForm"
                   >
-                    Include Form
+                    Form
                   </label>
                 </div>
               </div>
@@ -327,25 +403,114 @@ const ClassworkFormDrawer = ({
             )}
 
             {includeForm && (
-              <div className="mb-4">
+              <div
+                className="mb-4 position-relative"
+                ref={formDropdownRef}
+                style={{ zIndex: 1050 }}
+              >
                 <label className="form-label small fw-bold text-dark">
                   <i className="bi bi-ui-radios me-1 text-muted"></i> Select
                   Quiz/Exam Form
                 </label>
-                <select
-                  name="form_id"
-                  className="form-select bg-light toolbar-input"
-                  value={formData.form_id || ""}
-                  onChange={handleInputChange}
+                <div className="input-group shadow-sm">
+                  <input
+                    type="text"
+                    className="form-control bg-light toolbar-input border-end-0 text-truncate"
+                    placeholder="Search form..."
+                    value={formDisplayValue}
+                    onChange={(e) => {
+                      setFormSearchQuery(e.target.value);
+                      setShowFormDropdown(true);
+                      if (formData.form_id) {
+                        handleInputChange({
+                          target: { name: "form_id", value: "" },
+                        });
+                      }
+                    }}
+                    onClick={() => {
+                      setShowFormDropdown(true);
+                      setFormSearchQuery("");
+                    }}
+                    style={{ cursor: "text" }}
+                  />
+                  <span
+                    className="input-group-text bg-light border-start-0 text-muted"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setShowFormDropdown(!showFormDropdown)}
+                  >
+                    <i
+                      className={`bi ${showFormDropdown ? "bi-chevron-up" : "bi-chevron-down"}`}
+                    ></i>
+                  </span>
+                </div>
+
+                {/* HIDDEN INPUT FOR NATIVE HTML VALIDATION */}
+                <input
+                  type="text"
                   required
+                  value={formData.form_id || ""}
+                  onChange={() => {}}
+                  className="position-absolute"
+                  style={{ opacity: 0, zIndex: -1, bottom: 10, left: "50%" }}
+                  title="Please select a form from the dropdown."
+                />
+
+                <ul
+                  className={`dropdown-menu shadow-lg border border-light-subtle rounded-4 custom-scrollbar p-2 ${showFormDropdown ? "show" : ""}`}
+                  style={{
+                    width: "100%",
+                    left: 0,
+                    right: 0,
+                    maxHeight: "260px",
+                    overflowY: "auto",
+                    position: "absolute",
+                    top: "100%",
+                    zIndex: 1050,
+                    marginTop: "0.5rem",
+                  }}
                 >
-                  <option value="">Select an existing form...</option>
-                  {availableForms.map((form) => (
-                    <option key={form.id} value={form.id}>
-                      {form.name}
-                    </option>
-                  ))}
-                </select>
+                  {searchedForms.length > 0 ? (
+                    searchedForms.map((form) => {
+                      const isSelected =
+                        String(formData.form_id) === String(form.id);
+
+                      return (
+                        <li key={form.id} className="mb-1">
+                          <button
+                            type="button"
+                            className={`dropdown-item py-2 px-3 rounded-3 transition-all d-flex justify-content-between align-items-center ${isSelected ? "bg-primary text-white shadow-sm" : "hover-bg-light text-dark"}`}
+                            onClick={() => {
+                              handleInputChange({
+                                target: { name: "form_id", value: form.id },
+                              });
+                              setShowFormDropdown(false);
+                              setFormSearchQuery("");
+                            }}
+                          >
+                            <span
+                              className="fw-medium text-truncate"
+                              style={{ fontSize: "0.85rem", maxWidth: "90%" }}
+                            >
+                              {form.name}
+                            </span>
+                            {isSelected && (
+                              <i className="bi bi-check-circle-fill ms-2"></i>
+                            )}
+                          </button>
+                        </li>
+                      );
+                    })
+                  ) : (
+                    <li>
+                      <div className="text-center py-4 text-muted">
+                        <i className="bi bi-inbox fs-3 d-block mb-2 opacity-25"></i>
+                        <span className="small fw-medium">
+                          No matching forms found.
+                        </span>
+                      </div>
+                    </li>
+                  )}
+                </ul>
               </div>
             )}
 
@@ -380,7 +545,7 @@ const ClassworkFormDrawer = ({
                     className="text-muted mb-2"
                     style={{ fontSize: "0.75rem" }}
                   >
-                    Accepted formats: All file types
+                    Accepted formats: PDF, DOC, EXCEL, PPT, IMG, VIDEO
                     <br />
                     Max file size: 50MB
                   </p>
@@ -392,6 +557,7 @@ const ClassworkFormDrawer = ({
                     className="d-none"
                     ref={fileInputRef}
                     multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.mp4,.avi,.mov"
                     onChange={onFileInputChange}
                   />
                 </div>
@@ -406,7 +572,7 @@ const ClassworkFormDrawer = ({
                       style={{ maxHeight: "250px", overflowY: "auto" }}
                     >
                       {existingFiles.map((file) => {
-                        const style = getFileIcon(file.file_extension);
+                        const style = getFileDetails(file.file_extension);
                         return (
                           <div
                             key={file.id}
@@ -438,7 +604,7 @@ const ClassworkFormDrawer = ({
                                   className="mb-0 text-muted"
                                   style={{ fontSize: "0.70rem" }}
                                 >
-                                  {formatSize(file.file_size)}
+                                  {formatSize(file.file_size)} • {style.label}
                                 </p>
                               </div>
                             </div>
@@ -454,7 +620,7 @@ const ClassworkFormDrawer = ({
                       })}
                       {newFiles.map((file, index) => {
                         const ext = file.name.split(".").pop();
-                        const style = getFileIcon(ext);
+                        const style = getFileDetails(ext);
                         return (
                           <div
                             key={index}
@@ -489,7 +655,7 @@ const ClassworkFormDrawer = ({
                                   className="mb-0 text-muted"
                                   style={{ fontSize: "0.70rem" }}
                                 >
-                                  {formatSize(file.size)}
+                                  {formatSize(file.size)} • {style.label}
                                 </p>
                               </div>
                             </div>
@@ -585,54 +751,50 @@ const ClassworkFormDrawer = ({
         </div>
       </div>
 
-      {/* SAVE CONFIRMATION MODAL */}
+      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
-        id="saveConfirmModal"
+        id="deleteConfirmModal"
         tabIndex="-1"
         aria-hidden="true"
         data-bs-backdrop="static"
       >
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-body text-center p-4">
+            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
               <div
-                className="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center mx-auto mb-3"
+                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
                 style={{ width: "80px", height: "80px" }}
               >
                 <i
-                  className="bi bi-check-circle-fill text-success"
+                  className="bi bi-exclamation-triangle-fill text-danger"
                   style={{ fontSize: "2.5rem" }}
                 ></i>
               </div>
-              <h4 className="fw-bold text-dark mt-3">
-                {drawerMode === "create" ? "Post Classwork" : "Save Changes"}
-              </h4>
-              <p className="text-muted mb-4">
-                Are you sure you want to proceed with these details?
+            </div>
+            <div className="modal-body text-center p-4">
+              <h4 className="fw-bold text-dark">Delete Classwork</h4>
+              <p className="text-muted mb-0">
+                Are you sure you want to move <b>{selectedItem?.title}</b> to
+                the recycle bin?
               </p>
-              <div className="d-flex justify-content-center gap-2">
-                <button
-                  type="button"
-                  className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                  data-bs-dismiss="modal"
-                  onClick={() =>
-                    new Offcanvas(
-                      document.getElementById("classworkDrawer"),
-                    ).show()
-                  }
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                  data-bs-dismiss="modal"
-                  onClick={executeSubmit}
-                >
-                  Yes, Proceed
-                </button>
-              </div>
+            </div>
+            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
+              <button
+                type="button"
+                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
+                data-bs-dismiss="modal"
+                onClick={executeDelete}
+              >
+                Yes, Delete
+              </button>
             </div>
           </div>
         </div>

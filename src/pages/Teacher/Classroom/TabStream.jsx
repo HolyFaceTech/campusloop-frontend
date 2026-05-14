@@ -36,6 +36,11 @@ const TabStream = () => {
   const [replyText, setReplyText] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
 
+  // NEW STATES PARA SA EDIT, DELETE AT BUTTON DISABLE
+  const [isPosting, setIsPosting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState("");
+
   // STATES FOR DYNAMIC FILE HANDLING
   const [includeLink, setIncludeLink] = useState(false);
   const [includeFiles, setIncludeFiles] = useState(false);
@@ -87,6 +92,8 @@ const TabStream = () => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
+    setIsPosting(true); // DISABLE BUTTONS
+
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
       setActiveReplyBox(null);
@@ -112,6 +119,64 @@ const TabStream = () => {
         description: "Could not post comment.",
         ...darkToast,
       });
+    } finally {
+      setIsPosting(false); // ENABLE BUTTONS
+    }
+  };
+
+  // EDIT AT DELETE COMMENTS
+  const startEditing = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditContent(comment.content);
+  };
+
+  const saveEditedComment = async (commentId) => {
+    if (!editContent || editContent.trim() === "") return;
+    setIsPosting(true);
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        { content: editContent },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+      setEditingCommentId(null);
+      setEditContent("");
+      fetchClassworks(); // REFRESH FEED
+    } catch (error) {
+      sileo.error({
+        title: "Error",
+        description: "Failed to update comment.",
+        ...darkToast,
+      });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    setIsPosting(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          },
+        },
+      );
+      fetchClassworks(); // REFRESH FEED
+    } catch (error) {
+      sileo.error({
+        title: "Error",
+        description: "Failed to delete comment.",
+        ...darkToast,
+      });
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -139,7 +204,6 @@ const TabStream = () => {
     new Offcanvas(document.getElementById("classworkDrawer")).show();
   };
 
-  // SAFE AT PROGRAMMATIC NA PAGBUKAS NG RESPONDENTS MODAL
   const openRespondentsModal = (cw) => {
     setSelectedItem(cw);
     setTimeout(() => {
@@ -151,19 +215,19 @@ const TabStream = () => {
     }, 100);
   };
 
-  const handleConfirmUpdateClick = (cw) => {
+  const promptUpdate = (cw) => {
     setOpenDropdownId(null);
     setSelectedItem(cw);
-    const modalElement = document.getElementById("updateConfirmModal");
-    const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
+    const modal = new Modal(document.getElementById("updateConfirmModal"));
     modal.show();
   };
 
   const proceedToUpdateForm = () => {
-    const m = Modal.getInstance(document.getElementById("updateConfirmModal"));
-    if (m) m.hide();
-
     setTimeout(() => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
       if (selectedItem) {
         openUpdateDrawer(selectedItem);
       }
@@ -172,7 +236,6 @@ const TabStream = () => {
 
   const openUpdateDrawer = (cw) => {
     setDrawerMode("update");
-    setSelectedItem(cw);
     setFormData({
       title: cw.title,
       type: cw.type,
@@ -191,14 +254,23 @@ const TabStream = () => {
     new Offcanvas(document.getElementById("classworkDrawer")).show();
   };
 
-  const triggerSaveConfirmation = () => {
+  const handleSubmit = () => {
+    if (!formData.title || !formData.type || !formData.instruction) {
+      sileo.error({
+        title: "Incomplete",
+        description: "Please fill in all required fields.",
+        ...darkToast,
+      });
+      return;
+    }
+
     Offcanvas.getInstance(document.getElementById("classworkDrawer"))?.hide();
     setTimeout(() => {
-      const modal = Modal.getOrCreateInstance(
-        document.getElementById("saveConfirmModal"),
-      );
-      modal.show();
-    }, 400);
+      document
+        .querySelectorAll(".offcanvas-backdrop")
+        .forEach((el) => el.remove());
+      executeSubmit();
+    }, 300);
   };
 
   const executeSubmit = async () => {
@@ -259,9 +331,8 @@ const TabStream = () => {
 
   const promptDelete = (cw) => {
     setSelectedItem(cw);
-    const modal = Modal.getOrCreateInstance(
-      document.getElementById("deleteConfirmModal"),
-    );
+    setOpenDropdownId(null);
+    const modal = new Modal(document.getElementById("deleteConfirmModal"));
     modal.show();
   };
 
@@ -366,7 +437,7 @@ const TabStream = () => {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
-        label: "WORD",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
@@ -375,7 +446,14 @@ const TabStream = () => {
         bg: "#d1e7dd",
         label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
+      };
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -385,10 +463,11 @@ const TabStream = () => {
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
-        color: "#fd7e14",
-        bg: "#ffe5d0",
+        color: "#0dcaf0",
+        bg: "#cff4fc",
         label: "VIDEO",
       };
+
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
@@ -409,14 +488,137 @@ const TabStream = () => {
     }
   };
 
+  // HELPER FUNCTION PARA SA PAG-RENDER NG COMMENT BOX
+  const renderCommentBox = (comment, isReply = false, cwId) => {
+    const isOwner = comment.user_id === currentUser?.id;
+
+    if (editingCommentId === comment.id) {
+      return (
+        <div className="bg-light rounded-4 px-3 py-3 w-100 border border-primary-subtle shadow-sm">
+          <textarea
+            className="form-control mb-2 rounded-3 custom-scrollbar"
+            rows="2"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            disabled={isPosting}
+          ></textarea>
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-sm btn-light border rounded-3"
+              onClick={() => setEditingCommentId(null)}
+              disabled={isPosting}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-sm btn-campusloop rounded-3"
+              onClick={() => saveEditedComment(comment.id)}
+              disabled={isPosting}
+            >
+              <i className="bi bi-check-circle-fill me-1"></i> Save Changes
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-100 d-flex flex-column align-items-start">
+        <div
+          className="bg-light rounded-4 px-3 py-2"
+          style={{
+            display: "inline-block",
+            maxWidth: "100%",
+            border: "1px solid #f0f0f0",
+          }}
+        >
+          <span
+            className="fw-bold text-dark d-block"
+            style={{
+              fontSize: isReply ? "0.75rem" : "0.8rem",
+              marginBottom: "2px",
+            }}
+          >
+            {comment.user?.first_name} {comment.user?.last_name}
+            {comment.user?.role === "admin" && (
+              <i
+                className="bi bi-patch-check-fill text-primary ms-1"
+                title="Admin"
+              ></i>
+            )}
+          </span>
+          <span
+            className="text-dark lh-sm d-block"
+            style={{
+              fontSize: isReply ? "0.85rem" : "0.9rem",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {comment.content}
+          </span>
+        </div>
+
+        <div className="ms-2 mt-1 d-flex align-items-center gap-3">
+          <span
+            className="text-muted"
+            style={{ fontSize: "0.65rem", fontWeight: "500" }}
+          >
+            {new Date(comment.created_at).toLocaleString([], {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+
+          {!isReply && (
+            <button
+              className="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none"
+              style={{ fontSize: "0.7rem" }}
+              onClick={() => setActiveReplyBox(comment.id)}
+            >
+              Reply
+            </button>
+          )}
+
+          <div className="d-flex align-items-center gap-2 ms-1 ps-2">
+            {isOwner && (
+              <>
+                <button
+                  className="btn btn-link p-0 text-primary fw-bold text-decoration-none shadow-none"
+                  style={{ fontSize: "0.7rem" }}
+                  onClick={() => startEditing(comment)}
+                  title="Edit Comment"
+                  disabled={isPosting}
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
+                  style={{ fontSize: "0.7rem" }}
+                  onClick={() => deleteComment(comment.id)}
+                  title="Delete Comment"
+                  disabled={isPosting}
+                >
+                  <i className="bi bi-trash-fill"></i>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      <GlobalSpinner isLoading={isLoading} text="Loading Classworks..." />
+      <GlobalSpinner isLoading={isLoading} text="Loading Stream..." />
       <div className="row g-4">
         {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div
-            className="card border-0 shadow-sm rounded-4 bg-white sticky-top"
+            className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
             style={{ top: "100px" }}
           >
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
@@ -484,7 +686,7 @@ const TabStream = () => {
                                   {task.title}
                                 </span>
                                 <span
-                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1`}
+                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1 fw-medium`}
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   {task.type.toUpperCase()}
@@ -502,6 +704,7 @@ const TabStream = () => {
                                     {new Date(task.created_at).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -515,6 +718,7 @@ const TabStream = () => {
                                     {new Date(task.deadline).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -577,7 +781,7 @@ const TabStream = () => {
           </div>
 
           {classworks.length === 0 ? (
-            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
+            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
               <div className="card-body p-5 text-center">
                 <i
                   className="bi bi-inbox text-muted d-block mb-3 opacity-50"
@@ -598,14 +802,13 @@ const TabStream = () => {
                 <div
                   key={cw.id}
                   id={`classwork-${cw.id}`}
-                  className="card border-0 shadow-sm bg-white mb-4 position-relative"
+                  className="card border-0 shadow-sm bg-white mb-4 position-relative premium-hover-card"
                   style={{
                     borderRadius: "1rem",
                     borderLeft: `5px solid ${typeStyle.hex}`,
                   }}
                 >
                   <div className="card-body p-4 p-md-5 pb-4">
-                    {/* PREMIUM HEADER */}
                     <div className="d-flex justify-content-between align-items-start mb-4">
                       <div className="d-flex align-items-center gap-3">
                         <div
@@ -623,7 +826,7 @@ const TabStream = () => {
                           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2 flex-wrap">
                             {cw.title}
                             <span
-                              className={`badge bg-opacity-10 border text-uppercase px-2 py-1 ${typeStyle.badge}`}
+                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge}`}
                               style={{
                                 fontSize: "0.65rem",
                                 letterSpacing: "1px",
@@ -638,6 +841,7 @@ const TabStream = () => {
                               <i className="bi bi-calendar-plus me-1"></i>{" "}
                               Posted:{" "}
                               {new Date(cw.created_at).toLocaleString([], {
+                                year: "numeric",
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",
@@ -649,9 +853,10 @@ const TabStream = () => {
                                 <span className="d-none d-sm-inline opacity-50">
                                   |
                                 </span>
-                                <span className="text-danger fw-bold">
+                                <span className="text-danger fw-medium">
                                   <i className="bi bi-clock me-1"></i> Due:{" "}
                                   {new Date(cw.deadline).toLocaleString([], {
+                                    year: "numeric",
                                     month: "short",
                                     day: "numeric",
                                     hour: "2-digit",
@@ -668,7 +873,7 @@ const TabStream = () => {
                       <div className="d-flex align-items-center gap-2 position-relative ms-3">
                         {!isMaterial && (
                           <button
-                            className="btn btn-sm btn-campusloop fw-bold rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
+                            className="btn btn-sm btn-campusloop fw-medium rounded-3 px-3 shadow-sm d-none d-md-flex align-items-center"
                             onClick={() => openRespondentsModal(cw)}
                           >
                             <i className="bi bi-people-fill me-2"></i>{" "}
@@ -736,7 +941,7 @@ const TabStream = () => {
                             <li>
                               <button
                                 className="dropdown-item py-2 fw-medium text-dark"
-                                onClick={() => handleConfirmUpdateClick(cw)}
+                                onClick={() => promptUpdate(cw)}
                               >
                                 <i
                                   className="bi bi-pencil-square me-2"
@@ -751,10 +956,7 @@ const TabStream = () => {
                             <li>
                               <button
                                 className="dropdown-item py-2 fw-medium text-danger"
-                                onClick={() => {
-                                  promptDelete(cw);
-                                  setOpenDropdownId(null);
-                                }}
+                                onClick={() => promptDelete(cw)}
                               >
                                 <i className="bi bi-trash-fill me-2"></i> Delete
                               </button>
@@ -903,7 +1105,6 @@ const TabStream = () => {
                           })}
                       </div>
 
-                      {/* POINTS FOR TEACHER VIEW (HIDDEN FOR MATERIAL) */}
                       {!isMaterial && (
                         <div className="d-flex align-items-center justify-content-end mt-2 mb-4 px-1">
                           <div className="d-flex align-items-center gap-2">
@@ -926,7 +1127,7 @@ const TabStream = () => {
                         </div>
                       )}
 
-                      {/* FB-STYLE COMMENTS THREAD */}
+                      {/* COMMENTS THREAD */}
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">
@@ -938,7 +1139,7 @@ const TabStream = () => {
                           </span>
                         </div>
 
-                        {/* RENDER COMMENTS */}
+                        {/* RENDER COMMENTS GAMIT ANG BAGONG HELPER FUNCTION */}
                         {cw.comments && cw.comments.length > 0 && (
                           <div
                             className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
@@ -966,61 +1167,8 @@ const TabStream = () => {
                                   {comment.user?.first_name?.charAt(0)}
                                 </div>
                                 <div className="flex-grow-1">
-                                  <div
-                                    className="bg-light rounded-4 px-3 py-2"
-                                    style={{
-                                      display: "inline-block",
-                                      maxWidth: "100%",
-                                      border: "1px solid #f0f0f0",
-                                    }}
-                                  >
-                                    <span
-                                      className="fw-bold text-dark d-block"
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      {comment.user?.first_name}{" "}
-                                      {comment.user?.last_name}
-                                    </span>
-                                    <span
-                                      className="text-dark lh-sm d-block"
-                                      style={{
-                                        fontSize: "0.9rem",
-                                        whiteSpace: "pre-wrap",
-                                      }}
-                                    >
-                                      {comment.content}
-                                    </span>
-                                  </div>
-                                  <div className="ms-2 mt-1 d-flex align-items-center gap-3">
-                                    <span
-                                      className="text-muted"
-                                      style={{
-                                        fontSize: "0.7rem",
-                                        fontWeight: "500",
-                                      }}
-                                    >
-                                      {new Date(
-                                        comment.created_at,
-                                      ).toLocaleString([], {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                    <button
-                                      className="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none"
-                                      style={{ fontSize: "0.7rem" }}
-                                      onClick={() =>
-                                        setActiveReplyBox(comment.id)
-                                      }
-                                    >
-                                      Reply
-                                    </button>
-                                  </div>
+                                  {/* PARENT COMMENT */}
+                                  {renderCommentBox(comment, false, cw.id)}
 
                                   {/* RENDER REPLIES */}
                                   {comment.replies &&
@@ -1047,52 +1195,11 @@ const TabStream = () => {
                                               )}
                                             </div>
                                             <div className="flex-grow-1">
-                                              <div
-                                                className="bg-light rounded-4 px-3 py-2"
-                                                style={{
-                                                  display: "inline-block",
-                                                  maxWidth: "100%",
-                                                  border: "1px solid #f0f0f0",
-                                                }}
-                                              >
-                                                <span
-                                                  className="fw-bold text-dark d-block"
-                                                  style={{
-                                                    fontSize: "0.75rem",
-                                                    marginBottom: "1px",
-                                                  }}
-                                                >
-                                                  {reply.user?.first_name}{" "}
-                                                  {reply.user?.last_name}
-                                                </span>
-                                                <span
-                                                  className="text-dark lh-sm d-block"
-                                                  style={{
-                                                    fontSize: "0.85rem",
-                                                    whiteSpace: "pre-wrap",
-                                                  }}
-                                                >
-                                                  {reply.content}
-                                                </span>
-                                              </div>
-                                              <div className="ms-2 mt-1">
-                                                <span
-                                                  className="text-muted"
-                                                  style={{
-                                                    fontSize: "0.65rem",
-                                                    fontWeight: "500",
-                                                  }}
-                                                >
-                                                  {new Date(
-                                                    reply.created_at,
-                                                  ).toLocaleString([], {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                  })}
-                                                </span>
-                                              </div>
+                                              {renderCommentBox(
+                                                reply,
+                                                true,
+                                                cw.id,
+                                              )}
                                             </div>
                                           </div>
                                         ))}
@@ -1125,6 +1232,7 @@ const TabStream = () => {
                                             [comment.id]: e.target.value,
                                           })
                                         }
+                                        disabled={isPosting}
                                         style={{
                                           resize: "vertical",
                                           fontSize: "0.85rem",
@@ -1136,6 +1244,7 @@ const TabStream = () => {
                                         onClick={() =>
                                           handleCommentSubmit(cw.id, comment.id)
                                         }
+                                        disabled={isPosting}
                                         style={{ height: "32px" }}
                                       >
                                         <i className="bi bi-send-fill fs-6"></i>
@@ -1143,6 +1252,7 @@ const TabStream = () => {
                                       <button
                                         className="btn btn-sm btn-light border shadow-sm rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 mt-1 text-muted"
                                         onClick={() => setActiveReplyBox(null)}
+                                        disabled={isPosting}
                                         style={{
                                           width: "32px",
                                           height: "32px",
@@ -1181,6 +1291,7 @@ const TabStream = () => {
                                 [cw.id]: e.target.value,
                               })
                             }
+                            disabled={isPosting}
                             style={{
                               resize: "vertical",
                               fontSize: "0.9rem",
@@ -1191,6 +1302,7 @@ const TabStream = () => {
                             className="btn btn-campusloop shadow-sm rounded-pill d-flex justify-content-center align-items-center flex-shrink-0 px-4 mt-1"
                             title="Post Comment"
                             onClick={() => handleCommentSubmit(cw.id)}
+                            disabled={isPosting}
                             style={{ height: "38px" }}
                           >
                             <i className="bi bi-send-fill fs-6 me-1"></i> Send
@@ -1221,8 +1333,8 @@ const TabStream = () => {
         existingFiles={existingFiles}
         setExistingFiles={setExistingFiles}
         setDeletedFileIds={setDeletedFileIds}
-        triggerSaveConfirmation={triggerSaveConfirmation}
-        executeSubmit={executeSubmit}
+        handleSubmit={handleSubmit}
+        executeDelete={executeDelete}
         selectedItem={selectedItem}
         proceedToUpdateForm={proceedToUpdateForm}
       />
