@@ -20,14 +20,31 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
   const [feedbackText, setFeedbackText] = useState("");
   const [isUnsubmitMode, setIsUnsubmitMode] = useState(false);
 
-  // TABLE CONTROLS STATE (SEARCH ONLY)
+  // SEARCH AT PAGINATION STATES (SMART SERVER-SIDE)
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
+  // Reset page kapag nagbago ang classwork
   useEffect(() => {
     if (selectedItem && selectedItem.type !== "material") {
+      setCurrentPage(1);
       fetchRespondents();
     }
   }, [selectedItem]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT
+  useEffect(() => {
+    if (selectedItem && selectedItem.type !== "material") {
+      const delayDebounceFn = setTimeout(() => {
+        fetchRespondents();
+      }, 500); // 500ms delay para iwas spam sa server
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchTerm, currentPage, entriesPerPage]);
 
   const fetchRespondents = async () => {
     setIsLoading(true);
@@ -38,11 +55,19 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
           },
+          params: {
+            search: searchTerm,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
         },
       );
-      setRespondents(res.data);
+      setRespondents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Failed to fetch respondents", error);
+      setRespondents([]);
     } finally {
       setIsLoading(false);
     }
@@ -254,7 +279,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     }, 400);
   };
 
-  // HELPER FOR FILE SIZES
   const formatBytes = (bytes) => {
     if (bytes === 0 || !bytes) return "0 Bytes";
     const k = 1024;
@@ -277,7 +301,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
-        label: "WORD",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
@@ -286,7 +310,14 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         bg: "#d1e7dd",
         label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
+      };
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -308,12 +339,51 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     };
   };
 
-  const filteredRespondents = respondents.filter((s) => {
-    const fullName = `${s.first_name} ${s.last_name}`.toLowerCase();
-    const lrn = s.lrn ? s.lrn.toLowerCase() : "";
-    const search = searchTerm.toLowerCase();
-    return fullName.includes(search) || lrn.includes(search);
-  });
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
@@ -329,23 +399,20 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
       >
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
           <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden bg-light">
-            {/* HEADER */}
             <div
               className="modal-header border-bottom py-3 d-flex flex-row align-items-center justify-content-between"
               style={{ backgroundColor: "var(--accent-color)" }}
             >
-              <div className="d-flex align-items-center flex-wrap gap-2">
-                <h5
-                  className="modal-title fw-bold mb-0"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="bi bi-people-fill me-2"></i> Respondents:{" "}
-                  {selectedItem?.title || "Classwork"}
-                  {selectedItem?.points
-                    ? ` • Total Points: ${selectedItem.points}`
-                    : ""}
-                </h5>
-              </div>
+              <h5
+                className="modal-title fw-bold mb-0"
+                style={{ color: "var(--primary-color)" }}
+              >
+                <i className="bi bi-people-fill me-2"></i> Respondents:{" "}
+                {selectedItem?.title || "Classwork"}
+                {selectedItem?.points
+                  ? ` • Total Points: ${selectedItem.points}`
+                  : ""}
+              </h5>
               <button
                 type="button"
                 className="btn-close shadow-none m-0"
@@ -353,160 +420,211 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
               ></button>
             </div>
 
-            {/* EXACT SEARCH BAR DESIGN FROM PROMPT */}
-            <div className="p-3 bg-white border-bottom d-flex justify-content-end align-items-center">
-              <div className="input-group" style={{ width: "350px" }}>
-                <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                  placeholder="Search Name or LRN..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+            <div className="modal-body p-4 bg-light">
+              <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+                <div className="card-body p-0">
+                  <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+                    <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+                      Show
+                      <select
+                        className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                        style={{ width: "70px" }}
+                        value={entriesPerPage}
+                        onChange={(e) => {
+                          setEntriesPerPage(Number(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                      entries
+                    </div>
 
-            {/* MAIN TABLE WRAPPER */}
-            <div className="modal-body p-3 bg-light">
-              <div className="border rounded-3 overflow-hidden shadow-sm">
+                    <div
+                      className="input-group"
+                      style={{ maxWidth: "400px", minWidth: "350px" }}
+                    >
+                      <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                        placeholder="Search Name or LRN..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* TABLE BODY */}
+              <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
-                  className="table-responsive custom-scrollbar bg-white"
+                  className="table-responsive custom-scrollbar"
                   style={{ maxHeight: "400px" }}
                 >
-                  <table className="table table-hover align-middle mb-0 custom-table">
-                    <thead className="bg-light sticky-top">
+                  <table
+                    className="table table-summer align-middle mb-0"
+                    style={{ minWidth: "900px" }}
+                  >
+                    <thead className="sticky-top bg-white z-1 shadow-sm">
                       <tr>
-                        <th className="small fw-bold text-muted px-4 py-3 text-uppercase">
+                        <th style={{ width: "60px" }} className="ps-4">
                           #
                         </th>
-                        <th className="small fw-bold text-muted py-3 text-uppercase">
-                          Student Details
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Status
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Date & Time
-                        </th>
-                        <th className="small fw-bold text-muted py-3 text-center text-uppercase">
-                          Grade
-                        </th>
-                        <th className="small fw-bold text-muted py-3 pe-4 text-center text-uppercase">
-                          Action
-                        </th>
+                        <th>Student Details</th>
+                        <th className="text-center">Status</th>
+                        <th className="text-center">Date & Time</th>
+                        <th className="text-center">Grade</th>
+                        <th className="text-center pe-4">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="border-top-0">
+                    <tbody>
                       {isLoading ? (
                         <tr>
                           <td
                             colSpan="6"
-                            className="text-center py-5 text-muted"
+                            className="text-center py-5 text-muted bg-white"
                           >
                             <div
-                              className="spinner-border spinner-border-sm me-2 text-primary"
+                              className="spinner-border spinner-border-sm text-primary me-2"
                               role="status"
                             ></div>
                             Loading respondents...
                           </td>
                         </tr>
-                      ) : filteredRespondents.length === 0 ? (
+                      ) : respondents.length === 0 ? (
                         <tr>
                           <td
                             colSpan="6"
-                            className="text-center py-5 text-muted"
+                            className="p-4 bg-light border-bottom-0"
                           >
-                            <i className="bi bi-inbox fs-2 d-block mb-2 opacity-50"></i>
-                            <span className="fw-medium">
-                              No matching records found.
-                            </span>
+                            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                              <i
+                                className="bi bi-inbox text-muted d-block mb-3"
+                                style={{ fontSize: "3rem", opacity: 0.5 }}
+                              ></i>
+                              <h5 className="fw-bold text-dark">
+                                No records found.
+                              </h5>
+                              <p className="text-muted small mb-0">
+                                {searchTerm
+                                  ? "No matching students for your search."
+                                  : "No respondents for this classwork yet."}
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       ) : (
-                        filteredRespondents.map((student, index) => {
+                        respondents.map((student, index) => {
                           const sub = student.submission;
+                          const hasSubmission =
+                            sub !== null && sub !== undefined;
+                          const isGraded =
+                            hasSubmission &&
+                            sub.grade !== null &&
+                            sub.grade !== undefined;
                           const isReturned =
-                            sub?.status === "returned" ||
-                            (sub?.status === "pending" &&
-                              sub?.teacher_feedback);
+                            hasSubmission &&
+                            !isGraded &&
+                            (sub.teacher_feedback || sub.status === "returned");
+                          const hasDeadline = selectedItem?.deadline;
+                          const deadlineTime = hasDeadline
+                            ? new Date(selectedItem.deadline).getTime()
+                            : null;
+                          const submitTime =
+                            hasSubmission && sub.submitted_at
+                              ? new Date(sub.submitted_at).getTime()
+                              : null;
+                          const currentTime = new Date().getTime();
+
+                          const isDoneLate =
+                            hasDeadline &&
+                            hasSubmission &&
+                            submitTime > deadlineTime;
+                          const isMissing =
+                            hasDeadline &&
+                            !hasSubmission &&
+                            currentTime > deadlineTime;
 
                           return (
-                            <tr key={student.id}>
-                              <td className="px-4 text-muted fw-medium text-center">
-                                {index + 1}
+                            <tr key={student.id || index}>
+                              <td className="ps-4 fw-bold text-muted">
+                                {(currentPage - 1) * entriesPerPage + index + 1}
                               </td>
-
-                              {/* 1. STUDENT DETAILS */}
                               <td>
-                                <div className="d-flex align-items-center gap-2">
+                                <div className="d-flex align-items-center py-1">
                                   <div
-                                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold flex-shrink-0 shadow-sm"
+                                    className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
                                     style={{
-                                      width: "38px",
-                                      height: "38px",
-                                      fontSize: "0.9rem",
+                                      width: "40px",
+                                      height: "40px",
                                       backgroundColor: "var(--secondary-color)",
                                     }}
                                   >
-                                    {student.first_name.charAt(0)}
+                                    {student.first_name
+                                      ? student.first_name.charAt(0)
+                                      : "U"}
                                   </div>
-                                  <div>
-                                    <span
-                                      className="d-block fw-bold text-dark lh-sm"
-                                      style={{ fontSize: "0.9rem" }}
-                                    >
-                                      {student.last_name}, {student.first_name}
-                                    </span>
-                                    <span
-                                      className="text-muted"
-                                      style={{ fontSize: "0.75rem" }}
+                                  <div className="overflow-hidden">
+                                    <div className="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                      <span
+                                        className="fw-bold text-dark text-truncate"
+                                        style={{ maxWidth: "250px" }}
+                                      >
+                                        {student.last_name || ""},{" "}
+                                        {student.first_name || "Unknown"}
+                                      </span>
+                                    </div>
+                                    <p
+                                      className="mb-0 text-muted text-truncate"
+                                      style={{
+                                        fontSize: "0.80rem",
+                                        maxWidth: "250px",
+                                      }}
                                     >
                                       LRN: {student.lrn || "N/A"}
-                                    </span>
+                                    </p>
                                   </div>
                                 </div>
                               </td>
-
-                              {/* 2. STATUS */}
                               <td className="text-center">
-                                {sub ? (
-                                  isReturned ? (
-                                    <span className="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-3 px-2 py-1">
-                                      Returned
-                                    </span>
-                                  ) : sub.status === "late_submission" ? (
-                                    <span className="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-3 px-2 py-1">
-                                      Done Late
-                                    </span>
-                                  ) : sub.status === "graded" ? (
-                                    <span className="badge bg-success bg-opacity-10 text-success border border-success rounded-3 px-2 py-1">
-                                      Graded
-                                    </span>
-                                  ) : (
-                                    <span className="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-3 px-2 py-1">
-                                      Turned In
-                                    </span>
-                                  )
+                                {isGraded ? (
+                                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success rounded-3 px-2 py-1 shadow-sm">
+                                    Graded
+                                  </span>
+                                ) : isReturned ? (
+                                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger rounded-3 px-2 py-1 shadow-sm">
+                                    Returned
+                                  </span>
+                                ) : isDoneLate ? (
+                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1">
+                                    Done Late
+                                  </span>
+                                ) : hasSubmission ? (
+                                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary rounded-3 px-2 py-1 shadow-sm">
+                                    Turned In
+                                  </span>
+                                ) : isMissing ? (
+                                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger rounded-3 px-2 py-1 shadow-sm">
+                                    Missing
+                                  </span>
                                 ) : (
-                                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-3 px-2 py-1">
+                                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary rounded-3 px-2 py-1 shadow-sm">
                                     Pending
                                   </span>
                                 )}
                               </td>
-
-                              {/* 3. DATE & TIME */}
-                              <td
-                                className="text-muted text-center"
-                                style={{
-                                  fontSize: "0.80rem",
-                                  fontWeight: "500",
-                                }}
-                              >
-                                {sub?.submitted_at
-                                  ? new Date(sub.submitted_at).toLocaleString(
+                              <td className="text-muted text-center small">
+                                {sub?.submitted_at ? (
+                                  <>
+                                    <i className="bi bi-clock me-1"></i>{" "}
+                                    {new Date(sub.submitted_at).toLocaleString(
                                       [],
                                       {
                                         month: "short",
@@ -514,35 +632,26 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                         hour: "2-digit",
                                         minute: "2-digit",
                                       },
-                                    )
-                                  : "-"}
+                                    )}
+                                  </>
+                                ) : (
+                                  "-"
+                                )}
                               </td>
-
-                              {/* 4. GRADE */}
                               <td className="text-center fw-bolder fs-6">
-                                {sub?.grade !== null &&
-                                sub?.grade !== undefined ? (
-                                  <span
-                                    className={
-                                      sub.grade <
-                                      (selectedItem?.points / 2 || 0)
-                                        ? "text-danger"
-                                        : "text-success"
-                                    }
-                                  >
+                                {isGraded ? (
+                                  <span className="text-success">
                                     {sub.grade}
                                   </span>
                                 ) : (
                                   <span className="text-muted small">-</span>
                                 )}
                               </td>
-
-                              {/* 5. ACTION (VIEW SUBMISSION) */}
-                              <td className="pe-4 text-center">
-                                {sub ? (
+                              <td className="text-center pe-4">
+                                {hasSubmission ? (
                                   <button
-                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle d-inline-flex justify-content-center align-items-center transition-all hover-primary"
-                                    style={{ width: "32px", height: "32px" }}
+                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle"
+                                    style={{ width: "35px", height: "35px" }}
                                     onClick={() => openViewSubmission(student)}
                                     title="View Submission"
                                   >
@@ -552,7 +661,13 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                     ></i>
                                   </button>
                                 ) : (
-                                  <i className="bi bi-lock-fill text-muted opacity-50"></i>
+                                  <button
+                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle opacity-50"
+                                    style={{ width: "35px", height: "35px" }}
+                                    disabled
+                                  >
+                                    <i className="bi bi-lock-fill text-muted"></i>
+                                  </button>
                                 )}
                               </td>
                             </tr>
@@ -563,9 +678,52 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                   </table>
                 </div>
               </div>
+
+              {/* PAGINATION METADATA FOOTER (SMART UPDATE) */}
+              {totalRecords > 0 && (
+                <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3 px-2">
+                  <p className="text-muted small mb-0">
+                    Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+                    {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+                    {totalRecords} respondents
+                  </p>
+                  <nav>
+                    <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+                      <li
+                        className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) => Math.max(prev - 1, 1))
+                          }
+                        >
+                          Previous
+                        </button>
+                      </li>
+
+                      {renderPageNumbers()}
+
+                      <li
+                        className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                      >
+                        <button
+                          className="page-link page-link-summer"
+                          onClick={() =>
+                            setCurrentPage((prev) =>
+                              Math.min(prev + 1, totalPages),
+                            )
+                          }
+                        >
+                          Next
+                        </button>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              )}
             </div>
 
-            {/* MODAL FOOTER */}
             <div className="modal-footer border-top bg-light p-3 d-flex justify-content-end">
               <button
                 type="button"
@@ -579,7 +737,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         </div>
       </div>
 
-      {/* VIEW SUBMISSION MODAL (NANDITO NA ANG FILES, GRADE, AT UNSUBMIT LOGIC) */}
+      {/* VIEW SUBMISSION MODAL */}
       <div
         className="modal fade"
         id="viewSubmissionModal"
@@ -607,8 +765,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
             </div>
 
             <div className="modal-body p-4 bg-white custom-scrollbar">
-              {/* STUDENT INFO HEADER */}
-              <div className="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded-4 border border-light-subtle shadow-sm">
+              <div className="d-flex justify-content-between align-items-center mb-4 p-3">
                 <div className="d-flex align-items-center gap-3">
                   <div
                     className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold fs-5 shadow-sm"
@@ -634,14 +791,15 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                     className="d-block text-muted small fw-bold text-uppercase mb-1"
                     style={{ letterSpacing: "0.5px", fontSize: "0.65rem" }}
                   >
-                    Date Submitted
+                    Date Submitted :
                   </span>
-                  <span className="badge bg-white text-dark border shadow-sm px-3 py-2 fw-medium">
+                  <span className="text-dark px-3 py-2 fw-medium small">
                     <i className="bi bi-calendar-check me-1 text-primary"></i>
                     {selectedStudent?.submission?.submitted_at
                       ? new Date(
                           selectedStudent.submission.submitted_at,
                         ).toLocaleString([], {
+                          year: "numeric",
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
@@ -652,7 +810,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 </div>
               </div>
 
-              {/* ATTACHED FILES (VERTICAL STACK LIST) */}
               <h6 className="fw-bold text-dark mb-3">
                 <i className="bi bi-paperclip me-2 text-muted"></i>Attached
                 Files
@@ -711,13 +868,12 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 </div>
               ) : (
                 <div className="text-center p-4 bg-light rounded-4 border border-light-subtle mb-4">
-                  <p className="text-muted small mb-0 fw-medium fst-italic">
+                  <p className="text-muted small mb-0 fw-medium">
                     No files attached to this submission.
                   </p>
                 </div>
               )}
 
-              {/* DYNAMIC ACTION SECTION (GRADING VS UNSUBMITTING) */}
               <div
                 className="p-4 rounded-4 shadow-sm"
                 style={{
@@ -730,15 +886,14 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 }}
               >
                 {!isUnsubmitMode ? (
-                  // GRADING VIEW
                   <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                     <div>
                       <label className="form-label small fw-bold text-dark mb-2">
                         <i className="bi bi-award-fill text-warning me-1"></i>{" "}
-                        Assignment Grade
+                        Assignment Grade:
                       </label>
                       <div
-                        className="input-group shadow-sm rounded-3 overflow-hidden border bg-white"
+                        className="input-group rounded-3 overflow-hidden bg-white"
                         style={{ width: "220px" }}
                       >
                         <input
@@ -746,43 +901,42 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                           step="0.01"
                           min="0"
                           max={selectedItem?.points || ""}
-                          className="form-control border-0 text-center fw-bold text-primary py-2"
+                          className="form-control bg-light toolbar-input fw-bold text-primary text-center"
                           value={gradeInput}
                           onChange={(e) => setGradeInput(e.target.value)}
                           placeholder="0.00"
                         />
-                        <span className="input-group-text bg-light border-0 text-muted small fw-medium">
+                        <span className="input-group-text bg-light small text-muted fw-medium">
                           / {selectedItem?.points || "-"}
                         </span>
                       </div>
                     </div>
                     <div className="d-flex align-items-center gap-2 mt-2 mt-md-0">
-                      {/* HIDE UNSUBMIT KUNG RETURNED NA O KUNG FORM ANG CLASSWORK */}
                       {selectedStudent?.submission?.status !== "returned" &&
                         !selectedItem?.form_id && (
                           <button
-                            className="btn btn-outline-danger rounded-3 fw-bold shadow-sm px-4 py-2"
+                            className="btn btn-outline-danger rounded-3 fw-bold shadow-sm px-3 py-2"
                             onClick={promptUnsubmit}
                           >
                             <i className="bi bi-arrow-return-left me-1"></i>{" "}
-                            Unsubmit
                           </button>
                         )}
                       <button
-                        className="btn btn-campusloop rounded-3 fw-bold shadow-sm px-4 py-2"
+                        className="btn btn-campusloop rounded-3 fw-bold shadow-sm px-3 py-2"
                         onClick={
                           hasExistingGrade
                             ? promptGradeUpdateConfirm
                             : executeGrade
                         }
                       >
-                        <i className="bi bi-check-circle-fill me-1"></i>{" "}
+                        <i
+                          className={`bi ${hasExistingGrade ? "bi-check-circle-fill" : "bi-plus-circle-fill"} me-1`}
+                        ></i>{" "}
                         {hasExistingGrade ? "Save Changes" : "Submit"}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  // UNSUBMIT VIEW
                   <div className="animate__animated animate__fadeIn">
                     <h6 className="fw-bold text-danger mb-2">
                       <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
@@ -811,6 +965,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                         className="btn btn-danger px-4 rounded-3 fw-bold shadow-sm"
                         onClick={executeReturn}
                       >
+                        <i className="bi bi-arrow-return-left me-1"></i>{" "}
                         Unsubmit
                       </button>
                     </div>
@@ -879,7 +1034,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
                 onClick={executeGrade}
               >
                 Yes, Proceed
@@ -934,7 +1089,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-danger px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
                 onClick={proceedToFeedback}
               >
                 Yes, Proceed
