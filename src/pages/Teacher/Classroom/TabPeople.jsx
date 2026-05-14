@@ -11,6 +11,15 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeaders = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const TabPeople = () => {
   const { classroom } = useOutletContext();
   const [students, setStudents] = useState([]);
@@ -22,33 +31,61 @@ const TabPeople = () => {
   const [filterGender, setFilterGender] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // PAGINATION STATES
+  // SERVER-SIDE PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
   const [actionType, setActionType] = useState(""); // 'approve', 'decline', 'remove'
 
-  useEffect(() => {
-    if (classroom) fetchStudents();
-  }, [classroom]);
-
   // RESET PAGE TO 1 PAG MAY GINAGALAW NA FILTER O ENTRIES PER PAGE
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterGender, filterStatus, entriesPerPage]);
 
+  // SERVER-SIDE DEBOUNCE EFFECT
+  useEffect(() => {
+    if (!classroom) return;
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchStudents();
+    }, 500); // 500ms bago i-fire yung query
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [
+    searchQuery,
+    filterGender,
+    filterStatus,
+    currentPage,
+    entriesPerPage,
+    classroom,
+  ]);
+
   const fetchStudents = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching students...");
+    setLoadingText("Loading students...");
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/students`,
+        {
+          headers: getAuthHeaders(),
+          params: {
+            search: searchQuery,
+            gender: filterGender,
+            status: filterStatus,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setStudents(res.data);
-      setSelectedIds([]); // Reset selection
+      setStudents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
+      setSelectedIds([]); // I-reset ang selection para iwas stale IDs
     } catch (error) {
       console.error("Error fetching students", error);
     } finally {
@@ -78,6 +115,7 @@ const TabPeople = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/students/approve`,
           { student_ids: selectedIds },
+          { headers: getAuthHeaders() },
         );
         sileo.success({
           title: "Enrolled",
@@ -88,6 +126,7 @@ const TabPeople = () => {
         await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/students/remove`,
           { student_ids: selectedIds },
+          { headers: getAuthHeaders() },
         );
         sileo.success({
           title: "Success",
@@ -107,32 +146,12 @@ const TabPeople = () => {
     }
   };
 
-  // LOGIC PARA SA FILTERS
-  const filteredStudents = students.filter((s) => {
-    const matchesSearch = `${s.first_name} ${s.last_name} ${s.email} ${s.lrn}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesGender = filterGender === "all" || s.gender === filterGender;
-    const matchesStatus =
-      filterStatus === "all" || s.pivot.status === filterStatus;
-    return matchesSearch && matchesGender && matchesStatus;
-  });
-
-  // LOGIC PARA SA PAGINATION
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentItems = filteredStudents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
-
   const handleSelectAll = (e) => {
-    if (e.target.checked) setSelectedIds(currentItems.map((s) => s.id));
+    if (e.target.checked) setSelectedIds(students.map((s) => s.id));
     else setSelectedIds([]);
   };
 
-  // CHECKERS PARA SA BUTTONS (Disabled kung walang tamang selected)
+  // CHECKERS PARA SA BUTTONS
   const hasPendingSelected = selectedIds.some(
     (id) => students.find((s) => s.id === id)?.pivot?.status === "pending",
   );
@@ -140,14 +159,58 @@ const TabPeople = () => {
     (id) => students.find((s) => s.id === id)?.pivot?.status === "approved",
   );
 
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
-            {/* ENTRIES PER PAGE DROPDOWN */}
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -166,7 +229,7 @@ const TabPeople = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "200px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -180,7 +243,7 @@ const TabPeople = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -195,7 +258,7 @@ const TabPeople = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "200px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -210,10 +273,9 @@ const TabPeople = () => {
               </select>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div className="d-flex gap-2 flex-shrink-0">
               <button
-                className="btn btn-success text-dark  d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
+                className="btn btn-success text-dark d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
                 disabled={!hasPendingSelected}
                 onClick={() => confirmAction("approve")}
               >
@@ -240,7 +302,7 @@ const TabPeople = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -254,8 +316,8 @@ const TabPeople = () => {
                     className="form-check-input"
                     onChange={handleSelectAll}
                     checked={
-                      selectedIds.length === currentItems.length &&
-                      currentItems.length > 0
+                      selectedIds.length === students.length &&
+                      students.length > 0
                     }
                   />
                 </th>
@@ -269,7 +331,7 @@ const TabPeople = () => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((student, index) => (
+              {students.map((student, index) => (
                 <tr
                   key={student.id}
                   className={
@@ -292,7 +354,7 @@ const TabPeople = () => {
                     />
                   </td>
                   <td className="fw-bold text-muted">
-                    {indexOfFirstItem + index + 1}
+                    {(currentPage - 1) * entriesPerPage + index + 1}
                   </td>
 
                   <td>
@@ -334,7 +396,7 @@ const TabPeople = () => {
 
                   <td>
                     <span
-                      className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                      className="badge bg-opacity-10 border border-dark-subtle fw-medium text-dark rounded-3 px-2 py-1"
                       style={{
                         maxWidth: "150px",
                         backgroundColor: "var(--accent-color)",
@@ -346,31 +408,23 @@ const TabPeople = () => {
 
                   <td>
                     <span className="text-muted small fw-bold">
-                      {student.gender || "N/A"}
+                      {student.gender ? student.gender.toUpperCase() : "N/A"}
                     </span>
                   </td>
 
                   <td>
                     {student.pivot.status === "approved" ? (
                       <span
-                        className="badge bg-success bg-opacity-10 text-success rounded-3 px-2 py-1"
+                        className="badge bg-success bg-opacity-10 border border-success-subtle fw-medium text-success rounded-3 px-2 py-1"
                         style={{ fontSize: "0.65rem" }}
                       >
-                        <i
-                          className="bi bi-circle-fill me-1"
-                          style={{ fontSize: "0.4rem" }}
-                        ></i>{" "}
                         Enrolled
                       </span>
                     ) : (
                       <span
-                        className="badge bg-warning bg-opacity-10 text-warning rounded-pill px-2 py-1"
+                        className="badge bg-warning bg-opacity-10 border border-success-subtle fw-medium text-warning rounded-pill px-2 py-1"
                         style={{ fontSize: "0.65rem" }}
                       >
-                        <i
-                          className="bi bi-circle-fill me-1"
-                          style={{ fontSize: "0.4rem" }}
-                        ></i>{" "}
                         Pending
                       </span>
                     )}
@@ -395,22 +449,24 @@ const TabPeople = () => {
                 </tr>
               ))}
 
-              {currentItems.length === 0 && !isLoading && (
+              {/* EMPTY STATE */}
+              {students.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="8" className="text-center py-5 text-muted">
-                    {students.length === 0 ? (
-                      <>
-                        <i className="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
-                        <span className="fw-medium">No students found.</span>
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        <span className="fw-medium">
-                          No matching records found.
-                        </span>
-                      </>
-                    )}
+                  <td colSpan="8" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery ||
+                        filterGender !== "all" ||
+                        filterStatus !== "all"
+                          ? "No matching students for your search or filters."
+                          : "There are no students in this classroom yet."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -419,13 +475,12 @@ const TabPeople = () => {
         </div>
       </div>
 
-      {/* PAGINATION FOOTER */}
-      {filteredStudents.length > 0 && (
+      {totalRecords > 0 && (
         <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
           <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredStudents.length)} of{" "}
-            {filteredStudents.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">
@@ -441,19 +496,9 @@ const TabPeople = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+
+              {renderPageNumbers()}
+
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >

@@ -65,7 +65,7 @@ const StudentViewDrawer = ({
               </div>
               <div className="col-md-6">
                 <label className="form-label small fw-bold text-dark">
-                  Last Name
+                  <i className="bi bi-person me-1 text-muted"></i> Last Name
                 </label>
                 <input
                   type="text"
@@ -172,11 +172,8 @@ const StudentViewDrawer = ({
                 </h6>
               </div>
               <div className="col-md-6">
-                <label
-                  className="form-label small fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="bi bi-123 me-1"></i> LRN
+                <label className="form-label small fw-bold text-dark">
+                  <i className="bi bi-123 me-1 text-muted"></i> LRN
                 </label>
                 <input
                   type="text"
@@ -186,11 +183,8 @@ const StudentViewDrawer = ({
                 />
               </div>
               <div className="col-md-6">
-                <label
-                  className="form-label small fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  <i className="bi bi-journal-text me-1"></i> Strand
+                <label className="form-label small fw-bold text-dark">
+                  <i className="bi bi-journal-text me-1 text-muted"></i> Strand
                 </label>
                 <input
                   type="text"
@@ -234,7 +228,7 @@ const StudentViewDrawer = ({
                 style={{ width: "80px", height: "80px" }}
               >
                 <i
-                  className={`bi ${actionType === "approve" ? "bi-person-check-fill text-success" : actionType === "decline" ? "bi-person-x-fill text-warning" : "bi-trash3-fill text-danger"}`}
+                  className={`bi ${actionType === "approve" ? "bi-person-check-fill text-success" : actionType === "decline" ? "bi-person-x-fill text-warning" : "bi-exclamation-triangle-fill text-danger"}`}
                   style={{ fontSize: "2.5rem" }}
                 ></i>
               </div>
