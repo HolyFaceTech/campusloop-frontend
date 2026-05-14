@@ -3,6 +3,15 @@ import { useOutletContext } from "react-router-dom";
 import axios from "axios";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 
+const getAuthHeaders = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const TabGrades = () => {
   const { classroom } = useOutletContext();
   const [students, setStudents] = useState([]);
@@ -13,14 +22,24 @@ const TabGrades = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-  useEffect(() => {
-    if (classroom) fetchGradesData();
-  }, [classroom]);
-
+  // Reset sa Page 1 kapag nag-search o nagpalit ng limit
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT
+  useEffect(() => {
+    if (classroom && classroom.id) {
+      const delayDebounceFn = setTimeout(() => {
+        fetchGradesData();
+      }, 500); // 500ms delay para iwas spam sa server
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [classroom?.id, searchQuery, currentPage, entriesPerPage]);
 
   const fetchGradesData = async () => {
     setIsLoading(true);
@@ -28,14 +47,19 @@ const TabGrades = () => {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/classrooms/${classroom.id}/grades`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          headers: getAuthHeaders(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
           },
         },
       );
       const data = res.data;
       setClassworks(data.classworks || []);
       setStudents(data.students || []);
+      setTotalPages(data.last_page || 1);
+      setTotalRecords(data.total || 0);
     } catch (error) {
       console.error("Error fetching grades data", error);
     } finally {
@@ -83,46 +107,54 @@ const TabGrades = () => {
       (s) => s.classwork_id === cw.id,
     );
 
-    if (!submission) {
-      return (
-        <span className="text-muted fw-light" style={{ opacity: 0.3 }}>
-          —
-        </span>
-      );
-    }
+    const hasDeadline = cw.deadline ? true : false;
+    const deadlineTime = hasDeadline ? new Date(cw.deadline).getTime() : null;
+    const submitTime =
+      submission && submission.submitted_at
+        ? new Date(submission.submitted_at).getTime()
+        : null;
+    const currentTime = new Date().getTime();
 
-    if (submission.status === "graded" && submission.grade !== null) {
+    const hasSubmission = submission && submission.status !== "missing";
+    const isGraded =
+      hasSubmission &&
+      submission.grade !== null &&
+      submission.grade !== undefined;
+    const isReturned =
+      hasSubmission &&
+      !isGraded &&
+      (submission.teacher_feedback || submission.status === "returned");
+    const isDoneLate =
+      hasDeadline && hasSubmission && submitTime > deadlineTime;
+    const isMissing =
+      submission?.status === "missing" ||
+      (hasDeadline && !hasSubmission && currentTime > deadlineTime);
+
+    if (isGraded) {
       return (
-        <div className="d-flex align-items-center justify-content-center">
+        <div className="d-flex flex-column align-items-center justify-content-center">
           <span
             className="fw-bold text-dark"
             style={{ fontSize: "1.1rem", lineHeight: "1" }}
           >
             {submission.grade}
           </span>
+          {isDoneLate && (
+            <span
+              className="badge bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning fw-medium mt-1 rounded-3"
+              style={{ fontSize: "0.6rem" }}
+            >
+              Done Late
+            </span>
+          )}
         </div>
       );
     }
 
-    if (submission.status === "missing") {
+    if (isReturned) {
       return (
         <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill fw-medium"
-          style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
-        >
-          Missing
-        </span>
-      );
-    }
-
-    // KAPAG RETURNED NI TEACHER
-    if (
-      submission.status === "returned" ||
-      (submission.status === "pending" && submission.teacher_feedback)
-    ) {
-      return (
-        <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill fw-medium"
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Returned
@@ -130,13 +162,21 @@ const TabGrades = () => {
       );
     }
 
-    if (
-      submission.status === "pending" ||
-      submission.status === "late_submission"
-    ) {
+    if (isDoneLate) {
       return (
         <span
-          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill fw-medium"
+          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+        >
+          Done Late
+        </span>
+      );
+    }
+
+    if (hasSubmission) {
+      return (
+        <span
+          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Turned In
@@ -144,30 +184,79 @@ const TabGrades = () => {
       );
     }
 
-    return <span className="text-muted fw-light">—</span>;
+    if (isMissing) {
+      return (
+        <span
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+        >
+          Missing
+        </span>
+      );
+    }
+
+    return (
+      <span
+        className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+        style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
+      >
+        Pending
+      </span>
+    );
   };
 
-  const filteredStudents = students.filter((s) => {
-    return `${s.first_name} ${s.last_name} ${s.lrn}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-  });
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
 
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentStudents = filteredStudents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredStudents.length / entriesPerPage);
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Class Record..." />
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 w-100">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -184,7 +273,10 @@ const TabGrades = () => {
               entries
             </div>
 
-            <div className="input-group" style={{ maxWidth: "350px" }}>
+            <div
+              className="input-group flex-shrink-0"
+              style={{ maxWidth: "350px", minWidth: "280px" }}
+            >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
               </span>
@@ -230,6 +322,7 @@ const TabGrades = () => {
                 >
                   Student Details
                 </th>
+
                 {classworks.length === 0 ? (
                   <th className="py-4 text-center text-muted fw-normal border-bottom border-end bg-light">
                     No gradable classworks yet.
@@ -263,7 +356,7 @@ const TabGrades = () => {
                           </div>
                           <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
                             <span
-                              className="badge bg-white text-dark border fw-semibold shadow-sm"
+                              className="text-dark fw-semibold "
                               style={{
                                 fontSize: "0.65rem",
                                 padding: "0.25rem 0.4rem",
@@ -281,7 +374,11 @@ const TabGrades = () => {
                             >
                               {new Date(cw.created_at).toLocaleDateString(
                                 "en-US",
-                                { month: "short", day: "numeric" },
+                                {
+                                  year: "numeric",
+                                  month: "numeric",
+                                  day: "numeric",
+                                },
                               )}
                             </span>
                           </div>
@@ -292,26 +389,38 @@ const TabGrades = () => {
                 )}
               </tr>
             </thead>
+
             <tbody>
-              {currentStudents.length === 0 ? (
+              {students.length === 0 ? (
                 <tr>
                   <td
                     colSpan={classworks.length + 2}
-                    className="text-center py-5 text-muted bg-white"
+                    className="p-4 bg-light border-bottom-0"
                   >
-                    <i className="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
-                    <span className="fw-medium">No student records found.</span>
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery
+                          ? "No matching students for your search."
+                          : "There are no students enrolled in this classroom yet."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
-                currentStudents.map((student, index) => (
+                students.map((student, index) => (
                   <tr key={student.id} className="hover-bg-light">
                     <td
                       className="text-center fw-medium text-muted border-end bg-white"
                       style={{ fontSize: "0.9rem" }}
                     >
-                      {indexOfFirstItem + index + 1}
+                      {(currentPage - 1) * entriesPerPage + index + 1}
                     </td>
+
                     <td
                       className="px-4 py-3 bg-white"
                       style={{
@@ -350,6 +459,7 @@ const TabGrades = () => {
                         </div>
                       </div>
                     </td>
+
                     {classworks.length === 0 ? (
                       <td className="text-center bg-white border-end"></td>
                     ) : (
@@ -370,15 +480,15 @@ const TabGrades = () => {
         </div>
       </div>
 
-      {filteredStudents.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
+      {totalRecords > 0 && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredStudents.length)} of{" "}
-            {filteredStudents.length} entries
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} records
           </p>
           <nav>
-            <ul className="pagination pagination-sm mb-0">
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
               <li
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
@@ -391,19 +501,9 @@ const TabGrades = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+
+              {renderPageNumbers()}
+
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
