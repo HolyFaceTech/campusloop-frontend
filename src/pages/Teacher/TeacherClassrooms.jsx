@@ -11,16 +11,30 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const TeacherClassrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
 
+  // TOOLKIT & SMART PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [drawerMode, setDrawerMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
-
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -34,21 +48,41 @@ const TeacherClassrooms = () => {
   });
 
   useEffect(() => {
-    fetchClassrooms();
+    const delayDebounceFn = setTimeout(() => {
+      fetchClassrooms();
+    }, 500);
 
     const closeDropdown = () => setOpenDropdownId(null);
     document.addEventListener("click", closeDropdown);
-    return () => document.removeEventListener("click", closeDropdown);
-  }, []);
+
+    return () => {
+      clearTimeout(delayDebounceFn);
+      document.removeEventListener("click", closeDropdown);
+    };
+  }, [searchQuery, currentPage, entriesPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, entriesPerPage]);
 
   const fetchClassrooms = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching classrooms...");
+    setLoadingText("Loading classrooms...");
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/classrooms`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setClassrooms(res.data);
+      setClassrooms(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -85,43 +119,43 @@ const TeacherClassrooms = () => {
       color_bg: "#626F47",
       schedule: { days: [], start_time: "", end_time: "" },
     });
-    const bsOffcanvas = new Offcanvas(
-      document.getElementById("classroomDrawer"),
-    );
-    bsOffcanvas.show();
+    new Offcanvas(document.getElementById("classroomDrawer")).show();
   };
 
-  const openUpdateDrawer = (item) => {
-    setDrawerMode("update");
+  const promptUpdate = (item) => {
     setSelectedItem(item);
+    new Modal(document.getElementById("updateConfirmModal")).show();
+  };
 
+  const proceedToUpdate = () => {
+    setDrawerMode("update");
     let parsedSchedule = { days: [], start_time: "", end_time: "" };
-    if (item.schedule) {
-      if (typeof item.schedule === "object") {
-        parsedSchedule = item.schedule;
-      } else if (typeof item.schedule === "string") {
-        try {
-          parsedSchedule = JSON.parse(item.schedule);
-        } catch (e) {}
-      }
+    if (selectedItem.schedule) {
+      parsedSchedule =
+        typeof selectedItem.schedule === "object"
+          ? selectedItem.schedule
+          : JSON.parse(selectedItem.schedule);
     }
-
     setFormData({
-      section: item.section,
-      strand_id: item.strand_id,
-      grade_level: item.grade_level,
-      subject_id: item.subject_id,
-      capacity: item.capacity,
-      color_bg: item.color_bg,
+      section: selectedItem.section,
+      strand_id: selectedItem.strand_id,
+      grade_level: selectedItem.grade_level,
+      subject_id: selectedItem.subject_id,
+      capacity: selectedItem.capacity,
+      color_bg: selectedItem.color_bg,
       schedule: parsedSchedule,
     });
-    const bsOffcanvas = new Offcanvas(
-      document.getElementById("classroomDrawer"),
-    );
-    bsOffcanvas.show();
+
+    setTimeout(() => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      new Offcanvas(document.getElementById("classroomDrawer")).show();
+    }, 400);
   };
 
-  const triggerSaveConfirmation = () => {
+  const handleSubmit = () => {
     if (
       !formData.section ||
       !formData.strand_id ||
@@ -135,12 +169,9 @@ const TeacherClassrooms = () => {
       });
       return;
     }
-
     const safeSchedule = formData.schedule || {};
-    const safeDays = safeSchedule.days || [];
-
     if (
-      safeDays.length === 0 ||
+      (safeSchedule.days || []).length === 0 ||
       !safeSchedule.start_time ||
       !safeSchedule.end_time
     ) {
@@ -160,18 +191,13 @@ const TeacherClassrooms = () => {
       return;
     }
 
-    const bsOffcanvas = Offcanvas.getInstance(
-      document.getElementById("classroomDrawer"),
-    );
-    if (bsOffcanvas) bsOffcanvas.hide();
-
+    Offcanvas.getInstance(document.getElementById("classroomDrawer"))?.hide();
     setTimeout(() => {
       document
         .querySelectorAll(".offcanvas-backdrop")
         .forEach((el) => el.remove());
-      const modal = new Modal(document.getElementById("saveConfirmModal"));
-      modal.show();
-    }, 400);
+      executeSubmit();
+    }, 300);
   };
 
   const executeSubmit = async () => {
@@ -184,20 +210,22 @@ const TeacherClassrooms = () => {
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/classrooms`,
           formData,
+          getAuthHeader(),
         );
         sileo.success({
           title: "Success",
-          description: `Classroom created! Class Code: ${res.data.code}`,
+          description: `Classroom created! Code: ${res.data.code}`,
           ...darkToast,
         });
       } else {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/classrooms/${selectedItem.id}`,
           formData,
+          getAuthHeader(),
         );
         sileo.success({
           title: "Updated",
-          description: "Classroom updated successfully.",
+          description: "Classroom updated.",
           ...darkToast,
         });
       }
@@ -205,7 +233,7 @@ const TeacherClassrooms = () => {
     } catch (error) {
       sileo.error({
         title: "Failed",
-        description: "Could not process request.",
+        description: "Process failed.",
         ...darkToast,
       });
     } finally {
@@ -215,8 +243,7 @@ const TeacherClassrooms = () => {
 
   const promptDelete = (item) => {
     setSelectedItem(item);
-    const modal = new Modal(document.getElementById("deleteConfirmModal"));
-    modal.show();
+    new Modal(document.getElementById("deleteConfirmModal")).show();
   };
 
   const executeDelete = async () => {
@@ -225,6 +252,7 @@ const TeacherClassrooms = () => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/classrooms/${selectedItem.id}`,
+        getAuthHeader(),
       );
       sileo.success({
         title: "Deleted",
@@ -235,7 +263,7 @@ const TeacherClassrooms = () => {
     } catch (error) {
       sileo.error({
         title: "Failed",
-        description: "Could not delete classroom.",
+        description: "Deletion failed.",
         ...darkToast,
       });
     } finally {
@@ -247,54 +275,74 @@ const TeacherClassrooms = () => {
     setIsLoading(true);
     setLoadingText("Entering Classroom...");
     setTimeout(() => {
-      setIsLoading(false);
       navigate(`/teacher/classrooms/${id}`);
-    }, 1000);
+      setIsLoading(false);
+    }, 800);
   };
 
   const formatScheduleText = (schedule) => {
     try {
-      const schedObj =
-        typeof schedule === "string" ? JSON.parse(schedule) : schedule;
-      if (
-        !schedObj ||
-        !Array.isArray(schedObj.days) ||
-        schedObj.days.length === 0
-      )
-        return "No Schedule";
-
-      const formatTime = (time24) => {
-        if (!time24) return "";
-        const [h, m] = time24.split(":");
-        let hours = parseInt(h);
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-        return `${hours}:${m} ${ampm}`;
+      const s = typeof schedule === "string" ? JSON.parse(schedule) : schedule;
+      if (!s || !s.days?.length) return "No Schedule";
+      const fmt = (t) => {
+        if (!t) return "";
+        const [h, m] = t.split(":");
+        const h12 = h % 12 || 12;
+        return `${h12}:${m} ${h >= 12 ? "PM" : "AM"}`;
       };
-
-      return `${schedObj.days.join(", ")} | ${formatTime(
-        schedObj.start_time,
-      )} - ${formatTime(schedObj.end_time)}`;
+      return `${s.days.join(", ")} | ${fmt(s.start_time)} - ${fmt(s.end_time)}`;
     } catch (e) {
-      return typeof schedule === "string" ? schedule : "Invalid Schedule";
+      return "Invalid Schedule";
     }
   };
 
-  const filteredClassrooms = classrooms.filter((item) => {
-    const search = searchQuery.toLowerCase();
-    const subjectMatch = item.subject?.description
-      ?.toLowerCase()
-      .includes(search);
-    const sectionMatch = item.section?.toLowerCase().includes(search);
-    const codeMatch = item.code?.toLowerCase().includes(search);
-    return subjectMatch || sectionMatch || codeMatch;
-  });
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
-
-      {/* Tittle and Button Section */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-3 gap-3">
         <div>
           <h3
@@ -307,7 +355,6 @@ const TeacherClassrooms = () => {
             Create and manage your digital classrooms.
           </p>
         </div>
-
         <div className="flex-shrink-0">
           <button
             onClick={openCreateDrawer}
@@ -318,27 +365,53 @@ const TeacherClassrooms = () => {
         </div>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="input-group shadow-sm rounded-3 overflow-hidden">
-            <span className="input-group-text bg-white border-end-0 text-muted px-3">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control border-start-0 ps-0 toolbar-input"
-              placeholder="Search Subject, Section, or Code..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              entries
+            </div>
+            <div
+              className="input-group"
+              style={{ maxWidth: "400px", minWidth: "350px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search Subject, Section, or Code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Cards Section */}
       <div className="row g-4">
-        {filteredClassrooms.map((item) => (
-          <div className="col-12 col-md-6 col-xl-4" key={item.id}>
+        {classrooms.map((item) => (
+          <div
+            className="col-12 col-md-6 col-xl-4"
+            key={item.id}
+            style={{
+              zIndex: openDropdownId === item.id ? 1050 : 1,
+              position: openDropdownId === item.id ? "relative" : "static",
+            }}
+          >
             <div
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
               style={{ borderRadius: "1rem" }}
@@ -352,7 +425,6 @@ const TeacherClassrooms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
-                {/* Decorative Circles */}
                 <div
                   className="position-absolute rounded-circle"
                   style={{
@@ -361,6 +433,7 @@ const TeacherClassrooms = () => {
                     backgroundColor: "rgba(255,255,255,0.1)",
                     top: "-20px",
                     right: "-20px",
+                    pointerEvents: "none",
                   }}
                 ></div>
                 <div
@@ -371,8 +444,10 @@ const TeacherClassrooms = () => {
                     backgroundColor: "rgba(255,255,255,0.05)",
                     bottom: "-10px",
                     left: "20%",
+                    pointerEvents: "none",
                   }}
                 ></div>
+
                 <div
                   className="dropdown position-absolute top-0 end-0 mt-3 me-3"
                   onClick={(e) => e.stopPropagation()}
@@ -393,20 +468,22 @@ const TeacherClassrooms = () => {
                   >
                     <i className="bi bi-three-dots-vertical"></i>
                   </button>
+
                   <ul
-                    className={`dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-1 ${openDropdownId === item.id ? "show" : ""}`}
+                    className={`dropdown-menu shadow-sm border-0 rounded-3 mt-1 ${openDropdownId === item.id ? "show" : ""}`}
                     style={{
                       position: "absolute",
                       top: "100%",
                       right: "0",
-                      zIndex: 1050,
+                      left: "auto",
+                      minWidth: "160px",
                     }}
                   >
                     <li>
                       <button
                         className="dropdown-item py-2 fw-medium"
                         onClick={() => {
-                          openUpdateDrawer(item);
+                          promptUpdate(item);
                           setOpenDropdownId(null);
                         }}
                       >
@@ -433,7 +510,6 @@ const TeacherClassrooms = () => {
                     </li>
                   </ul>
                 </div>
-
                 <div className="pe-4 position-relative z-1">
                   <h4
                     className="fw-bold text-white mb-1 text-truncate"
@@ -446,7 +522,6 @@ const TeacherClassrooms = () => {
                   </span>
                 </div>
               </div>
-
               <div className="card-body p-4 d-flex flex-column position-relative">
                 <div
                   className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white"
@@ -459,33 +534,20 @@ const TeacherClassrooms = () => {
                     border: "4px solid white",
                     fontSize: "1.3rem",
                   }}
-                  title={`Creator: ${item.creator?.first_name} ${item.creator?.last_name}`}
                 >
-                  {item.creator?.first_name
-                    ? item.creator.first_name.charAt(0).toUpperCase()
-                    : "T"}
+                  {item.creator?.first_name?.charAt(0).toUpperCase()}
                 </div>
-
                 <div className="mb-3 mt-1">
                   <span
-                    className="d-block text-muted mb-1 text-uppercase"
-                    style={{
-                      fontSize: "0.65rem",
-                      letterSpacing: "1px",
-                      fontWeight: "700",
-                    }}
+                    className="d-block text-muted mb-1 text-uppercase fw-bold"
+                    style={{ fontSize: "0.65rem", letterSpacing: "1px" }}
                   >
                     Creator
                   </span>
-                  <div className="d-flex align-items-center">
-                    <span className="text-dark small fw-bold">
-                      {item.creator
-                        ? `${item.creator.first_name} ${item.creator.last_name}`
-                        : "Unknown Teacher"}
-                    </span>
-                  </div>
+                  <span className="text-dark small fw-bold">
+                    {item.creator?.first_name} {item.creator?.last_name}
+                  </span>
                 </div>
-
                 <div className="bg-light rounded-4 p-3 mb-4 border border-light-subtle flex-grow-1">
                   <div className="d-flex align-items-start mb-3">
                     <div
@@ -535,7 +597,6 @@ const TeacherClassrooms = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                   <div className="d-flex flex-column">
                     <span
@@ -555,25 +616,29 @@ const TeacherClassrooms = () => {
                     onClick={() => handleEnterClassroom(item.id)}
                     className="btn btn-campusloop rounded-3 fw-bold px-4 shadow-sm"
                   >
-                    Enter <i className="bi bi-arrow-right ms-1"></i>
+                    <span className="d-none d-sm-inline">Enter</span>{" "}
+                    <i className="bi bi-arrow-right ms-1"></i>
                   </button>
                 </div>
               </div>
             </div>
           </div>
         ))}
-
-        {filteredClassrooms.length === 0 && !isLoading && (
+        {classrooms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-easel text-muted d-block mb-3"
+                className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
-              <h5 className="fw-bold text-dark">No classrooms found.</h5>
+              <h5 className="fw-bold text-dark">
+                {searchQuery
+                  ? "No matching classrooms found."
+                  : "No classrooms found."}
+              </h5>
               <p className="text-muted small mb-0">
                 {searchQuery
-                  ? "No matching classrooms for your search."
+                  ? "Try adjusting your search query."
                   : "Click the 'New Classroom' button to get started."}
               </p>
             </div>
@@ -581,120 +646,55 @@ const TeacherClassrooms = () => {
         )}
       </div>
 
+      {totalRecords > 0 && !isLoading && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 px-1 gap-3">
+          <span className="text-muted small">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} classrooms
+          </span>
+          <nav>
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+              {renderPageNumbers()}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
       <ClassroomFormDrawer
         drawerMode={drawerMode}
         formData={formData}
         handleInputChange={handleInputChange}
         handleScheduleChange={handleScheduleChange}
-        triggerSaveConfirmation={triggerSaveConfirmation}
+        handleSubmit={handleSubmit}
+        executeDelete={executeDelete}
+        proceedToUpdate={proceedToUpdate}
+        selectedItem={selectedItem}
       />
-
-      <div
-        className="modal fade"
-        id="saveConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle d-flex justify-content-center align-items-center"
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  backgroundColor: "rgba(98, 111, 71, 0.1)",
-                }}
-              >
-                <i
-                  className="bi bi-check-circle-fill"
-                  style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">
-                {drawerMode === "create" ? "Create Classroom" : "Save Changes"}
-              </h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to proceed with these details?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() => {
-                  const bsOffcanvas = new Offcanvas(
-                    document.getElementById("classroomDrawer"),
-                  );
-                  bsOffcanvas.show();
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark">Delete Classroom</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move{" "}
-                <b>{selectedItem?.subject?.description}</b> to the recycle bin?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
