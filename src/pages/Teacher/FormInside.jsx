@@ -12,6 +12,15 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const FormInside = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,22 +28,28 @@ const FormInside = () => {
   const [form, setForm] = useState(null);
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingText, setLoadingText] = useState("Loading Form Details...");
   const [activeTab, setActiveTab] = useState("questionnaire");
 
-  // States para sa Respondents Datatable
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-  // STATE PARA SA SELECTED RESPONDENT PARA SA REVIEW MODAL
   const [selectedRespondent, setSelectedRespondent] = useState(null);
 
   useEffect(() => {
     fetchFormData();
-    fetchRespondents();
   }, [id]);
 
-  // Reset sa Page 1 kapag nag-search o nagpalit ng entries limit
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (id) fetchRespondents();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [id, searchQuery, currentPage, entriesPerPage]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
@@ -43,6 +58,7 @@ const FormInside = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/forms/${id}`,
+        getAuthHeader(),
       );
       setForm(res.data);
     } catch (error) {
@@ -51,23 +67,34 @@ const FormInside = () => {
   };
 
   const fetchRespondents = async () => {
+    if (activeTab === "respondents") {
+      setIsLoading(true);
+      setLoadingText("Loading respondents...");
+    }
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/forms/${id}/respondents`,
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setRespondents(res.data);
-      setIsLoading(false);
+      setRespondents(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Error fetching respondents", error);
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // FUNCTION PARA BUKSAN ANG REVIEW MODAL
   const openReviewModal = (respondent) => {
     setSelectedRespondent(respondent);
-
-    // Binibigyan natin ang React ng konting milliseconds para ma-render yung data sa Modal
     setTimeout(() => {
       const modalEl = document.getElementById("reviewSubmissionModal");
       if (modalEl) {
@@ -77,28 +104,57 @@ const FormInside = () => {
     }, 150);
   };
 
-  // DATATABLE LOGIC PARA SA RESPONDENTS
-  const filteredRespondents = respondents.filter((r) =>
-    `${r.student?.first_name} ${r.student?.last_name} ${r.student?.lrn} ${r.student?.email} ${r.student?.strand?.name}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase()),
-  );
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentRespondents = filteredRespondents.slice(
-    indexOfFirstItem,
-    indexOfLastItem,
-  );
-  const totalPages = Math.ceil(filteredRespondents.length / entriesPerPage);
-
-  if (isLoading || !form)
+  if (isLoading && !form)
     return <GlobalSpinner isLoading={true} text="Loading Form Details..." />;
 
   const groupedQuestions = [];
   const existingSections = [];
 
-  if (form.questions) {
+  if (form?.questions) {
     form.questions.forEach((q) => {
       const secName = q.section || "";
       if (!existingSections.includes(secName) && q.section)
@@ -121,37 +177,17 @@ const FormInside = () => {
     });
   }
 
-  const totalPoints = form.questions
+  const totalPoints = form?.questions
     ? form.questions.reduce((sum, q) => sum + q.points, 0)
     : 0;
 
   return (
     <>
-      {/* BREADCRUMB NAVIGATION */}
-      <nav aria-label="breadcrumb" className="mb-3 ps-1">
-        <ol className="breadcrumb mb-0">
-          <li className="breadcrumb-item">
-            <Link
-              to="/teacher/forms"
-              className="text-decoration-none text-muted fw-medium d-flex align-items-center"
-            >
-              Forms
-            </Link>
-          </li>
-          <li
-            className="breadcrumb-item active fw-bold text-dark"
-            aria-current="page"
-          >
-            {form.name}
-          </li>
-        </ol>
-      </nav>
+      <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* UNIFIED HEADER CARD */}
       <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
         <div className="card-body p-4 p-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
-            {/* TITLE & INSTRUCTION */}
             <div className="flex-grow-1" style={{ maxWidth: "800px" }}>
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div
@@ -168,7 +204,7 @@ const FormInside = () => {
                   className="fw-bolder text-dark mb-0"
                   style={{ letterSpacing: "-0.5px" }}
                 >
-                  {form.name}
+                  {form?.name}
                 </h2>
               </div>
               <p
@@ -179,14 +215,13 @@ const FormInside = () => {
                   whiteSpace: "pre-wrap",
                 }}
               >
-                {form.instruction}
+                {form?.instruction}
               </p>
             </div>
 
-            {/* ACTION BUTTON */}
             <button
-              onClick={() => navigate(`/teacher/forms/${form.id}/builder`)}
-              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0"
+              onClick={() => navigate(`/teacher/forms/${form?.id}/builder`)}
+              className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold flex-shrink-0 justify-content-center"
             >
               <i className="bi bi-pencil-square"></i> Open Builder
             </button>
@@ -194,7 +229,6 @@ const FormInside = () => {
 
           <hr className="opacity-10 my-4" />
 
-          {/* COMPACT INFO WIDGET */}
           <div className="d-flex flex-wrap justify-content-center gap-4 gap-md-4 align-items-center bg-light p-3 rounded-4 border border-light-subtle">
             <div className="d-flex align-items-center gap-3 pe-md-4 border-end-md">
               <div
@@ -215,7 +249,7 @@ const FormInside = () => {
                   Time Limit
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {form.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
+                  {form?.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
                 </span>
               </div>
             </div>
@@ -226,7 +260,7 @@ const FormInside = () => {
                 style={{ width: "40px", height: "40px" }}
               >
                 <i
-                  className={`bi ${form.is_focus_mode ? "bi-eye-slash-fill text-danger" : "bi-shield-check text-success"} fs-5`}
+                  className={`bi ${form?.is_focus_mode ? "bi-eye-slash-fill text-danger" : "bi-shield-check text-success"} fs-5`}
                 ></i>
               </div>
               <div>
@@ -240,12 +274,12 @@ const FormInside = () => {
                 >
                   Security Mode
                 </span>
-                {form.is_focus_mode ? (
-                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 mt-1 px-2 py-1">
+                {form?.is_focus_mode ? (
+                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1">
                     Focus Mode ON
                   </span>
                 ) : (
-                  <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1">
                     Normal
                   </span>
                 )}
@@ -258,7 +292,7 @@ const FormInside = () => {
                 style={{ width: "40px", height: "40px" }}
               >
                 <i
-                  className={`bi bi-shuffle ${form.is_shuffle_questions ? "text-primary" : "text-muted"} fs-5`}
+                  className={`bi bi-shuffle ${form?.is_shuffle_questions ? "text-primary" : "text-muted"} fs-5`}
                 ></i>
               </div>
               <div>
@@ -272,19 +306,18 @@ const FormInside = () => {
                 >
                   Question Order
                 </span>
-                {form.is_shuffle_questions ? (
-                  <span className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 mt-1 px-2 py-1">
+                {form?.is_shuffle_questions ? (
+                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1">
                     Shuffled
                   </span>
                 ) : (
-                  <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1">
                     Default Order
                   </span>
                 )}
               </div>
             </div>
 
-            {/* TOTAL POINTS SA WIDGET ROW */}
             <div className="d-flex align-items-center gap-3">
               <div
                 className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
@@ -312,7 +345,6 @@ const FormInside = () => {
         </div>
       </div>
 
-      {/* SLEEK UNDERLINE TABS */}
       <div className="d-flex justify-content-center gap-4 border-bottom mb-4 px-3 mt-2">
         <button
           className={`btn rounded-0 pb-3 px-3 border-0 d-flex align-items-center gap-2 transition-all ${activeTab === "questionnaire" ? "fw-bolder" : "text-muted fw-medium"}`}
@@ -327,7 +359,8 @@ const FormInside = () => {
           }}
           onClick={() => setActiveTab("questionnaire")}
         >
-          <i className="bi bi-card-list"></i> Questionnaire
+          <i className="bi bi-card-list"></i>{" "}
+          <span className="d-none d-sm-inline">Questionnaire</span>
         </button>
         <button
           className={`btn rounded-0 pb-3 px-3 border-0 d-flex align-items-center gap-2 transition-all ${activeTab === "respondents" ? "fw-bolder" : "text-muted fw-medium"}`}
@@ -342,9 +375,10 @@ const FormInside = () => {
           }}
           onClick={() => setActiveTab("respondents")}
         >
-          <i className="bi bi-people-fill"></i> Respondents
+          <i className="bi bi-people-fill"></i>{" "}
+          <span className="d-none d-sm-inline">Respondents</span>
           <span
-            className="badge rounded-pill shadow-sm ms-1"
+            className="badge rounded-3 shadow-sm ms-1 fw-medium"
             style={{
               backgroundColor:
                 activeTab === "respondents"
@@ -353,18 +387,16 @@ const FormInside = () => {
               color: activeTab === "respondents" ? "white" : "#6c757d",
             }}
           >
-            {respondents.length}
+            {totalRecords}
           </span>
         </button>
       </div>
 
-      {/* TAB 1: QUESTIONNAIRE (PREVIEW) */}
       {activeTab === "questionnaire" && (
         <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
           {groupedQuestions.length > 0 ? (
             groupedQuestions.map((group, gIndex) => (
               <div className="mb-5 pb-2" key={gIndex}>
-                {/* SECTION HEADER PREVIEW */}
                 {group.sectionName !== "" && (
                   <div className="position-relative mt-4 mb-3">
                     <div
@@ -408,8 +440,6 @@ const FormInside = () => {
                     </div>
                   </div>
                 )}
-
-                {/* QUESTIONS LIST PREVIEW */}
                 <div className="d-flex flex-column gap-3 mt-3">
                   {group.questions.map((q, index) => (
                     <div
@@ -422,7 +452,6 @@ const FormInside = () => {
                       key={q.id}
                     >
                       <div className="card-body p-4 pt-4 pb-4">
-                        {/* QUESTION HEADER */}
                         <div className="d-flex justify-content-between align-items-start gap-3 mb-4">
                           <div className="d-flex gap-2 align-items-start flex-grow-1">
                             <span className="fw-normal text-dark mt-1">
@@ -435,7 +464,6 @@ const FormInside = () => {
                               {q.text}
                             </h5>
                           </div>
-                          {/* POINTS */}
                           <div className="text-end flex-shrink-0 mt-1">
                             <span
                               className="text-muted fw-medium"
@@ -446,7 +474,6 @@ const FormInside = () => {
                           </div>
                         </div>
 
-                        {/* DISPLAY CHOICES / ANSWER */}
                         <div className="ps-4 mb-2">
                           {q.type === "multiple_choice" && q.choices && (
                             <div className="d-flex flex-column gap-3">
@@ -468,7 +495,6 @@ const FormInside = () => {
                               ))}
                             </div>
                           )}
-
                           {q.type === "short_answer" && (
                             <div
                               className="d-flex align-items-center gap-3 border-bottom pb-2"
@@ -516,7 +542,7 @@ const FormInside = () => {
                   </p>
                   <button
                     onClick={() =>
-                      navigate(`/teacher/forms/${form.id}/builder`)
+                      navigate(`/teacher/forms/${form?.id}/builder`)
                     }
                     className="btn shadow-sm fw-medium px-4 py-2 rounded-3 text-white d-inline-flex align-items-center gap-2"
                     style={{ backgroundColor: "var(--primary-color)" }}
@@ -530,13 +556,12 @@ const FormInside = () => {
         </div>
       )}
 
-      {/* TAB 2: RESPONDENTS */}
       {activeTab === "respondents" && (
         <>
-          <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-            <div className="card-body p-3">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-1">
-                <div className="d-flex align-items-center flex-shrink-0 text-muted small fw-medium">
+          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+            <div className="card-body p-0">
+              <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+                <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
                   Show
                   <select
                     className="form-select form-select-sm mx-2 toolbar-input rounded-3"
@@ -552,7 +577,10 @@ const FormInside = () => {
                   entries
                 </div>
 
-                <div className="input-group" style={{ width: "350px" }}>
+                <div
+                  className="input-group"
+                  style={{ maxWidth: "400px", minWidth: "350px" }}
+                >
                   <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                     <i className="bi bi-search"></i>
                   </span>
@@ -600,11 +628,11 @@ const FormInside = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentRespondents.length > 0 ? (
-                    currentRespondents.map((sub, index) => (
+                  {isLoading ? null : respondents.length > 0 ? (
+                    respondents.map((sub, index) => (
                       <tr key={sub.id} className="hover-bg-light">
                         <td className="text-center fw-bold text-muted px-4 py-2">
-                          {indexOfFirstItem + index + 1}
+                          {(currentPage - 1) * entriesPerPage + index + 1}
                         </td>
                         <td className="py-2">
                           <div className="d-flex align-items-center py-1">
@@ -642,7 +670,7 @@ const FormInside = () => {
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
+                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
                             style={{
                               maxWidth: "150px",
                               backgroundColor: "var(--accent-color)",
@@ -675,6 +703,7 @@ const FormInside = () => {
                               {new Date(sub.submitted_at).toLocaleDateString(
                                 "en-US",
                                 {
+                                  year: "numeric",
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
@@ -701,10 +730,7 @@ const FormInside = () => {
                           >
                             <i
                               className="bi bi-eye-fill"
-                              style={{
-                                color: "var(--primary-color)",
-                                fontSize: "0.9rem",
-                              }}
+                              style={{ color: "var(--primary-color)" }}
                             ></i>
                           </button>
                         </td>
@@ -712,22 +738,23 @@ const FormInside = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="text-center py-5 text-muted">
-                        {respondents.length === 0 ? (
-                          <i className="bi bi-inbox fs-1 d-block mb-3 opacity-50"></i>
-                        ) : (
-                          <i className="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
-                        )}
-                        <span className="fw-bolder text-dark d-block">
-                          {respondents.length === 0
-                            ? "No submissions yet"
-                            : "No matching records found"}
-                        </span>
-                        <span className="small">
-                          {respondents.length === 0
-                            ? "Students haven't taken this form."
-                            : "Try adjusting your search criteria."}
-                        </span>
+                      <td colSpan="7" className="p-4 bg-light border-bottom-0">
+                        <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                          <i
+                            className="bi bi-inbox text-muted d-block mb-3"
+                            style={{ fontSize: "3rem", opacity: 0.5 }}
+                          ></i>
+                          <h5 className="fw-bold text-dark">
+                            {totalRecords === 0 && !searchQuery
+                              ? "No submissions yet"
+                              : "No matching records found"}
+                          </h5>
+                          <p className="text-muted small mb-0">
+                            {totalRecords === 0 && !searchQuery
+                              ? "Students haven't taken this form."
+                              : "Try adjusting your search criteria."}
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   )}
@@ -736,16 +763,15 @@ const FormInside = () => {
             </div>
           </div>
 
-          {/* PAGINATION BUTTONS */}
-          {filteredRespondents.length > 0 && (
-            <div className="d-flex justify-content-between align-items-center mt-2 mb-4 px-1">
+          {totalRecords > 0 && !isLoading && (
+            <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
               <span className="text-muted small">
-                Showing {indexOfFirstItem + 1} to{" "}
-                {Math.min(indexOfLastItem, filteredRespondents.length)} of{" "}
-                {filteredRespondents.length} entries
+                Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+                {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+                {totalRecords} entries
               </span>
               <nav>
-                <ul className="pagination pagination-sm mb-0">
+                <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
                   <li
                     className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
                   >
@@ -758,20 +784,7 @@ const FormInside = () => {
                       Previous
                     </button>
                   </li>
-                  {/* NAGLAGAY NG KEY PROP SA LOOP */}
-                  {[...Array(totalPages)].map((_, i) => (
-                    <li
-                      key={i}
-                      className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                    >
-                      <button
-                        className="page-link page-link-summer"
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </button>
-                    </li>
-                  ))}
+                  {renderPageNumbers()}
                   <li
                     className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                   >
@@ -791,7 +804,6 @@ const FormInside = () => {
         </>
       )}
 
-      {/* RENDER REVIEW MODAL COMPONENT SA IBABA */}
       <ReviewSubmissionModal
         form={form}
         respondent={selectedRespondent}

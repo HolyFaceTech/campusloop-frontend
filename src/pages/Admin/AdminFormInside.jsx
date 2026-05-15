@@ -450,9 +450,8 @@ const AdminFormInside = () => {
         >
           <i className="bi bi-people-fill"></i>{" "}
           <span className="d-none d-sm-inline">Respondents</span>
-          {/* UPDATED: Dito sa badge, totalRecords na ang ipapakita para accurate kahit naka-paginate */}
           <span
-            className="badge rounded-3 shadow-sm ms-1"
+            className="badge rounded-3 shadow-sm ms-1 fw-medium"
             style={{
               backgroundColor:
                 activeTab === "respondents"
@@ -698,7 +697,6 @@ const AdminFormInside = () => {
                     respondents.map((sub, index) => (
                       <tr key={sub.id} className="hover-bg-light">
                         <td className="text-center fw-bold text-muted px-4 py-2">
-                          {/* UPDATED: Dynamic Index Calculation based on Page */}
                           {(currentPage - 1) * entriesPerPage + index + 1}
                         </td>
                         <td className="py-2">
@@ -770,6 +768,7 @@ const AdminFormInside = () => {
                               {new Date(sub.submitted_at).toLocaleDateString(
                                 "en-US",
                                 {
+                                  year: "numeric",
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
