@@ -10,31 +10,59 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const TeacherFiles = () => {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Files...");
 
+  // SMART PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
+  const [entriesPerPage, setEntriesPerPage] = useState(12); // Default 12 for grid
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+
   const [selectedIds, setSelectedIds] = useState([]);
 
   useEffect(() => {
-    fetchFiles();
-  }, []);
+    setCurrentPage(1);
+  }, [searchQuery, entriesPerPage]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchFiles();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage]);
 
   const fetchFiles = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching your files...");
+    setLoadingText("Loading your files...");
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/teacher/files`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
           },
         },
       );
-      setFiles(res.data || []);
+      const data = res.data;
+      setFiles(data.data || []);
+      setTotalPages(data.last_page || 1);
+      setTotalRecords(data.total || 0);
     } catch (error) {
       console.error("Failed to fetch files", error);
     } finally {
@@ -42,7 +70,6 @@ const TeacherFiles = () => {
     }
   };
 
-  // --- HELPERS PARA SA FILE DETAILS AT ICONS ---
   const formatBytes = (bytes) => {
     if (bytes === 0 || !bytes) return "0 Bytes";
     const k = 1024;
@@ -77,7 +104,7 @@ const TeacherFiles = () => {
         color: "#fd7e14",
         bg: "#ffe5d0",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -89,16 +116,9 @@ const TeacherFiles = () => {
         color: "#0dcaf0",
         bg: "#cff4fc",
       };
-    if (["zip", "rar"].includes(ext))
-      return {
-        icon: "bi-file-earmark-zip-fill",
-        color: "#6c757d",
-        bg: "#e2e3e5",
-      };
     return { icon: "bi-file-earmark-fill", color: "#6c757d", bg: "#e2e3e5" };
   };
 
-  // --- HELPER PARA SA BADGE COLOR NG MODULE ---
   const getBadgeStyle = (source) => {
     switch (source) {
       case "E-Library":
@@ -112,7 +132,6 @@ const TeacherFiles = () => {
     }
   };
 
-  // --- VIEW FILE LOGIC ---
   const handleViewDocument = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
     const formattedPath =
@@ -123,15 +142,42 @@ const TeacherFiles = () => {
     window.open(`${baseUrl}${formattedPath}`, "_blank");
   };
 
-  // --- SELECTION LOGIC PARA SA CHECKBOX ---
   const handleSelectFile = (id) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id],
     );
   };
 
-  // --- DOWNLOAD ZIP LOGIC ---
+  const handleSelectAll = () => {
+    const currentPageIds = files.map((file) => file.id);
+    const allSelectedOnPage = currentPageIds.every((id) =>
+      selectedIds.includes(id),
+    );
+
+    if (allSelectedOnPage) {
+      setSelectedIds((prev) =>
+        prev.filter((id) => !currentPageIds.includes(id)),
+      );
+    } else {
+      setSelectedIds((prev) => {
+        const newIds = [...prev];
+        currentPageIds.forEach((id) => {
+          if (!newIds.includes(id)) newIds.push(id);
+        });
+        return newIds;
+      });
+    }
+  };
+
   const openDownloadConfirmation = () => {
+    if (selectedIds.length > 20) {
+      sileo.error({
+        title: "Limit Exceeded",
+        description: "You can only download up to 20 files at once.",
+        ...darkToast,
+      });
+      return;
+    }
     const modalEl = document.getElementById("downloadZipModal");
     if (modalEl) Modal.getOrCreateInstance(modalEl).show();
   };
@@ -147,12 +193,7 @@ const TeacherFiles = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/teacher/files/download-zip`,
         { file_ids: selectedIds },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-          responseType: "blob",
-        },
+        { ...getAuthHeader(), responseType: "blob" },
       );
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -174,9 +215,18 @@ const TeacherFiles = () => {
       });
       setSelectedIds([]);
     } catch (error) {
+      let errorMessage = "An error occurred while zipping the files.";
+      if (error.response && error.response.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          if (json.message) errorMessage = json.message;
+        } catch (e) {}
+      }
+
       sileo.error({
         title: "Download Failed",
-        description: "An error occurred while zipping the files.",
+        description: errorMessage,
         ...darkToast,
       });
     } finally {
@@ -184,13 +234,50 @@ const TeacherFiles = () => {
     }
   };
 
-  // --- FILTERING ---
-  const filteredFiles = (files || []).filter((f) => {
-    if (!f) return false;
-    const safeSearch = typeof searchQuery === "string" ? searchQuery : "";
-    const safeName = typeof f.name === "string" ? f.name : "";
-    return safeName.toLowerCase().includes(safeSearch.toLowerCase());
-  });
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <div className="container-fluid px-0">
@@ -216,35 +303,89 @@ const TeacherFiles = () => {
             onClick={openDownloadConfirmation}
           >
             <i className="bi bi-file-earmark-zip-fill fs-5"></i> Download File
-            {selectedIds.length > 0 && (
-              <span className="badge bg-white text-dark ms-1 rounded-pill">
-                {selectedIds.length}
-              </span>
-            )}
           </button>
         </div>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 col-lg-4 col-xl-3">
-          <div className="input-group shadow-sm rounded-3 overflow-hidden">
-            <span className="input-group-text bg-white border-end-0 text-muted px-3">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control border-start-0 ps-0 toolbar-input"
-              placeholder="Search file name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+            {/* LEFT: Show Entries */}
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={12}>12</option>
+                <option value={24}>24</option>
+                <option value={48}>48</option>
+                <option value={100}>100</option>
+              </select>
+              entries
+            </div>
+
+            {/* CENTER: Search */}
+            <div
+              className="input-group flex-grow-1"
+              style={{ maxWidth: "450px", minWidth: "250px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search file name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* RIGHT: Select All & Count */}
+            <div className="d-flex align-items-center flex-shrink-0 ps-2 ps-3 gap-3">
+              <div className="form-check mb-0 d-flex align-items-center">
+                <input
+                  className="form-check-input border-secondary m-0"
+                  type="checkbox"
+                  id="selectAll"
+                  style={{
+                    cursor: "pointer",
+                    width: "1.2rem",
+                    height: "1.2rem",
+                  }}
+                  onChange={handleSelectAll}
+                  checked={
+                    files.length > 0 &&
+                    files.every((file) => selectedIds.includes(file.id))
+                  }
+                  disabled={files.length === 0}
+                />
+                <label
+                  className="form-check-label fw-bold text-dark ms-2 d-flex align-items-center"
+                  htmlFor="selectAll"
+                  style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+                >
+                  Select All
+                  <span
+                    className="badge bg-primary fw-medium rounded-3 ms-2"
+                    style={{ fontSize: "0.75rem" }}
+                  >
+                    {selectedIds.length}
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* GRID FILES */}
       <div className="row g-4 mb-4">
-        {filteredFiles.length > 0 ? (
-          filteredFiles.map((file) => {
+        {files.length > 0 ? (
+          files.map((file) => {
             const details = getFileDetails(file.file_extension);
             const isSelected = selectedIds.includes(file.id);
             const badgeStyle = getBadgeStyle(file.source_label);
@@ -313,7 +454,7 @@ const TeacherFiles = () => {
                             {file.file_extension}
                           </span>
                           <span
-                            className={`badge ${badgeStyle} bg-opacity-10 border`}
+                            className={`badge ${badgeStyle} bg-opacity-10 border fw-medium`}
                             style={{
                               fontSize: "0.60rem",
                               letterSpacing: "0.5px",
@@ -347,6 +488,7 @@ const TeacherFiles = () => {
                         style={{ fontSize: "0.7rem" }}
                       >
                         {new Date(file.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -362,7 +504,7 @@ const TeacherFiles = () => {
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-folder-x text-muted d-block mb-3"
+                className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
               <h5 className="fw-bold text-dark">No Files Found.</h5>
@@ -375,6 +517,45 @@ const TeacherFiles = () => {
           </div>
         )}
       </div>
+
+      {totalRecords > 0 && !isLoading && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 px-2">
+          <span className="text-muted small">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} files
+          </span>
+          <nav>
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+              {renderPageNumbers()}
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
 
       <TeacherFilesModal
         selectedIds={selectedIds}
