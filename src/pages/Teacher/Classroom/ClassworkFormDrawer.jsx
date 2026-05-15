@@ -250,7 +250,7 @@ const ClassworkFormDrawer = ({
               <input
                 type="text"
                 name="title"
-                className="form-control form-control-lg bg-light toolbar-input text-dark fw-medium fs-6"
+                className="form-control form-control-lg bg-light toolbar-input text-dark fw-bold fs-6"
                 value={formData.title || ""}
                 onChange={handleInputChange}
                 required
