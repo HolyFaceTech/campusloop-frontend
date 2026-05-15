@@ -11,16 +11,31 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeaders = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const TeacherForms = () => {
   const [forms, setForms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading forms...");
-  const [searchQuery, setSearchQuery] = useState("");
 
   const [modalMode, setModalMode] = useState("");
   const [selectedForm, setSelectedForm] = useState(null);
 
   const navigate = useNavigate();
+
+  // SERVER-SIDE PAGINATION STATES
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -32,8 +47,21 @@ const TeacherForms = () => {
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
+  // Reset page kapag nag-search o nagpalit ng entries limit
   useEffect(() => {
-    fetchForms();
+    setCurrentPage(1);
+  }, [searchQuery, entriesPerPage]);
+
+  // SERVER-SIDE DEBOUNCE EFFECT
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchForms();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage]);
+
+  useEffect(() => {
     const closeDropdown = () => setOpenDropdownId(null);
     document.addEventListener("click", closeDropdown);
     return () => document.removeEventListener("click", closeDropdown);
@@ -42,8 +70,21 @@ const TeacherForms = () => {
   const fetchForms = async () => {
     setIsLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/forms`);
-      setForms(res.data);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/forms`,
+        {
+          headers: getAuthHeaders(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
+      );
+      // Laravel Pagination Structure
+      setForms(res.data.data || []);
+      setTotalPages(res.data.last_page || 1);
+      setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Error fetching forms", error);
     } finally {
@@ -121,6 +162,7 @@ const TeacherForms = () => {
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/forms`,
           payload,
+          { headers: getAuthHeaders() },
         );
         sileo.success({
           title: "Success",
@@ -135,6 +177,7 @@ const TeacherForms = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/forms/${selectedForm.id}`,
           payload,
+          { headers: getAuthHeaders() },
         );
         sileo.success({
           title: "Updated",
@@ -166,6 +209,8 @@ const TeacherForms = () => {
     try {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/forms/${selectedForm.id}/duplicate`,
+        null,
+        { headers: getAuthHeaders() },
       );
       sileo.success({
         title: "Duplicated",
@@ -196,6 +241,7 @@ const TeacherForms = () => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/forms/${selectedForm.id}`,
+        { headers: getAuthHeaders() },
       );
       sileo.success({
         title: "Deleted",
@@ -214,9 +260,51 @@ const TeacherForms = () => {
     }
   };
 
-  const filteredForms = forms.filter((f) =>
-    f.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  // SMART PAGINATION HELPER
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
+
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <>
@@ -237,31 +325,52 @@ const TeacherForms = () => {
         </div>
         <button
           onClick={() => openFormModal("create")}
-          className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2"
+          className="btn btn-campusloop shadow-sm px-4 rounded-3 d-flex align-items-center gap-2 justify-content-center"
         >
           <i className="bi bi-plus-lg fs-5"></i> New Form
         </button>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-12 col-md-6 col-xl-4">
-          <div className="input-group shadow-sm rounded-3 overflow-hidden">
-            <span className="input-group-text bg-white border-end-0 text-muted px-3">
-              <i className="bi bi-search"></i>
-            </span>
-            <input
-              type="text"
-              className="form-control border-start-0 ps-0 toolbar-input py-2"
-              placeholder="Search form name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center justify-content-between gap-3 overflow-x-auto custom-scrollbar p-3">
+            <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+              Show
+              <select
+                className="form-select form-select-sm mx-2 toolbar-input rounded-3"
+                style={{ width: "70px" }}
+                value={entriesPerPage}
+                onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              entries
+            </div>
+
+            <div
+              className="input-group flex-shrink-0"
+              style={{ maxWidth: "350px", minWidth: "280px" }}
+            >
+              <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
+                <i className="bi bi-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
+                placeholder="Search form name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="row g-4">
-        {filteredForms.map((item) => (
+        {forms.map((item) => (
           <div className="col-12 col-md-6 col-xl-4" key={item.id}>
             <div
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
@@ -276,6 +385,27 @@ const TeacherForms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
+                {/* Decorative Circles */}
+                <div
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "100px",
+                    height: "100px",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                    top: "-20px",
+                    right: "-20px",
+                  }}
+                ></div>
+                <div
+                  className="position-absolute rounded-circle"
+                  style={{
+                    width: "60px",
+                    height: "60px",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    bottom: "-10px",
+                    left: "20%",
+                  }}
+                ></div>
                 <div
                   className="dropdown position-absolute top-0 end-0 mt-3 me-3"
                   onClick={(e) => e.stopPropagation()}
@@ -405,7 +535,7 @@ const TeacherForms = () => {
                       </span>
                       {item.timer > 0 ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25"
+                          className="badge bg-warning bg-opacity-10 text-dark fw-medium border border-warning-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -415,7 +545,7 @@ const TeacherForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-light text-muted border"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -439,7 +569,7 @@ const TeacherForms = () => {
                       </span>
                       {item.is_focus_mode ? (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -449,7 +579,7 @@ const TeacherForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -473,7 +603,7 @@ const TeacherForms = () => {
                       </span>
                       {item.is_shuffle_questions ? (
                         <span
-                          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25"
+                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -483,7 +613,7 @@ const TeacherForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -517,7 +647,8 @@ const TeacherForms = () => {
                     onClick={() => navigate(`/teacher/forms/${item.id}`)}
                     className="btn btn-campusloop rounded-3 fw-bold px-4 shadow-sm"
                   >
-                    Open <i className="bi bi-arrow-right ms-1"></i>
+                    <span className="d-none d-sm-inline">Open</span>{" "}
+                    <i className="bi bi-arrow-right ms-1"></i>
                   </button>
                 </div>
               </div>
@@ -525,11 +656,11 @@ const TeacherForms = () => {
           </div>
         ))}
 
-        {filteredForms.length === 0 && !isLoading && (
+        {forms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
               <i
-                className="bi bi-ui-radios text-muted d-block mb-3"
+                className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
               <h5 className="fw-bold text-dark">No records found.</h5>
@@ -543,162 +674,57 @@ const TeacherForms = () => {
         )}
       </div>
 
+      {totalRecords > 0 && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
+          <p className="text-muted small mb-0">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} forms
+          </p>
+          <nav>
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
+              <li
+                className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                >
+                  Previous
+                </button>
+              </li>
+
+              {renderPageNumbers()}
+
+              <li
+                className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+              >
+                <button
+                  className="page-link page-link-summer"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      )}
+
       <FormSetupModal
         modalMode={modalMode}
         formData={formData}
         handleInputChange={handleInputChange}
         handleFormSubmit={handleInitialSubmit}
+        selectedForm={selectedForm}
+        executeSubmit={executeSubmit}
+        executeDuplicate={executeDuplicate}
+        executeDelete={executeDelete}
       />
-
-      <div
-        className="modal fade"
-        id="updateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-pencil-square text-primary"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Save Changes</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to update the settings for{" "}
-                <b>{selectedForm?.name}</b>?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() => {
-                  const modal = new Modal(
-                    document.getElementById("formSetupModal"),
-                  );
-                  modal.show();
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Update
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="duplicateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-copy text-success"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Duplicate Form</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to create a copy of{" "}
-                <b>{selectedForm?.name}</b>?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-success px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDuplicate}
-              >
-                Yes, Duplicate
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Delete Form</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to move <b>{selectedForm?.name}</b> to the
-                recycle bin?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
