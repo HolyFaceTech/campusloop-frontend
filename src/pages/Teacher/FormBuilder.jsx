@@ -11,6 +11,15 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const FormBuilder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -41,11 +50,13 @@ const FormBuilder = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/forms/${id}`,
+        getAuthHeader(),
       );
       setForm(res.data);
-      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching form", error);
+      navigate("/teacher/forms");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -150,73 +161,102 @@ const FormBuilder = () => {
   };
 
   const handleInitialSubmit = (e) => {
-    e.preventDefault();
-    if (formData.type === "multiple_choice" && correctAnswerIndex === null) {
-      return sileo.error({
-        title: "Incomplete",
-        description: "Please select the correct answer.",
-        ...darkToast,
-      });
-    }
+    if (e && e.preventDefault) e.preventDefault();
 
-    const modalElement = document.getElementById("questionModal");
-    const modal = Modal.getInstance(modalElement);
-    if (modal) modal.hide();
+    let finalPayload = { ...formData };
 
-    if (modalMode === "update") {
-      const confirmModal = new Modal(
-        document.getElementById("updateConfirmModal"),
-      );
-      confirmModal.show();
+    if (formData.type === "multiple_choice") {
+      if (correctAnswerIndex === null) {
+        sileo.error({
+          title: "Incomplete",
+          description:
+            "Please select a correct answer by clicking the radio button.",
+          ...darkToast,
+        });
+        return;
+      }
+      const hasEmptyChoices = formData.choices.some((c) => c.trim() === "");
+      if (hasEmptyChoices) {
+        sileo.error({
+          title: "Incomplete",
+          description: "Please fill in all choice fields.",
+          ...darkToast,
+        });
+        return;
+      }
+      finalPayload.correct_answer = formData.choices[correctAnswerIndex];
     } else {
-      executeSubmit();
+      if (!formData.correct_answer || formData.correct_answer.trim() === "") {
+        sileo.error({
+          title: "Incomplete",
+          description: "Please provide the exact correct answer.",
+          ...darkToast,
+        });
+        return;
+      }
     }
+
+    setFormData(finalPayload);
+    executeSubmit(finalPayload);
   };
 
-  const executeSubmit = async () => {
-    setIsLoading(true);
-    setLoadingText("Saving Question...");
-
-    const payload = {
-      ...formData,
-      correct_answer:
-        formData.type === "multiple_choice"
-          ? formData.choices[correctAnswerIndex]
-          : formData.correct_answer,
-    };
-
-    try {
-      if (modalMode === "create") {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/forms/${id}/questions`,
-          payload,
-        );
-        sileo.success({
-          title: "Success",
-          description: "Question added.",
-          ...darkToast,
-        });
-      } else {
-        await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/questions/${selectedQuestion.id}`,
-          payload,
-        );
-        sileo.success({
-          title: "Updated",
-          description: "Question updated.",
-          ...darkToast,
-        });
-      }
-      fetchFormData();
-    } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Could not save question.",
-        ...darkToast,
-      });
-    } finally {
-      setIsLoading(false);
+  const executeSubmit = async (payload) => {
+    if (document.activeElement) {
+      document.activeElement.blur();
     }
+
+    const modalEl = document.getElementById("questionModal");
+    if (modalEl) {
+      const modalInstance = Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+    }
+
+    setTimeout(async () => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+
+      setIsLoading(true);
+      setLoadingText(
+        modalMode === "create" ? "Adding Question..." : "Saving Changes...",
+      );
+
+      try {
+        if (modalMode === "create") {
+          await axios.post(
+            `${import.meta.env.VITE_API_BASE_URL}/forms/${id}/questions`,
+            payload,
+            getAuthHeader(),
+          );
+          sileo.success({
+            title: "Success",
+            description: "Question added.",
+            ...darkToast,
+          });
+        } else {
+          await axios.put(
+            `${import.meta.env.VITE_API_BASE_URL}/questions/${selectedQuestion.id}`,
+            payload,
+            getAuthHeader(),
+          );
+          sileo.success({
+            title: "Success",
+            description: "Question updated.",
+            ...darkToast,
+          });
+        }
+        await fetchFormData();
+      } catch (error) {
+        console.error(error);
+        sileo.error({
+          title: "Failed",
+          description: "Failed to save question. Please check inputs.",
+          ...darkToast,
+        });
+        setIsLoading(false);
+      }
+    }, 300);
   };
 
   const confirmDelete = (item) => {
@@ -226,31 +266,48 @@ const FormBuilder = () => {
   };
 
   const executeDelete = async () => {
-    setIsLoading(true);
-    setLoadingText("Deleting Question...");
-    try {
-      await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/questions/${selectedQuestion.id}`,
-      );
-      sileo.success({
-        title: "Deleted",
-        description: "Question removed.",
-        ...darkToast,
-      });
-      fetchFormData();
-    } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Could not delete.",
-        ...darkToast,
-      });
-    } finally {
-      setIsLoading(false);
+    if (document.activeElement) {
+      document.activeElement.blur();
     }
+
+    const modalEl = document.getElementById("deleteConfirmModal");
+    if (modalEl) {
+      const modalInstance = Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
+    }
+
+    setTimeout(async () => {
+      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+      document.body.classList.remove("modal-open");
+      document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+
+      setIsLoading(true);
+      setLoadingText("Deleting Question...");
+      try {
+        await axios.delete(
+          `${import.meta.env.VITE_API_BASE_URL}/questions/${selectedQuestion.id}`,
+          getAuthHeader(),
+        );
+        sileo.success({
+          title: "Deleted",
+          description: "Question removed.",
+          ...darkToast,
+        });
+        await fetchFormData();
+      } catch (error) {
+        sileo.error({
+          title: "Failed",
+          description: "Could not delete question.",
+          ...darkToast,
+        });
+        setIsLoading(false);
+      }
+    }, 300);
   };
 
-  if (isLoading || !form)
-    return <GlobalSpinner isLoading={true} text={loadingText} />;
+  if (!form)
+    return <GlobalSpinner isLoading={true} text="Loading Builder..." />;
 
   const groupedQuestions = [];
   const existingSections = [];
@@ -284,12 +341,14 @@ const FormBuilder = () => {
 
   return (
     <>
+      <GlobalSpinner isLoading={isLoading} text={loadingText} />
+
       <nav aria-label="breadcrumb" className="mb-4 ps-1">
-        <ol className="breadcrumb mb-0">
+        <ol className="breadcrumb mb-0 align-items-center">
           <li className="breadcrumb-item">
             <Link
               to="/teacher/forms"
-              className="text-decoration-none text-muted fw-medium d-flex align-items-center"
+              className="text-decoration-none small text-muted fw-medium"
             >
               Forms
             </Link>
@@ -297,12 +356,19 @@ const FormBuilder = () => {
           <li className="breadcrumb-item">
             <Link
               to={`/teacher/forms/${id}`}
-              className="text-decoration-none text-muted fw-medium"
+              className="text-decoration-none small text-muted fw-medium text-truncate"
+              style={{
+                maxWidth: "250px",
+                display: "inline-block",
+                verticalAlign: "bottom",
+              }}
             >
               {form.name}
             </Link>
           </li>
-          <li className="breadcrumb-item active fw-bold text-dark">Builder</li>
+          <li className="breadcrumb-item small active fw-bold text-dark">
+            Builder
+          </li>
         </ol>
       </nav>
 
@@ -482,7 +548,6 @@ const FormBuilder = () => {
                           >
                             <i className="bi bi-pencil fs-5 text-dark"></i>
                           </button>
-
                           <button
                             onClick={() => confirmDelete(q)}
                             className="btn btn-sm shadow-none p-1 d-flex justify-content-center align-items-center bg-transparent border-0"
@@ -533,7 +598,6 @@ const FormBuilder = () => {
             </div>
           ))
         ) : (
-          /* CARD EMPTY STATE PARA SA BUILDER */
           <div className="col-12 mt-4">
             <div
               className="card bg-white border border-light-subtle shadow-sm text-center py-5"
@@ -629,106 +693,8 @@ const FormBuilder = () => {
         setCorrectAnswerIndex={setCorrectAnswerIndex}
         handleInitialSubmit={handleInitialSubmit}
         existingSections={existingSections}
+        executeDelete={executeDelete}
       />
-
-      {/* UPDATE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="updateConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-pencil-square text-primary"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Save Changes</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to update this question?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-                onClick={() =>
-                  new Modal(document.getElementById("questionModal")).show()
-                }
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeSubmit}
-              >
-                Yes, Proceed
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* DELETE CONFIRMATION MODAL */}
-      <div
-        className="modal fade"
-        id="deleteConfirmModal"
-        tabIndex="-1"
-        aria-hidden="true"
-        data-bs-backdrop="static"
-      >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
-              <div
-                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
-              >
-                <i
-                  className="bi bi-exclamation-triangle-fill text-danger"
-                  style={{ fontSize: "2.5rem" }}
-                ></i>
-              </div>
-            </div>
-            <div className="modal-body text-center p-4">
-              <h4 className="fw-bold text-dark mt-2">Delete Question</h4>
-              <p className="text-muted mb-0">
-                Are you sure you want to remove this question?
-              </p>
-            </div>
-            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
-              <button
-                type="button"
-                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger px-4 fw-medium shadow-sm rounded-3"
-                data-bs-dismiss="modal"
-                onClick={executeDelete}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 };
