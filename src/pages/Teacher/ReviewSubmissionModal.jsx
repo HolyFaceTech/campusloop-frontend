@@ -56,12 +56,10 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
           </div>
 
           <div className="modal-body p-4 bg-light custom-scrollbar">
-            {/* Dito lang natin i-che-check kung may laman ang data */}
             {form && respondent ? (
               <>
-                {/* STUDENT SUMMARY BADGE */}
                 <div
-                  className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 border border-light-subtle shadow-sm mx-auto"
+                  className="d-flex justify-content-between align-items-center mb-4 p-3 mx-auto"
                   style={{ maxWidth: "770px" }}
                 >
                   <div className="d-flex align-items-center gap-3">
@@ -90,9 +88,9 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                       className="d-block text-muted small fw-bold text-uppercase mb-1"
                       style={{ letterSpacing: "0.5px", fontSize: "0.65rem" }}
                     >
-                      Total Score
+                      Total Score:
                     </span>
-                    <span className="badge bg-light text-dark border shadow-sm px-3 py-2 fw-medium fs-5">
+                    <span className="text-dark px-3 py-2 fw-medium fs-5">
                       <span
                         className={
                           respondent.score < totalPoints / 2
@@ -108,7 +106,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                 </div>
 
                 <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
-                  {/* FORM HEADER (EXACT SAME DESIGN) */}
+                  {/* EXACT ADMIN DESIGN: FORM HEADER */}
                   <div
                     className="card bg-white shadow-sm mb-4 position-relative"
                     style={{
@@ -120,13 +118,19 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                     <div className="card-body p-4 p-md-5">
                       <h2
                         className="fw-normal text-dark mb-3"
-                        style={{ fontSize: "2.2rem", letterSpacing: "-0.5px" }}
+                        style={{
+                          fontSize: "2.2rem",
+                          letterSpacing: "-0.5px",
+                        }}
                       >
                         {form.name}
                       </h2>
                       <p
                         className="text-muted mb-0"
-                        style={{ whiteSpace: "pre-wrap", fontSize: "0.95rem" }}
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          fontSize: "0.95rem",
+                        }}
                       >
                         {form.instruction}
                       </p>
@@ -182,11 +186,11 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                       {/* QUESTIONS MAP */}
                       <div className="d-flex flex-column gap-3 mt-3">
                         {group.questions.map((q, index) => {
-                          // Find student's answer for this question
                           const answerData = respondent.answers?.find(
                             (a) => a.question_id === q.id,
                           );
-                          const isCorrect = answerData?.is_correct == 1; // Backend stores as 1 or 0
+                          const isCorrect =
+                            Number(answerData?.is_correct) === 1;
                           const studAns = answerData?.student_answer || "";
 
                           return (
@@ -218,7 +222,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                   </div>
                                   <div className="text-end flex-shrink-0 mt-1">
                                     <span
-                                      className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success border border-success" : "bg-danger bg-opacity-10 text-danger border border-danger"} px-3 py-2 rounded-3`}
+                                      className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3`}
                                     >
                                       {isCorrect ? (
                                         <i className="bi bi-check-circle-fill me-1"></i>
@@ -247,23 +251,20 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                             "bi-circle text-muted opacity-25";
                                           let badge = null;
 
-                                          // KUNG ITO ANG PINILI NG STUDENT AT TAMA SIYA
                                           if (isStudentChoice && isCorrect) {
                                             textColor = "text-success fw-bold";
                                             icon =
                                               "bi-check-circle-fill text-success";
                                             badge = (
                                               <span
-                                                className="badge bg-success ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
                                                 style={{ fontSize: "0.65rem" }}
                                               >
                                                 <i className="bi bi-check-circle-fill me-1"></i>{" "}
                                                 Correct Answer
                                               </span>
                                             );
-                                          }
-                                          // KUNG ITO ANG PINILI NIYA PERO MALI
-                                          else if (
+                                          } else if (
                                             isStudentChoice &&
                                             !isCorrect
                                           ) {
@@ -272,22 +273,20 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                               "bi-x-circle-fill text-danger";
                                             badge = (
                                               <span
-                                                className="badge bg-danger ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                className="badge bg-danger fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                 style={{ fontSize: "0.65rem" }}
                                               >
                                                 <i className="bi bi-x-circle-fill me-1"></i>{" "}
                                                 Student's Answer
                                               </span>
                                             );
-                                          }
-                                          // KUNG HINDI NIYA PINILI PERO ITO PALA YUNG TAMA
-                                          else if (isActualCorrectChoice) {
+                                          } else if (isActualCorrectChoice) {
                                             textColor = "text-success fw-bold";
                                             icon =
                                               "bi-check-circle-fill text-success opacity-75";
                                             badge = (
                                               <span
-                                                className="badge bg-success bg-opacity-10 text-success border border-success ms-auto rounded-3 px-2 py-1"
+                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
                                                 style={{ fontSize: "0.65rem" }}
                                               >
                                                 <i className="bi bi-check-circle-fill me-1"></i>{" "}
@@ -347,7 +346,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                         disabled
                                       />
 
-                                      {/* DESIGN FOR INCORRECT SHORT ANSWER */}
+                                      {/* INCORRECT SHORT ANSWER */}
                                       {!isCorrect && (
                                         <div className="d-flex align-items-center gap-3 p-2 mt-1 rounded-3">
                                           <i className="bi bi-check-circle-fill text-success opacity-75 fs-5"></i>
@@ -358,7 +357,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                             {q.correct_answer}
                                           </span>
                                           <span
-                                            className="badge bg-success bg-opacity-10 text-success border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                            className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                             style={{ fontSize: "0.65rem" }}
                                           >
                                             <i className="bi bi-check-circle-fill me-1"></i>{" "}
@@ -389,7 +388,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
             )}
           </div>
 
-          <div className="modal-footer border-top bg-white p-3 d-flex justify-content-end">
+          <div className="modal-footer border-top bg-white p-3 d-flex justify-content-end w-100">
             <button
               type="button"
               className="btn btn-light px-4 fw-medium rounded-3 border shadow-sm"
