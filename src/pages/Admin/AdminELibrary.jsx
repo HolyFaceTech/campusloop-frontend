@@ -512,7 +512,7 @@ const AdminELibrary = () => {
                     <div className="text-end flex-shrink-0">
                       {item.status === "pending" && (
                         <span
-                          className="badge bg-warning bg-opacity-25 text-warning fw-medium border border-warning px-2 py-1 shadow-sm"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Pending
@@ -520,7 +520,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "approved" && (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Approved
@@ -528,7 +528,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "declined" && (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Declined
