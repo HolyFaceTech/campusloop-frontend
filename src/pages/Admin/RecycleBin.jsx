@@ -225,7 +225,7 @@ const RecycleBin = () => {
             className="fw-bold mb-1"
             style={{ color: "var(--primary-color)" }}
           >
-            Recycle Bin <i className="bi bi-trash3 ps-1"></i>
+            Recycle Bin <i className="bi bi-trash ps-1"></i>
           </h3>
           <p className="text-muted small mb-0">
             Restore or permanently delete system records.
