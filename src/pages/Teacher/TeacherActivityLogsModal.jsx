@@ -19,20 +19,30 @@ const getAuthHeader = () => {
 const TeacherActivityLogsModal = () => {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const fetchLogs = async () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/teacher/activity-logs`,
-        getAuthHeader(),
+        {
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+          },
+        },
       );
-      setLogs(response.data);
+      const data = response.data;
+      setLogs(data.data || []);
+      setTotalPages(data.last_page || 1);
+      setTotalRecords(data.total || 0);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -44,21 +54,31 @@ const TeacherActivityLogsModal = () => {
     }
   };
 
-  useEffect(() => {
-    const modalElement = document.getElementById("teacherActivityLogsModal");
-    if (modalElement) {
-      modalElement.addEventListener("show.bs.modal", fetchLogs);
-    }
-    return () => {
-      if (modalElement) {
-        modalElement.removeEventListener("show.bs.modal", fetchLogs);
-      }
-    };
-  }, []);
-
+  // Reset page kapag nag-search o nagpalit ng entries
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
+
+  // DEBOUNCE EFFECT (500ms server request delay)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchLogs();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage]);
+
+  useEffect(() => {
+    const modalElement = document.getElementById("teacherActivityLogsModal");
+    const onShow = () => fetchLogs();
+    if (modalElement) {
+      modalElement.addEventListener("show.bs.modal", onShow);
+    }
+    return () => {
+      if (modalElement) {
+        modalElement.removeEventListener("show.bs.modal", onShow);
+      }
+    };
+  }, [searchQuery, currentPage, entriesPerPage]);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "N/A";
@@ -72,16 +92,50 @@ const TeacherActivityLogsModal = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  const filteredLogs = logs.filter((log) => {
-    return `${log.user_name} ${log.action} ${log.description}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-  });
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages = [1, 2, 3, 4, "...", totalPages];
+      } else if (currentPage >= totalPages - 2) {
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      } else {
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
+      }
+    }
 
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentLogs = filteredLogs.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredLogs.length / entriesPerPage);
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <div
@@ -115,9 +169,9 @@ const TeacherActivityLogsModal = () => {
             style={{ maxHeight: "80vh", overflowY: "auto" }}
           >
             <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
-              <div className="card-body p-3">
-                <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                  <div className="d-flex align-items-center flex-shrink-0 text-muted small">
+              <div className="card-body p-0">
+                <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
+                  <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
                     Show
                     <select
                       className="form-select form-select-sm mx-2 toolbar-input rounded-3"
@@ -136,8 +190,8 @@ const TeacherActivityLogsModal = () => {
                   </div>
 
                   <div
-                    className="input-group ms-auto flex-grow-1"
-                    style={{ maxWidth: "400px" }}
+                    className="input-group"
+                    style={{ maxWidth: "400px", minWidth: "350px" }}
                   >
                     <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                       <i className="bi bi-search"></i>
@@ -145,7 +199,7 @@ const TeacherActivityLogsModal = () => {
                     <input
                       type="text"
                       className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                      placeholder="Search Action or Description..."
+                      placeholder="Search User, Action, or Description..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -154,16 +208,16 @@ const TeacherActivityLogsModal = () => {
               </div>
             </div>
 
-            <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
               <div
-                className="table-responsive custom-scrollbar position-relative"
-                style={{ minHeight: "300px" }}
+                className="table-responsive custom-scrollbar"
+                style={{ maxHeight: "400px" }}
               >
                 <table
                   className="table table-summer align-middle mb-0"
                   style={{ minWidth: "900px" }}
                 >
-                  <thead>
+                  <thead className="sticky-top bg-white z-1 shadow-sm">
                     <tr>
                       <th className="ps-4">User</th>
                       <th>Action</th>
@@ -172,59 +226,90 @@ const TeacherActivityLogsModal = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {currentLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="ps-4">
-                          <div className="d-flex align-items-center py-1">
-                            <div
-                              className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
-                              style={{
-                                width: "35px",
-                                height: "35px",
-                                backgroundColor: "var(--secondary-color)",
-                              }}
-                            >
-                              {log.user_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="overflow-hidden">
-                              <span className="fw-bold text-dark d-block">
-                                {log.user_name}
-                              </span>
-                              <span
-                                className="text-muted small d-block"
-                                style={{
-                                  fontSize: "0.75rem",
-                                }}
-                              >
-                                {log.user_email}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span
-                            className="badge border text-dark text-uppercase rounded-3 px-2 py-1"
-                            style={{ backgroundColor: "var(--accent-color)" }}
-                          >
-                            {log.action}
-                          </span>
-                        </td>
+                    {isLoading ? (
+                      <tr>
                         <td
-                          className="text-muted small fw-medium"
-                          style={{ maxWidth: "250px" }}
+                          colSpan="4"
+                          className="text-center py-5 text-muted bg-white"
                         >
-                          {log.description}
-                        </td>
-                        <td className="text-muted small text-end pe-4">
-                          {formatDateTime(log.created_at)}
+                          <div
+                            className="spinner-border spinner-border-sm text-primary me-2"
+                            role="status"
+                          ></div>
+                          Loading activity logs...
                         </td>
                       </tr>
-                    ))}
-                    {currentLogs.length === 0 && !isLoading && (
+                    ) : logs.length > 0 ? (
+                      logs.map((log) => (
+                        <tr key={log.id}>
+                          <td className="ps-4">
+                            <div className="d-flex align-items-center py-1">
+                              <div
+                                className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
+                                style={{
+                                  width: "35px",
+                                  height: "35px",
+                                  backgroundColor: "var(--secondary-color)",
+                                }}
+                              >
+                                {log.user_name.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="overflow-hidden">
+                                <span className="fw-bold text-dark d-block">
+                                  {log.user_name}
+                                </span>
+                                <span
+                                  className="text-muted small d-block"
+                                  style={{
+                                    fontSize: "0.75rem",
+                                  }}
+                                >
+                                  {log.user_email}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span
+                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                              style={{ backgroundColor: "var(--accent-color)" }}
+                            >
+                              {log.action}
+                            </span>
+                          </td>
+                          <td
+                            className="text-muted small fw-medium"
+                            style={{ maxWidth: "250px" }}
+                          >
+                            {log.description}
+                          </td>
+                          <td className="text-muted small text-end pe-4 text-nowrap">
+                            {formatDateTime(log.created_at)}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
                       <tr>
-                        <td colSpan="4" className="text-center py-5 text-muted">
-                          <i className="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                          No activity logs found.
+                        <td
+                          colSpan="4"
+                          className="p-4 bg-light border-bottom-0"
+                        >
+                          <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                            <i
+                              className="bi bi-inbox text-muted d-block mb-3"
+                              style={{ fontSize: "3rem", opacity: 0.5 }}
+                            ></i>
+                            <h5 className="fw-bold text-dark">
+                              {searchQuery
+                                ? "No records found."
+                                : "Activity logs are empty."}
+                            </h5>
+                            <p className="text-muted small mb-0">
+                              {searchQuery
+                                ? "No matching activity logs found for your search."
+                                : "No system activities have been recorded yet."}
+                            </p>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -233,12 +318,12 @@ const TeacherActivityLogsModal = () => {
               </div>
             </div>
 
-            {filteredLogs.length > 0 && (
+            {totalRecords > 0 && !isLoading && (
               <div className="d-flex justify-content-between align-items-center mt-3">
                 <p className="text-muted small mb-0">
-                  Showing {indexOfFirstItem + 1} to{" "}
-                  {Math.min(indexOfLastItem, filteredLogs.length)} of{" "}
-                  {filteredLogs.length} entries
+                  Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+                  {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+                  {totalRecords} entries
                 </p>
                 <nav>
                   <ul className="pagination pagination-sm mb-0">
@@ -254,19 +339,7 @@ const TeacherActivityLogsModal = () => {
                         Previous
                       </button>
                     </li>
-                    {[...Array(totalPages)].map((_, i) => (
-                      <li
-                        key={i}
-                        className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                      >
-                        <button
-                          className="page-link page-link-summer"
-                          onClick={() => setCurrentPage(i + 1)}
-                        >
-                          {i + 1}
-                        </button>
-                      </li>
-                    ))}
+                    {renderPageNumbers()}
                     <li
                       className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                     >

@@ -19,9 +19,7 @@ const getAuthHeader = () => {
 const AdminActivityLogsModal = () => {
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Track kung bukas ang modal
-
-  // Filters, Search, & Pagination States
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,7 +180,10 @@ const AdminActivityLogsModal = () => {
             ></button>
           </div>
 
-          <div className="modal-body p-4 bg-light">
+          <div
+            className="modal-body p-4 custom-scrollbar"
+            style={{ maxHeight: "80vh", overflowY: "auto" }}
+          >
             <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
               <div className="card-body p-0">
                 <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
@@ -214,7 +215,7 @@ const AdminActivityLogsModal = () => {
                     <input
                       type="text"
                       className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                      placeholder="Search User, Action, or Description..."
+                      placeholder="Search Action, or Description..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -281,7 +282,7 @@ const AdminActivityLogsModal = () => {
                     ) : (
                       logs.map((log) => (
                         <tr key={log.id}>
-                          <td className="ps-4 py-2">
+                          <td className="ps-4">
                             <div className="d-flex align-items-center py-1">
                               <div
                                 className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-3 shadow-sm flex-shrink-0"
@@ -308,7 +309,7 @@ const AdminActivityLogsModal = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="py-2">
+                          <td>
                             <span
                               className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
                               style={{ backgroundColor: "var(--accent-color)" }}
@@ -317,12 +318,12 @@ const AdminActivityLogsModal = () => {
                             </span>
                           </td>
                           <td
-                            className="text-muted small fw-medium py-2"
+                            className="text-muted small fw-medium"
                             style={{ maxWidth: "250px" }}
                           >
                             {log.description}
                           </td>
-                          <td className="text-muted small text-end pe-4 py-2 text-nowrap">
+                          <td className="text-muted small text-end pe-4 text-nowrap">
                             {formatDateTime(log.created_at)}
                           </td>
                         </tr>
