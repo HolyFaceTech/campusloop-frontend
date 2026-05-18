@@ -52,7 +52,7 @@ const RecycleBinModals = ({ actionType, selectedCount, executeAction }) => {
           <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
             <button
               type="button"
-              className="btn btn-light px-4 fw-medium shadow-sm rounded-3"
+              className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
               data-bs-dismiss="modal"
             >
               Cancel
