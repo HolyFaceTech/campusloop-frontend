@@ -101,7 +101,14 @@ const ClassworkFormDrawer = ({
               },
             },
           );
-          setAvailableForms(res.data);
+          if (Array.isArray(res.data.data)) {
+            setAvailableForms(res.data.data);
+          } else if (Array.isArray(res.data)) {
+            setAvailableForms(res.data);
+          } else {
+            setAvailableForms([]);
+            console.log("Unexpected forms response structure:", res.data);
+          }
         } catch (error) {
           console.error("Failed to fetch forms", error);
         }

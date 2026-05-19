@@ -17,17 +17,15 @@ const TeacherHome = () => {
     classrooms_count: 0,
     today_schedules: [],
   });
-  const [isLoading, setIsLoading] = useState(true);
 
+  const [isLoading, setIsLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
-
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
   const [openDropdownId, setOpenDropdownId] = useState(null);
-
   const navigate = useNavigate();
 
   const userInitial = data.user?.first_name
@@ -308,7 +306,7 @@ const TeacherHome = () => {
                 onClick={() => deleteComment(comment.id)}
                 title="Delete Comment"
               >
-                <i className="bi bi-trash3-fill"></i>
+                <i className="bi bi-trash-fill"></i>
               </button>
             </div>
           )}
@@ -319,7 +317,7 @@ const TeacherHome = () => {
 
   return (
     <div className="container-fluid px-0">
-      <GlobalSpinner isLoading={isLoading} text="Loading your dashboard..." />
+      <GlobalSpinner isLoading={isLoading} text="Loading your home page..." />
 
       <div className="row g-4">
         {/* LEFT COLUMN: Feed (Announcements) */}
@@ -758,7 +756,7 @@ const TeacherHome = () => {
               </h2>
             </div>
             <div
-              className="rounded-4 bg-primary bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
+              className="rounded-4 bg-primary border border-primary-subtle bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
               style={{ width: "60px", height: "60px" }}
             >
               <i className="bi bi-easel-fill text-primary fs-2"></i>
