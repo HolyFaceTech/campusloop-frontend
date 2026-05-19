@@ -274,7 +274,7 @@ const AnnouncementViewModal = ({
                 onClick={() => deleteComment(comment.id)}
                 title="Delete Comment"
               >
-                <i className="bi bi-trash3-fill"></i>
+                <i className="bi bi-trash-fill"></i>
               </button>
             )}
           </div>

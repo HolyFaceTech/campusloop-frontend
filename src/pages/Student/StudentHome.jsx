@@ -9,6 +9,15 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentHome = () => {
   const [data, setData] = useState({
     user: {},
@@ -17,18 +26,14 @@ const StudentHome = () => {
     classrooms_count: 0,
     today_schedules: [],
   });
-  const [isLoading, setIsLoading] = useState(true);
 
-  // States para sa Commenting
+  const [isLoading, setIsLoading] = useState(true);
   const [commentInputs, setCommentInputs] = useState({});
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
-
-  // States para sa Updating Comments
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
-
   const navigate = useNavigate();
 
   const userInitial = data.user?.first_name
@@ -44,11 +49,7 @@ const StudentHome = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/dashboard`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setData(res.data);
     } catch (error) {
@@ -58,7 +59,6 @@ const StudentHome = () => {
     }
   };
 
-  // --- POST COMMENT / REPLY ---
   const submitComment = async (announcementId, parentId = null) => {
     const content = parentId
       ? replyInputs[parentId]
@@ -77,11 +77,7 @@ const StudentHome = () => {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/student/announcements/${announcementId}/comment`,
         { content, parent_id: parentId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setTimeout(() => fetchDashboard(false), 300);
     } catch (error) {
@@ -95,7 +91,6 @@ const StudentHome = () => {
     }
   };
 
-  // --- UPDATE COMMENT ---
   const startEditing = (comment) => {
     setEditingCommentId(comment.id);
     setEditContent(comment.content);
@@ -108,11 +103,7 @@ const StudentHome = () => {
       await axios.put(
         `${import.meta.env.VITE_API_BASE_URL}/student/comments/${commentId}`,
         { content: editContent },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setEditingCommentId(null);
       setEditContent("");
@@ -128,17 +119,12 @@ const StudentHome = () => {
     }
   };
 
-  // --- DELETE COMMENT ---
   const deleteComment = async (commentId) => {
     setIsPosting(true);
     try {
       await axios.delete(
         `${import.meta.env.VITE_API_BASE_URL}/student/comments/${commentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setTimeout(() => fetchDashboard(false), 300);
     } catch (error) {
@@ -169,21 +155,7 @@ const StudentHome = () => {
         bg: "#f8d7da",
         label: "PDF",
       };
-    if (["doc", "docx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "#0d6efd",
-        bg: "#cfe2ff",
-        label: "WORD",
-      };
-    if (["xls", "xlsx", "csv"].includes(ext))
-      return {
-        icon: "bi-file-earmark-excel-fill",
-        color: "#198754",
-        bg: "#d1e7dd",
-        label: "EXCEL",
-      };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -205,13 +177,14 @@ const StudentHome = () => {
     };
   };
 
-  // --- DYNAMIC ICONS PARA SA TO-DO LIST ---
   const getTodoIcon = (statusCode) => {
     switch (statusCode) {
       case "missing":
         return "bi-exclamation-circle-fill";
-      case "due_soon":
+      case "pending":
         return "bi-clock-history";
+      case "turned_in":
+        return "bi-file-earmark-check-fill";
       case "done":
         return "bi-check-circle-fill";
       case "done_late":
@@ -221,11 +194,10 @@ const StudentHome = () => {
       case "graded":
         return "bi-award-fill";
       default:
-        return "bi-file-earmark-check";
+        return "bi-file-earmark-text";
     }
   };
 
-  // --- HELPER PARA I-RENDER ANG COMMENT BOX ---
   const renderCommentBox = (comment, isReply = false) => {
     const isOwner = comment.user_id === data.user?.id;
 
@@ -240,17 +212,17 @@ const StudentHome = () => {
           ></textarea>
           <div className="d-flex justify-content-end gap-2">
             <button
-              className="btn btn-sm btn-light border"
+              className="btn btn-sm btn-light border rounded-3"
               onClick={() => setEditingCommentId(null)}
             >
               Cancel
             </button>
             <button
-              className="btn btn-sm btn-campusloop"
+              className="btn btn-sm btn-campusloop rounded-3"
               onClick={() => saveEditedComment(comment.id)}
               disabled={isPosting}
             >
-              Save
+              <i className="bi bi-check-circle-fill me-1"></i> Save Changes
             </button>
           </div>
         </div>
@@ -294,7 +266,6 @@ const StudentHome = () => {
           </span>
         </div>
 
-        {/* DATE, REPLY, AT DIREKTANG ACTION BUTTONS */}
         <div className="ms-2 mt-1 d-flex align-items-center gap-3">
           <span
             className="text-muted"
@@ -318,7 +289,6 @@ const StudentHome = () => {
             </button>
           )}
 
-          {/* DIREKTANG ICONS PARA SA UPDATE AT DELETE KUNG SIYA ANG MAY-ARI */}
           {isOwner && (
             <div className="d-flex align-items-center gap-2 ms-1 ps-2">
               <button
@@ -335,7 +305,7 @@ const StudentHome = () => {
                 title="Delete Comment"
                 style={{ fontSize: "0.8rem" }}
               >
-                <i className="bi bi-trash3-fill"></i>
+                <i className="bi bi-trash-fill"></i>
               </button>
             </div>
           )}
@@ -346,13 +316,13 @@ const StudentHome = () => {
 
   return (
     <div className="container-fluid px-0">
-      <GlobalSpinner isLoading={isLoading} text="Loading your dashboard..." />
+      <GlobalSpinner isLoading={isLoading} text="Loading your home page..." />
 
       <div className="row g-4">
         {/* LEFT COLUMN: Feed (Announcements) */}
         <div className="col-12 col-lg-8 d-flex flex-column gap-4">
           <div
-            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative"
+            className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative premium-hover-card"
             style={{
               background:
                 "linear-gradient(135deg, var(--primary-color) 0%, #4a5435 100%)",
@@ -385,7 +355,7 @@ const StudentHome = () => {
                   className="badge bg-white text-dark bg-opacity-25 px-2 py-1 fw-semibold shadow-sm mb-2 text-uppercase"
                   style={{ letterSpacing: "1px" }}
                 >
-                  <i className="bi bi-person-video me-1"></i> Student Dashboard
+                  <i className="bi bi-person-video me-1"></i> Student Home Page
                 </span>
                 <h2 className="fw-bold mb-2 display-6 text-white">
                   Welcome back, {data.user.first_name}!{" "}
@@ -423,7 +393,7 @@ const StudentHome = () => {
               return (
                 <div
                   key={announcement.id}
-                  className="card border-0 shadow-sm bg-white mb-2 position-relative"
+                  className="card border-0 shadow-sm bg-white mb-2 position-relative premium-hover-card"
                   style={{
                     borderRadius: "1rem",
                     borderLeft: `5px solid ${statusColor}`,
@@ -454,6 +424,7 @@ const StudentHome = () => {
                               {new Date(
                                 announcement.publish_from,
                               ).toLocaleString([], {
+                                year: "numeric",
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",
@@ -763,7 +734,7 @@ const StudentHome = () => {
           )}
         </div>
 
-        {/* RIGHT COLUMN: Info Cards & To-Do List */}
+        {/* Info Cards & To-Do List */}
         <div className="col-12 col-lg-4 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div className="card border-0 shadow-sm rounded-4 bg-white p-4 mb-3 d-flex flex-row align-items-center justify-content-between premium-hover-card">
             <div>
@@ -778,7 +749,7 @@ const StudentHome = () => {
               </h2>
             </div>
             <div
-              className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
+              className="rounded-4 bg-primary border border-primary-subtle bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
               style={{ width: "60px", height: "60px" }}
             >
               <i className="bi bi-journal-bookmark-fill text-primary fs-2"></i>
@@ -786,13 +757,16 @@ const StudentHome = () => {
           </div>
 
           {/* TODAY'S SCHEDULES CARD */}
-          <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
+          <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
             <div className="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center">
-                <i className="bi bi-calendar-event-fill fs-5 me-2 text-success"></i>{" "}
-                Today's Schedules
+                <i className="bi bi-calendar-event fs-5 me-2"></i> Today's
+                Schedules
               </h6>
-              <span className="badge bg-success rounded-pill shadow-sm">
+              <span
+                className="badge rounded-3 shadow-sm fw-medium"
+                style={{ background: "var(--bs-purple, #6f42c1)" }}
+              >
                 {data.today_schedules?.length || 0}
               </span>
             </div>
@@ -887,16 +861,15 @@ const StudentHome = () => {
 
           {/* STUDENT TO-DO LIST */}
           <div
-            className="card border-0 shadow-sm rounded-4 bg-white sticky-top"
+            className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
             style={{ top: "100px" }}
           >
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center justify-content-between">
                 <span>
-                  <i className="bi bi-list-task fs-5 me-2 text-danger"></i>{" "}
-                  To-Do List
+                  <i className="bi bi-list-task fs-5 me-2"></i> To-Do List
                 </span>
-                <span className="badge bg-danger rounded-pill shadow-sm">
+                <span className="badge bg-danger rounded-3 shadow-sm fw-medium">
                   {data.todos.length}
                 </span>
               </h6>
@@ -953,7 +926,6 @@ const StudentHome = () => {
                               color: "white",
                             }}
                           >
-                            {/* DYNAMIC ICON MULA SA FUNCTION */}
                             <i
                               className={getTodoIcon(todo.status_code)}
                               style={{ fontSize: "0.85rem" }}
@@ -968,7 +940,7 @@ const StudentHome = () => {
                                 {todo.title}
                               </span>
                               <span
-                                className={`badge bg-${todo.indicator} px-2 py-1 flex-shrink-0 mt-1`}
+                                className={`badge bg-${todo.indicator} bg-opacity-10 text-${todo.indicator} fw-medium border border-${todo.indicator}-subtle px-2 py-1 flex-shrink-0 mt-1`}
                                 style={{ fontSize: "0.55rem" }}
                               >
                                 {todo.label}
