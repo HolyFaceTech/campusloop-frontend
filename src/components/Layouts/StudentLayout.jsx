@@ -13,25 +13,27 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
-
-  // FOOLPROOF REACT STATES PARA SA DROPDOWNS
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
-
-  // RED DOT INDICATORS
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
   const [hasTodayAlert, setHasTodayAlert] = useState(false);
-
-  // MGA STATES PARA SA NOTIFICATIONS (TULAD SA TEACHER)
   const [notifications, setNotifications] = useState([]);
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
-
+  const [unreadCount, setUnreadCount] = useState(0);
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
 
@@ -53,17 +55,16 @@ const StudentLayout = () => {
     fetchActiveSettings();
     fetchActiveIndicator();
     checkTodayAlerts();
-    fetchNotifications(); // INITIAL FETCH
+    fetchNotifications();
 
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAlerts);
 
-    // SILENT BACKGROUND POLLING (Every 30 Seconds na para iwas lag sa server gaya sa Teacher)
     const intervalId = setInterval(() => {
       checkTodayAlerts();
       fetchActiveIndicator();
       fetchNotifications();
-    }, 30000);
+    }, 60000);
 
     return () => {
       window.removeEventListener("settingsChanged", fetchActiveSettings);
@@ -76,11 +77,22 @@ const StudentLayout = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/settings`,
+        getAuthHeader(),
       );
-      if (response.data) {
+
+      let settingsData = response.data;
+
+      // Handle arrays or objects seamlessly
+      if (Array.isArray(settingsData)) {
+        settingsData = settingsData[0];
+      } else if (settingsData && settingsData.data) {
+        settingsData = settingsData.data;
+      }
+
+      if (settingsData && settingsData.school_year && settingsData.semester) {
         setActiveSettings({
-          school_year: response.data.school_year,
-          semester: response.data.semester,
+          school_year: settingsData.school_year,
+          semester: settingsData.semester,
         });
       } else {
         setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
@@ -94,6 +106,7 @@ const StudentLayout = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/calendar/active-indicator`,
+        getAuthHeader(),
       );
       setHasActiveEvent(response.data.has_active_events);
     } catch (error) {
@@ -105,11 +118,7 @@ const StudentLayout = () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/dashboard`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
 
       const today = new Date();
@@ -138,24 +147,22 @@ const StudentLayout = () => {
     }
   };
 
-  // FETCH NOTIFICATIONS PARA SA STUDENT
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/notifications`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
+          headers: getAuthHeader().headers,
+          params: { entries: 10 },
         },
       );
-      setNotifications(response.data);
+      setNotifications(response.data.data || []);
+      setUnreadCount(response.data.unread_count || 0);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
     }
   };
 
-  // PAG-CLICK SA NOTIFICATION
   const handleNotificationClick = async (notif) => {
     setShowNotif(false);
     if (!notif.is_read) {
@@ -163,11 +170,7 @@ const StudentLayout = () => {
         await axios.put(
           `${import.meta.env.VITE_API_BASE_URL}/student/notifications/${notif.id}/read`,
           {},
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-            },
-          },
+          getAuthHeader(),
         );
         fetchNotifications();
       } catch (error) {
@@ -177,31 +180,12 @@ const StudentLayout = () => {
     navigate(notif.link);
   };
 
-  // DAGDAG: TIME FORMATTER
-  const formatTimeAgo = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.round((now - date) / 1000);
-    const minutes = Math.round(seconds / 60);
-    const hours = Math.round(minutes / 60);
-    const days = Math.round(hours / 24);
-
-    if (seconds < 60) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days === 1) return "Yesterday";
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (avatarRef.current && !avatarRef.current.contains(event.target)) {
+      if (avatarRef.current && !avatarRef.current.contains(event.target))
         setShowAvatar(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(event.target)) {
+      if (notifRef.current && !notifRef.current.contains(event.target))
         setShowNotif(false);
-      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -212,18 +196,11 @@ const StudentLayout = () => {
     setLoadingText("Signing out...");
     setIsLoading(true);
     try {
-      const token =
-        localStorage.getItem("campusloop_token") ||
-        sessionStorage.getItem("campusloop_token");
-      if (token) {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/logout`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-      }
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/logout`,
+        {},
+        getAuthHeader(),
+      );
       localStorage.clear();
       sessionStorage.clear();
       sileo.success({
@@ -243,12 +220,26 @@ const StudentLayout = () => {
     }
   };
 
-  const handleViewAllNotifications = () => {
-    setShowNotif(false);
-    navigate("/student/notifications");
+  const formatTimeAgo = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.round((now - date) / 1000);
+    const minutes = Math.round(seconds / 60);
+    const hours = Math.round(minutes / 60);
+    const days = Math.round(hours / 24);
+
+    if (seconds < 60) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days === 1) return "Yesterday";
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  // PROGRAMMATIC MODAL OPENERS (Iwas Illegal Invocation Error)
   const openActivityLogs = () => {
     setShowAvatar(false);
     const modalElement = document.getElementById("studentActivityLogsModal");
@@ -297,7 +288,7 @@ const StudentLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-3 w-100 py-2"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-mortarboard-fill me-1"></i> STUDENT
@@ -387,15 +378,14 @@ const StudentLayout = () => {
               >
                 <li className="p-4 text-muted border-bottom">
                   <span
-                    className="fw-bold d-block text-dark mb-2"
-                    style={{ fontSize: "0.70rem", letterSpacing: "1px" }}
+                    className="fw-bold d-block text-dark mb-1"
+                    style={{ fontSize: "0.75rem", letterSpacing: "1px" }}
                   >
                     SIGNED IN AS:
                   </span>
                   <span
                     className="d-block fw-bold text-dark"
                     style={{ fontSize: "0.95rem", whiteSpace: "nowrap" }}
-                    title={`${user.first_name} ${user.last_name}`}
                   >
                     {user.first_name} {user.last_name}
                   </span>
@@ -411,7 +401,6 @@ const StudentLayout = () => {
                   <span
                     className="d-block text-muted mt-1"
                     style={{ fontSize: "0.80rem", whiteSpace: "nowrap" }}
-                    title={user.email || "student@campusloop.com"}
                   >
                     {user.email || "student@campusloop.com"}
                   </span>
@@ -421,8 +410,7 @@ const StudentLayout = () => {
                     className="dropdown-item py-2 fw-medium"
                     onClick={openActivityLogs}
                   >
-                    <i className="bi bi-clock-history text-primary me-2"></i>{" "}
-                    Activity Logs
+                    <i className="bi bi-clock-history me-2"></i> Activity Logs
                   </button>
                 </li>
                 <li>
@@ -430,16 +418,14 @@ const StudentLayout = () => {
                     className="dropdown-item py-2 fw-medium"
                     onClick={openHelpCenter}
                   >
-                    <i className="bi bi-question-circle text-primary me-2"></i>{" "}
-                    Help Center
+                    <i className="bi bi-question-circle me-2"></i> Help Center
                   </button>
                 </li>
               </ul>
             </div>
-
             <button
               onClick={handleLogout}
-              className="sidebar-footer-text btn btn-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3"
               style={{ transition: "all 0.3s ease" }}
             >
               <i className="bi bi-box-arrow-right me-1"></i> Sign Out
@@ -467,21 +453,15 @@ const StudentLayout = () => {
               </button>
 
               <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
-                <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-calendar-event me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                <span className="fw-medium text-dark small">
+                  <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
-                    ? `SY: ${activeSettings.school_year}`
-                    : "SY: Not Set"}
+                    ? `SY : ${activeSettings.school_year}`
+                    : "SY Not Set"}
                 </span>
                 <div className="vr"></div>
-                <span className="fw-bold text-muted small">
-                  <i
-                    className="bi bi-clock-history me-2"
-                    style={{ color: "var(--primary-color)" }}
-                  ></i>{" "}
+                <span className="fw-medium text-dark small">
+                  <i className="bi bi-clock-history me-2 text-success"></i>{" "}
                   {activeSettings.semester !== "Not Set"
                     ? `${activeSettings.semester} Semester`
                     : "Semester Not Set"}
@@ -547,7 +527,7 @@ const StudentLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-danger">
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
                         {unreadCount} Unread
                       </span>
                     )}
@@ -562,7 +542,7 @@ const StudentLayout = () => {
                         No notifications yet.
                       </div>
                     ) : (
-                      notifications.slice(0, 50).map((notif) => (
+                      notifications.map((notif) => (
                         <div
                           key={notif.id}
                           className="dropdown-item py-3 border-bottom text-wrap"
@@ -597,12 +577,13 @@ const StudentLayout = () => {
                                 {notif.description}
                               </p>
                               <p
-                                className="mb-0 mt-1 fw-bold"
+                                className="mb-0 mt-1 fw-medium"
                                 style={{
                                   fontSize: "0.70rem",
                                   color: "var(--secondary-color)",
                                 }}
                               >
+                                <i className="bi bi-clock me-1"></i>
                                 {formatTimeAgo(notif.created_at)}
                               </p>
                             </div>
@@ -624,8 +605,11 @@ const StudentLayout = () => {
 
                   <div className="p-3 text-center bg-white border-top">
                     <button
-                      onClick={handleViewAllNotifications}
-                      className="btn btn-campusloop btn-sm w-100 fw-bold rounded-3"
+                      onClick={() => {
+                        setShowNotif(false);
+                        navigate("/student/notifications");
+                      }}
+                      className="btn btn-campusloop fw-medium btn-sm w-100 rounded-3"
                     >
                       View All Notifications
                     </button>
@@ -640,22 +624,24 @@ const StudentLayout = () => {
               <Outlet />
             </div>
 
-            <footer className="py-3 bg-white text-center border-top mt-auto flex-shrink-0 px-4">
-              <small className="text-muted fw-medium">
-                &copy; {new Date().getFullYear()} CampusLoop. All rights
-                reserved.
-                <span className="d-none d-md-inline mx-2">|</span>
-                <br className="d-md-none" />
-                <a
-                  href="#"
-                  className="text-decoration-none fw-bold"
-                  style={{ color: "var(--primary-color)" }}
-                  data-bs-toggle="offcanvas"
-                  data-bs-target="#termsDrawer"
-                >
-                  Terms & Policy
-                </a>
-              </small>
+            <footer className="py-3 bg-white border-top mt-auto flex-shrink-0 px-4 px-md-5">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <small className="text-muted fw-medium mb-2 mb-md-0">
+                  &copy; {new Date().getFullYear()} CampusLoop. All rights
+                  reserved.
+                </small>
+                <small className="text-muted fw-medium">
+                  <a
+                    href="#"
+                    className="text-decoration-none"
+                    style={{ color: "var(--primary-color)" }}
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#termsDrawer"
+                  >
+                    <i className="bi bi-shield-check me-1"></i> Terms & Policy
+                  </a>
+                </small>
+              </div>
             </footer>
           </div>
         </main>
