@@ -73,7 +73,7 @@ const StudentClassroomsModals = ({
                   className="btn btn-campusloop px-4 fw-bold rounded-3 shadow-sm"
                   disabled={!joinCode}
                 >
-                  Send Request
+                  <i className="bi bi-send-fill"></i> Send Request
                 </button>
               </div>
             </form>
