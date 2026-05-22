@@ -11,6 +11,16 @@ import axios from "axios";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 
+// CENTRALIZED TOKEN HELPER
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentClassroomInside = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -22,7 +32,6 @@ const StudentClassroomInside = () => {
     fetchClassroomDetails();
   }, [id]);
 
-  // Auto-redirect to stream if visiting the base ID URL
   useEffect(() => {
     if (classroom && location.pathname === `/student/classrooms/${id}`) {
       navigate(`/student/classrooms/${id}/stream`, { replace: true });
@@ -33,11 +42,7 @@ const StudentClassroomInside = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/classrooms/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setClassroom(res.data);
     } catch (error) {
@@ -76,7 +81,6 @@ const StudentClassroomInside = () => {
 
   return (
     <div className="classroom-view-container custom-scrollbar">
-      {/* PREMIUM HEADER BANNER (100% From Teacher Layout) */}
       <div
         className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative"
         style={{
@@ -125,7 +129,6 @@ const StudentClassroomInside = () => {
               </div>
             </div>
 
-            {/* CREATOR AVATAR */}
             <div className="text-center d-none d-sm-block">
               <div
                 className="shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white mx-auto"
@@ -151,7 +154,6 @@ const StudentClassroomInside = () => {
             </div>
           </div>
 
-          {/* BOTTOM SECTION */}
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mt-5 pt-4 border-top border-white border-opacity-10 gap-3">
             <div className="d-flex align-items-center text-white opacity-75 fw-medium">
               <div
@@ -203,7 +205,6 @@ const StudentClassroomInside = () => {
         </div>
       </div>
 
-      {/* TABS (Stream at Grades lang for Students) */}
       <div className="bg-white rounded-4 shadow-sm mb-4 overflow-hidden">
         <ul className="nav nav-justified custom-premium-tabs m-0">
           <li className="nav-item">
@@ -226,7 +227,6 @@ const StudentClassroomInside = () => {
         </ul>
       </div>
 
-      {/* TAB CONTENT AREA */}
       <div className="tab-content-wrapper pb-5">
         <Outlet context={{ classroom }} />
       </div>

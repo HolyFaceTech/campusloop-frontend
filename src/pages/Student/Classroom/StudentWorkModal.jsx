@@ -17,7 +17,6 @@ const StudentWorkModal = ({
 }) => {
   return (
     <>
-      {/* MODAL FOR ADDING WORK / RESUBMITTING */}
       <div
         className="modal fade"
         id="addWorkModal"
@@ -36,7 +35,7 @@ const StudentWorkModal = ({
                 style={{ color: "var(--primary-color)" }}
               >
                 <i className="bi bi-cloud-upload-fill me-2"></i>{" "}
-                {selectedItemForWork?.student_status === "RETURNED"
+                {selectedItemForWork?.student_status === "returned"
                   ? "Re-submit Work"
                   : "Add Work"}
               </h5>
@@ -68,7 +67,8 @@ const StudentWorkModal = ({
                   style={{ fontSize: "2.5rem", color: "#626F47" }}
                 ></i>
                 <p className="text-muted mb-2" style={{ fontSize: "0.75rem" }}>
-                  Accepted formats: All file types <br /> Max file size: 50MB
+                  Accepted formats: PDF, DOC, EXCEL, PPT, IMG, VIDEO <br />
+                  Max file size: 50MB
                 </p>
                 <p className="fw-medium text-dark mb-0">
                   Drag & Drop or Click to Browse
@@ -79,6 +79,7 @@ const StudentWorkModal = ({
                   ref={workFileInputRef}
                   multiple
                   onChange={onWorkFileInputChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.png,.jpg,.jpeg,.gif,.mp4,.avi,.mov"
                 />
               </div>
 
@@ -97,28 +98,25 @@ const StudentWorkModal = ({
                       return (
                         <div
                           key={index}
-                          className="d-flex align-items-center justify-content-between p-2 bg-white border rounded-3 shadow-sm"
-                          style={{
-                            borderLeft: `4px solid ${style.color} !important`,
-                          }}
+                          className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm"
                         >
                           <div className="d-flex align-items-center">
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3"
                               style={{
-                                width: "35px",
-                                height: "35px",
+                                width: "40px",
+                                height: "40px",
                                 backgroundColor: style.bg,
                                 color: style.color,
                               }}
                             >
-                              <i className={`bi ${style.icon} fs-6`}></i>
+                              <i className={`bi ${style.icon} fs-5`}></i>
                             </div>
                             <div>
                               <p
                                 className="mb-0 fw-bold text-dark text-truncate"
                                 style={{
-                                  fontSize: "0.80rem",
+                                  fontSize: "0.85rem",
                                   maxWidth: "250px",
                                 }}
                               >
@@ -126,9 +124,10 @@ const StudentWorkModal = ({
                               </p>
                               <p
                                 className="mb-0 text-muted"
-                                style={{ fontSize: "0.65rem" }}
+                                style={{ fontSize: "0.70rem" }}
                               >
-                                {formatBytes(file.size)}
+                                {formatBytes(file.size)} •{" "}
+                                {style.label || "FILE"}
                               </p>
                             </div>
                           </div>
@@ -164,7 +163,7 @@ const StudentWorkModal = ({
                 disabled={workFiles.length === 0}
               >
                 <i className="bi bi-send-check-fill me-2"></i>{" "}
-                {selectedItemForWork?.student_status === "RETURNED"
+                {selectedItemForWork?.student_status === "returned"
                   ? "Turn In Again"
                   : "Turn In"}
               </button>
@@ -173,7 +172,6 @@ const StudentWorkModal = ({
         </div>
       </div>
 
-      {/* MODAL FOR MARK AS DONE */}
       <div
         className="modal fade"
         id="markDoneModal"
@@ -196,7 +194,7 @@ const StudentWorkModal = ({
             </div>
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark">
-                {selectedItemForWork?.student_status === "RETURNED"
+                {selectedItemForWork?.student_status === "returned"
                   ? "Mark as Re-submitted"
                   : "Mark as Done"}
               </h4>
@@ -204,7 +202,7 @@ const StudentWorkModal = ({
                 You haven't attached any work for{" "}
                 <b>{selectedItemForWork?.title}</b>. Are you sure you want to
                 mark this as{" "}
-                {selectedItemForWork?.student_status === "RETURNED"
+                {selectedItemForWork?.student_status === "returned"
                   ? "re-submitted"
                   : "done"}
                 ?
@@ -220,11 +218,11 @@ const StudentWorkModal = ({
               </button>
               <button
                 type="button"
-                className="btn btn-success px-4 fw-bold rounded-3"
+                className="btn btn-success px-4 fw-medium rounded-3"
                 onClick={submitStudentWork}
               >
                 Yes, Mark as{" "}
-                {selectedItemForWork?.student_status === "RETURNED"
+                {selectedItemForWork?.student_status === "returned"
                   ? "Re-submitted"
                   : "Done"}
               </button>
@@ -233,7 +231,6 @@ const StudentWorkModal = ({
         </div>
       </div>
 
-      {/* MODAL FOR UNSUBMIT CONFIRMATION */}
       <div
         className="modal fade"
         id="unsubmitConfirmModal"
@@ -272,7 +269,7 @@ const StudentWorkModal = ({
               </button>
               <button
                 type="button"
-                className="btn btn-danger px-4 fw-bold rounded-3"
+                className="btn btn-danger px-4 fw-medium rounded-3"
                 onClick={executeUnsubmit}
               >
                 Yes, Unsubmit
@@ -282,7 +279,6 @@ const StudentWorkModal = ({
         </div>
       </div>
 
-      {/* VIEW SUBMISSION MODAL NA MAY FILES & TEACHER FEEDBACK */}
       <div
         className="modal fade"
         id="viewSubmissionModal"
@@ -308,46 +304,46 @@ const StudentWorkModal = ({
               ></button>
             </div>
             <div className="modal-body p-4 bg-white">
-              {/* NAGPAPAKITA NG TEACHER FEEDBACK KUNG NA-RETURN ANG GAWA AT MAY RESUBMIT BUTTON */}
-              {selectedItemForWork?.student_status === "RETURNED" && (
-                <div className="alert alert-danger d-flex align-items-start gap-3 mb-4 px-3 py-3 border border-danger rounded-4 shadow-sm">
-                  <i className="bi bi-exclamation-circle-fill text-danger mt-1 fs-5"></i>
-                  <div className="w-100">
-                    <strong
-                      className="d-block text-danger mb-1"
-                      style={{
-                        fontSize: "0.80rem",
-                        textTransform: "uppercase",
-                        letterSpacing: "1px",
-                      }}
-                    >
-                      Work Returned
-                    </strong>
-                    <span className="small text-dark fw-medium lh-sm d-block mb-3">
-                      {selectedItemForWork.student_submission?.teacher_feedback}
-                    </span>
+              {selectedItemForWork?.student_status === "returned" && (
+                <div className="card-body p-4 bg-danger bg-opacity-10 border rounded-4 border-danger-subtle mb-4">
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <div className="d-flex align-items-center">
+                      <h6 className="fw-bold text-danger mb-2">
+                        <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
+                        Work Returned
+                      </h6>
+                    </div>
                     <button
-                      className="btn btn-danger btn-sm fw-bold shadow-sm rounded-3 px-3"
+                      type="button"
+                      className="btn btn-sm btn-outline-secondary px-3 fw-medium rounded-3 shadow-sm border border-secondary-subtle"
                       onClick={() => {
                         const m = Modal.getInstance(
                           document.getElementById("viewSubmissionModal"),
                         );
                         if (m) m.hide();
                         setTimeout(() => {
-                          document
-                            .querySelectorAll(".modal-backdrop")
-                            .forEach((el) => el.remove());
                           openAddWorkModal(selectedItemForWork);
                         }, 400);
                       }}
                     >
-                      <i className="bi bi-cloud-upload me-1"></i> Re-submit Work
+                      <i className="bi bi-cloud-upload me-2"></i> Re-submit
                     </button>
+                  </div>
+                  <div
+                    className="bg-white p-3 rounded-3 border border-danger border-opacity-25 text-dark mb-0 custom-scrollbar shadow-sm"
+                    style={{
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      maxHeight: "150px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {selectedItemForWork.student_submission?.teacher_feedback}
                   </div>
                 </div>
               )}
 
-              <div className="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+              <div className="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
                 <div>
                   <h6 className="fw-bold text-dark mb-1">
                     {selectedItemForWork?.title}
@@ -359,6 +355,7 @@ const StudentWorkModal = ({
                       ? new Date(
                           selectedItemForWork.student_submission.submitted_at,
                         ).toLocaleString([], {
+                          year: "numeric",
                           month: "short",
                           day: "numeric",
                           hour: "2-digit",
@@ -368,13 +365,17 @@ const StudentWorkModal = ({
                   </span>
                 </div>
                 <div className="text-end">
-                  {selectedItemForWork?.student_submission?.grade ? (
-                    <span className="badge bg-success px-3 py-2 fw-bolder fs-6 shadow-sm">
-                      Grade: {selectedItemForWork.student_submission.grade} /{" "}
+                  {selectedItemForWork?.student_status === "graded" ? (
+                    <span className="badge bg-success px-3 py-2 fw-medium shadow-sm">
+                      Grade: {selectedItemForWork.student_submission?.grade} /{" "}
                       {selectedItemForWork.points}
                     </span>
+                  ) : selectedItemForWork?.student_status === "returned" ? (
+                    <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm">
+                      Returned
+                    </span>
                   ) : (
-                    <span className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 py-2 shadow-sm">
+                    <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary px-2 py-1 shadow-sm">
                       Pending Grade
                     </span>
                   )}
@@ -421,14 +422,15 @@ const StudentWorkModal = ({
                               className="mb-0 text-muted"
                               style={{ fontSize: "0.70rem" }}
                             >
-                              {formatBytes(file.file_size)}
+                              {formatBytes(file.file_size)} •{" "}
+                              {style.label || "FILE"}
                             </p>
                           </div>
                         </div>
                         <a
                           href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noopener noreferrer"
                           className="btn btn-sm btn-campusloop rounded-3 shadow-sm flex-shrink-0 ms-3 d-flex justify-content-center align-items-center"
                           style={{ width: "35px", height: "35px" }}
                         >

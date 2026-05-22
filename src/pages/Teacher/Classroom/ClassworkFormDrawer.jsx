@@ -583,7 +583,7 @@ const ClassworkFormDrawer = ({
                         return (
                           <div
                             key={file.id}
-                            className="d-flex align-items-center justify-content-between p-2 bg-white border rounded-3 shadow-sm"
+                            className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm"
                           >
                             <div className="d-flex align-items-center">
                               <div
@@ -631,10 +631,7 @@ const ClassworkFormDrawer = ({
                         return (
                           <div
                             key={index}
-                            className="d-flex align-items-center justify-content-between p-2 bg-white border rounded-3 shadow-sm"
-                            style={{
-                              borderLeft: `4px solid ${style.color} !important`,
-                            }}
+                            className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm"
                           >
                             <div className="d-flex align-items-center">
                               <div
