@@ -316,31 +316,31 @@ const StudentTabStream = () => {
       case "graded":
         return (
           <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm">
-            Graded
+            <i className="bi bi-check-circle-fill me-1"></i> Graded
           </span>
         );
       case "turned_in":
         return (
           <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm">
-            Done
+            <i className="bi bi-check-circle-fill me-1"></i> Done
           </span>
         );
       case "late_submission":
         return (
           <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1 shadow-sm">
-            Done Late
+            <i className="bi bi-clock-history me-1"></i> Done Late
           </span>
         );
       case "returned":
         return (
           <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm">
-            Returned
+            <i className="bi bi-arrow-return-left me-1"></i> Returned
           </span>
         );
       case "missing":
         return (
           <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm">
-            Missing
+            <i className="bi bi-x-circle-fill me-1"></i> Missing
           </span>
         );
       case "pending":
