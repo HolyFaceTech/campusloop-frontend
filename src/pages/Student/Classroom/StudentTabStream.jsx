@@ -11,6 +11,16 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+// CENTRALIZED TOKEN HELPER
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentTabStream = () => {
   const { id } = useParams();
   const { classroom } = useOutletContext();
@@ -30,7 +40,9 @@ const StudentTabStream = () => {
   const [replyText, setReplyText] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
-
+  const [isPosting, setIsPosting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState("");
   const [selectedItemForWork, setSelectedItemForWork] = useState(null);
   const [workFiles, setWorkFiles] = useState([]);
   const workFileInputRef = useRef(null);
@@ -50,11 +62,7 @@ const StudentTabStream = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/classrooms/${id}/stream`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
       setStream(res.data);
     } catch (error) {
@@ -64,12 +72,12 @@ const StudentTabStream = () => {
     }
   };
 
-  // TINANGGAL ANG OPTIMISTIC COMMENT PARA WALANG DUPLICATION
   const handleCommentSubmit = async (classworkId, parentId = null) => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
-    // Clear fields instantly for quick UX
+    setIsPosting(true); // DISABLE BUTTONS
+
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
       setActiveReplyBox(null);
@@ -77,18 +85,13 @@ const StudentTabStream = () => {
       setCommentText((prev) => ({ ...prev, [classworkId]: "" }));
     }
 
-    // Direct database submission and refetch
     try {
       await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/classworks/${classworkId}/comments`,
         { content: content, parent_id: parentId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
-      fetchStream(); // Fetch the real data immediately
+      fetchStream();
     } catch (error) {
       console.error(error);
       sileo.error({
@@ -96,6 +99,55 @@ const StudentTabStream = () => {
         description: "Could not post comment.",
         ...darkToast,
       });
+    } finally {
+      setIsPosting(false); // ENABLE BUTTONS
+    }
+  };
+
+  const startEditing = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditContent(comment.content);
+  };
+
+  const saveEditedComment = async (commentId) => {
+    if (!editContent || editContent.trim() === "") return;
+    setIsPosting(true);
+    try {
+      await axios.put(
+        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        { content: editContent },
+        getAuthHeader(),
+      );
+      setEditingCommentId(null);
+      setEditContent("");
+      fetchStream(); // REFRESH FEED
+    } catch (error) {
+      sileo.error({
+        title: "Error",
+        description: "Failed to update comment.",
+        ...darkToast,
+      });
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    setIsPosting(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        getAuthHeader(),
+      );
+      fetchStream(); // REFRESH FEED
+    } catch (error) {
+      sileo.error({
+        title: "Error",
+        description: "Failed to delete comment.",
+        ...darkToast,
+      });
+    } finally {
+      setIsPosting(false);
     }
   };
 
@@ -140,7 +192,33 @@ const StudentTabStream = () => {
 
   const validateAndAddWorkFiles = (files) => {
     const maxSizeBytes = 50 * 1024 * 1024;
+    const allowedExts = [
+      "pdf",
+      "doc",
+      "docx",
+      "xls",
+      "xlsx",
+      "csv",
+      "ppt",
+      "pptx",
+      "png",
+      "jpg",
+      "jpeg",
+      "gif",
+      "mp4",
+      "avi",
+      "mov",
+    ];
     const validFiles = files.filter((f) => {
+      const ext = f.name.split(".").pop().toLowerCase();
+      if (!allowedExts.includes(ext)) {
+        sileo.error({
+          title: "Invalid File Type",
+          description: `${f.name} format is not supported.`,
+          ...darkToast,
+        });
+        return false;
+      }
       if (f.size > maxSizeBytes) {
         sileo.error({
           title: "File too large",
@@ -168,46 +246,38 @@ const StudentTabStream = () => {
     );
     if (markModal) markModal.hide();
 
-    setTimeout(async () => {
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
+    setIsLoading(true);
 
-      setIsLoading(true);
-
-      try {
-        const data = new FormData();
-        if (filesToSubmit.length > 0) {
-          filesToSubmit.forEach((file) => data.append("files[]", file));
-        }
-
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/submit`,
-          data,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-              "Content-Type": "multipart/form-data",
-            },
-          },
-        );
-        sileo.success({
-          title: "Success",
-          description: "Work turned in successfully.",
-          ...darkToast,
-        });
-        fetchStream();
-      } catch (error) {
-        sileo.error({
-          title: "Failed",
-          description:
-            error.response?.data?.message || "Failed to turn in work.",
-          ...darkToast,
-        });
-        setIsLoading(false);
+    try {
+      const data = new FormData();
+      if (filesToSubmit.length > 0) {
+        filesToSubmit.forEach((file) => data.append("files[]", file));
       }
-    }, 400);
+
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/submit`,
+        data,
+        {
+          headers: {
+            ...getAuthHeader().headers,
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+      sileo.success({
+        title: "Success",
+        description: "Work turned in successfully.",
+        ...darkToast,
+      });
+      fetchStream();
+    } catch (error) {
+      sileo.error({
+        title: "Failed",
+        description: error.response?.data?.message || "Failed to turn in work.",
+        ...darkToast,
+      });
+      setIsLoading(false);
+    }
   };
 
   const executeUnsubmit = async () => {
@@ -216,96 +286,67 @@ const StudentTabStream = () => {
     );
     if (unsubmitModal) unsubmitModal.hide();
 
-    setTimeout(async () => {
-      document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
-      document.body.classList.remove("modal-open");
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
+    setIsLoading(true);
 
-      setIsLoading(true);
-
-      try {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/unsubmit`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-            },
-          },
-        );
-        sileo.success({
-          title: "Unsubmitted",
-          description: "Your work has been unsubmitted.",
-          ...darkToast,
-        });
-        fetchStream();
-      } catch (error) {
-        sileo.error({
-          title: "Failed",
-          description:
-            error.response?.data?.message || "Failed to unsubmit work.",
-          ...darkToast,
-        });
-        setIsLoading(false);
-      }
-    }, 400);
+    try {
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/student/classworks/${selectedItemForWork.id}/unsubmit`,
+        {},
+        getAuthHeader(),
+      );
+      sileo.success({
+        title: "Unsubmitted",
+        description: "Your work has been unsubmitted.",
+        ...darkToast,
+      });
+      fetchStream();
+    } catch (error) {
+      sileo.error({
+        title: "Failed",
+        description:
+          error.response?.data?.message || "Failed to unsubmit work.",
+        ...darkToast,
+      });
+      setIsLoading(false);
+    }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "DONE":
-      case "GRADED":
+      case "graded":
         return (
-          <span
-            className="badge bg-success bg-opacity-10 text-success border border-success px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            <i className="bi bi-check-circle-fill me-1"></i> Done
+          <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm">
+            Graded
           </span>
         );
-      case "DONE LATE":
+      case "turned_in":
         return (
-          <span
-            className="badge bg-warning bg-opacity-10 text-warning border border-warning px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            <i className="bi bi-clock-history me-1"></i> Done Late
+          <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm">
+            Done
           </span>
         );
-      case "RETURNED":
+      case "late_submission":
         return (
-          <span
-            className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            <i className="bi bi-arrow-return-left me-1"></i> Returned
+          <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1 shadow-sm">
+            Done Late
           </span>
         );
-      case "MISSING":
+      case "returned":
         return (
-          <span
-            className="badge bg-danger bg-opacity-10 text-danger border border-danger px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            <i className="bi bi-x-circle-fill me-1"></i> Missing
+          <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm">
+            Returned
           </span>
         );
-      case "DUE SOON":
+      case "missing":
         return (
-          <span
-            className="badge bg-warning bg-opacity-25 text-dark border border-warning px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
-            <i className="bi bi-clock-fill me-1"></i> Due Soon
+          <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm">
+            Missing
           </span>
         );
+      case "pending":
       default:
         return (
-          <span
-            className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2 py-1 shadow-sm"
-            style={{ fontSize: "0.65rem", letterSpacing: "0.5px" }}
-          >
+          <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary px-2 py-1 shadow-sm">
             Pending
           </span>
         );
@@ -386,7 +427,7 @@ const StudentTabStream = () => {
         icon: "bi-file-earmark-word-fill",
         color: "#0d6efd",
         bg: "#cfe2ff",
-        label: "WORD",
+        label: "DOCX",
       };
     if (["xls", "xlsx", "csv"].includes(ext))
       return {
@@ -395,7 +436,14 @@ const StudentTabStream = () => {
         bg: "#d1e7dd",
         label: "EXCEL",
       };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
+    if (["ppt", "pptx"].includes(ext))
+      return {
+        icon: "bi-file-earmark-ppt-fill",
+        color: "#fd7e14",
+        bg: "#ffe5d0",
+        label: "POWERPOINT",
+      };
+    if (["png", "jpg", "jpeg", "gif"].includes(ext))
       return {
         icon: "bi-file-earmark-image-fill",
         color: "#6f42c1",
@@ -405,10 +453,11 @@ const StudentTabStream = () => {
     if (["mp4", "avi", "mov"].includes(ext))
       return {
         icon: "bi-file-earmark-play-fill",
-        color: "#fd7e14",
-        bg: "#ffe5d0",
+        color: "#0dcaf0",
+        bg: "#cff4fc",
         label: "VIDEO",
       };
+
     return {
       icon: "bi-file-earmark-fill",
       color: "#6c757d",
@@ -427,6 +476,128 @@ const StudentTabStream = () => {
         element.style.boxShadow = "0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)";
       }, 2000);
     }
+  };
+
+  const renderCommentBox = (comment, isReply = false, cwId) => {
+    const isOwner = comment.user_id === currentUser?.id;
+
+    if (editingCommentId === comment.id) {
+      return (
+        <div className="bg-light rounded-4 px-3 py-3 w-100 border border-primary-subtle shadow-sm">
+          <textarea
+            className="form-control mb-2 rounded-3 custom-scrollbar"
+            rows="2"
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            disabled={isPosting}
+          ></textarea>
+          <div className="d-flex justify-content-end gap-2">
+            <button
+              className="btn btn-sm btn-light border rounded-3"
+              onClick={() => setEditingCommentId(null)}
+              disabled={isPosting}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-sm btn-campusloop rounded-3"
+              onClick={() => saveEditedComment(comment.id)}
+              disabled={isPosting}
+            >
+              <i className="bi bi-check-circle-fill me-1"></i> Save Changes
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-100 d-flex flex-column align-items-start">
+        <div
+          className="bg-light rounded-4 px-3 py-2"
+          style={{
+            display: "inline-block",
+            maxWidth: "100%",
+            border: "1px solid #f0f0f0",
+          }}
+        >
+          <span
+            className="fw-bold text-dark d-block"
+            style={{
+              fontSize: isReply ? "0.75rem" : "0.8rem",
+              marginBottom: "2px",
+            }}
+          >
+            {comment.user?.first_name} {comment.user?.last_name}
+            {comment.user?.role === "admin" && (
+              <i
+                className="bi bi-patch-check-fill text-primary ms-1"
+                title="Admin"
+              ></i>
+            )}
+          </span>
+          <span
+            className="text-dark lh-sm d-block"
+            style={{
+              fontSize: isReply ? "0.85rem" : "0.9rem",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {comment.content}
+          </span>
+        </div>
+
+        <div className="ms-2 mt-1 d-flex align-items-center gap-3">
+          <span
+            className="text-muted"
+            style={{ fontSize: "0.65rem", fontWeight: "500" }}
+          >
+            {new Date(comment.created_at).toLocaleString([], {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+
+          {!isReply && (
+            <button
+              className="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none"
+              style={{ fontSize: "0.7rem" }}
+              onClick={() => setActiveReplyBox(comment.id)}
+            >
+              Reply
+            </button>
+          )}
+
+          <div className="d-flex align-items-center gap-2 ms-1 ps-2">
+            {isOwner && (
+              <>
+                <button
+                  className="btn btn-link p-0 text-primary fw-bold text-decoration-none shadow-none"
+                  style={{ fontSize: "0.7rem" }}
+                  onClick={() => startEditing(comment)}
+                  title="Edit Comment"
+                  disabled={isPosting}
+                >
+                  <i className="bi bi-pencil-square"></i>
+                </button>
+                <button
+                  className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
+                  style={{ fontSize: "0.7rem" }}
+                  onClick={() => deleteComment(comment.id)}
+                  title="Delete Comment"
+                  disabled={isPosting}
+                >
+                  <i className="bi bi-trash-fill"></i>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -504,7 +675,7 @@ const StudentTabStream = () => {
                                   {task.title}
                                 </span>
                                 <span
-                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1`}
+                                  className={`badge bg-opacity-10 fw-medium border ${taskStyle.badge} flex-shrink-0 mt-1`}
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   {task.type.toUpperCase()}
@@ -522,6 +693,7 @@ const StudentTabStream = () => {
                                     {new Date(task.created_at).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -535,6 +707,7 @@ const StudentTabStream = () => {
                                     {new Date(task.deadline).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -579,14 +752,13 @@ const StudentTabStream = () => {
               const typeStyle = getBadgeStyle(cw.type);
               const isMaterial = cw.type === "material";
 
-              // UPDATED STATUS CHECKS
               const isDone =
-                cw.student_status === "DONE" ||
-                cw.student_status === "DONE LATE" ||
-                cw.student_status === "GRADED";
-              const isReturned = cw.student_status === "RETURNED";
+                cw.student_status === "turned_in" ||
+                cw.student_status === "late_submission" ||
+                cw.student_status === "graded";
+              const isReturned = cw.student_status === "returned";
               const cannotUnsubmit =
-                isPastDeadline(cw.deadline) || cw.student_status === "GRADED";
+                isPastDeadline(cw.deadline) || cw.student_status === "graded";
 
               return (
                 <div
@@ -599,7 +771,6 @@ const StudentTabStream = () => {
                   }}
                 >
                   <div className="card-body p-4 p-md-5 pb-4">
-                    {/* PREMIUM HEADER */}
                     <div className="d-flex justify-content-between align-items-start mb-4">
                       <div className="d-flex align-items-center gap-3">
                         <div
@@ -617,7 +788,7 @@ const StudentTabStream = () => {
                           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2 flex-wrap">
                             {cw.title}
                             <span
-                              className={`badge bg-opacity-10 border text-uppercase px-2 py-1 ${typeStyle.badge}`}
+                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge}`}
                               style={{
                                 fontSize: "0.65rem",
                                 letterSpacing: "1px",
@@ -632,6 +803,7 @@ const StudentTabStream = () => {
                               <i className="bi bi-calendar-plus me-1"></i>{" "}
                               Posted:{" "}
                               {new Date(cw.created_at).toLocaleString([], {
+                                year: "numeric",
                                 month: "short",
                                 day: "numeric",
                                 hour: "2-digit",
@@ -643,9 +815,10 @@ const StudentTabStream = () => {
                                 <span className="d-none d-sm-inline opacity-50">
                                   |
                                 </span>
-                                <span className="text-danger fw-bold">
+                                <span className="text-danger fw-medium">
                                   <i className="bi bi-clock me-1"></i> Due:{" "}
                                   {new Date(cw.deadline).toLocaleString([], {
+                                    year: "numeric",
                                     month: "short",
                                     day: "numeric",
                                     hour: "2-digit",
@@ -658,7 +831,6 @@ const StudentTabStream = () => {
                         </div>
                       </div>
 
-                      {/* 3 DOTS STUDENT ACTIONS MENU */}
                       <div className="d-flex align-items-center gap-2 position-relative ms-3">
                         <div
                           className="dropdown classwork-card-dropdown"
@@ -712,7 +884,6 @@ const StudentTabStream = () => {
                                 top: "100%",
                               }}
                             >
-                              {/* Kung may Form at hindi pa tapos at hindi rin ni-return */}
                               {cw.type === "form" && !isDone && !isReturned && (
                                 <li>
                                   <Link
@@ -725,7 +896,6 @@ const StudentTabStream = () => {
                                 </li>
                               )}
 
-                              {/* Add Work / Resubmit Button (Hindi pwede sa Forms) */}
                               {(!isDone || isReturned) &&
                                 cw.type !== "form" && (
                                   <>
@@ -754,12 +924,11 @@ const StudentTabStream = () => {
                                   </>
                                 )}
 
-                              {/* View Submission & Unsubmit Button */}
                               {(isDone || isReturned) && (
                                 <>
                                   <li>
                                     <button
-                                      className="dropdown-item py-2 fw-medium text-secondary"
+                                      className="dropdown-item py-2 fw-medium text-dark"
                                       onClick={() =>
                                         openViewSubmissionModal(cw)
                                       }
@@ -771,9 +940,8 @@ const StudentTabStream = () => {
                                     </button>
                                   </li>
 
-                                  {/* HINDI PWEDE I-UNSUBMIT KUNG MAY FORM O KUNG GRADED/LAGPAS DEADLINE NA */}
                                   {!cw.form &&
-                                    cw.student_status !== "GRADED" &&
+                                    cw.student_status !== "graded" &&
                                     !isReturned && (
                                       <li>
                                         <button
@@ -807,7 +975,6 @@ const StudentTabStream = () => {
                         {cw.instruction || cw.description}
                       </p>
 
-                      {/* ATTACHMENTS */}
                       <div className="d-flex flex-column gap-2 mb-3">
                         {cw.link && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
@@ -837,7 +1004,7 @@ const StudentTabStream = () => {
                             <a
                               href={cw.link}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                               style={{ width: "35px", height: "35px" }}
                               title="Visit Link"
@@ -849,7 +1016,7 @@ const StudentTabStream = () => {
                         {cw.form && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
                             <div
-                              className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-campusloop text-white"
+                              className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-dark bg-opacity-10 text-dark"
                               style={{ width: "45px", height: "45px" }}
                             >
                               <i className="bi bi-ui-radios fs-4"></i>
@@ -926,7 +1093,7 @@ const StudentTabStream = () => {
                                 <a
                                   href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
                                   target="_blank"
-                                  rel="noreferrer"
+                                  rel="noopener noreferrer"
                                   className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                                   style={{ width: "35px", height: "35px" }}
                                   title="View File"
@@ -938,7 +1105,6 @@ const StudentTabStream = () => {
                           })}
                       </div>
 
-                      {/* STATUS AND POINTS */}
                       {!isMaterial && (
                         <div className="d-flex align-items-center justify-content-between mt-2 mb-4 px-1">
                           <div className="d-flex align-items-center gap-2">
@@ -973,7 +1139,6 @@ const StudentTabStream = () => {
                         </div>
                       )}
 
-                      {/* FB-STYLE COMMENTS THREAD */}
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">
@@ -1012,62 +1177,10 @@ const StudentTabStream = () => {
                                   {comment.user?.first_name?.charAt(0)}
                                 </div>
                                 <div className="flex-grow-1">
-                                  <div
-                                    className="bg-light rounded-4 px-3 py-2"
-                                    style={{
-                                      display: "inline-block",
-                                      maxWidth: "100%",
-                                      border: "1px solid #f0f0f0",
-                                    }}
-                                  >
-                                    <span
-                                      className="fw-bold text-dark d-block"
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      {comment.user?.first_name}{" "}
-                                      {comment.user?.last_name}
-                                    </span>
-                                    <span
-                                      className="text-dark lh-sm d-block"
-                                      style={{
-                                        fontSize: "0.9rem",
-                                        whiteSpace: "pre-wrap",
-                                      }}
-                                    >
-                                      {comment.content}
-                                    </span>
-                                  </div>
-                                  <div className="ms-2 mt-1 d-flex align-items-center gap-3">
-                                    <span
-                                      className="text-muted"
-                                      style={{
-                                        fontSize: "0.7rem",
-                                        fontWeight: "500",
-                                      }}
-                                    >
-                                      {new Date(
-                                        comment.created_at,
-                                      ).toLocaleString([], {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                    <button
-                                      className="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none"
-                                      style={{ fontSize: "0.7rem" }}
-                                      onClick={() =>
-                                        setActiveReplyBox(comment.id)
-                                      }
-                                    >
-                                      Reply
-                                    </button>
-                                  </div>
+                                  {/* PARENT COMMENT */}
+                                  {renderCommentBox(comment, false, cw.id)}
 
+                                  {/* RENDER REPLIES */}
                                   {comment.replies &&
                                     comment.replies.length > 0 && (
                                       <div className="d-flex flex-column gap-2 mt-2">
@@ -1092,58 +1205,18 @@ const StudentTabStream = () => {
                                               )}
                                             </div>
                                             <div className="flex-grow-1">
-                                              <div
-                                                className="bg-light rounded-4 px-3 py-2"
-                                                style={{
-                                                  display: "inline-block",
-                                                  maxWidth: "100%",
-                                                  border: "1px solid #f0f0f0",
-                                                }}
-                                              >
-                                                <span
-                                                  className="fw-bold text-dark d-block"
-                                                  style={{
-                                                    fontSize: "0.75rem",
-                                                    marginBottom: "1px",
-                                                  }}
-                                                >
-                                                  {reply.user?.first_name}{" "}
-                                                  {reply.user?.last_name}
-                                                </span>
-                                                <span
-                                                  className="text-dark lh-sm d-block"
-                                                  style={{
-                                                    fontSize: "0.85rem",
-                                                    whiteSpace: "pre-wrap",
-                                                  }}
-                                                >
-                                                  {reply.content}
-                                                </span>
-                                              </div>
-                                              <div className="ms-2 mt-1">
-                                                <span
-                                                  className="text-muted"
-                                                  style={{
-                                                    fontSize: "0.65rem",
-                                                    fontWeight: "500",
-                                                  }}
-                                                >
-                                                  {new Date(
-                                                    reply.created_at,
-                                                  ).toLocaleString([], {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                  })}
-                                                </span>
-                                              </div>
+                                              {renderCommentBox(
+                                                reply,
+                                                true,
+                                                cw.id,
+                                              )}
                                             </div>
                                           </div>
                                         ))}
                                       </div>
                                     )}
 
+                                  {/* REPLY INPUT BOX */}
                                   {activeReplyBox === comment.id && (
                                     <div className="d-flex align-items-start gap-2 mt-2">
                                       <div
@@ -1169,6 +1242,7 @@ const StudentTabStream = () => {
                                             [comment.id]: e.target.value,
                                           })
                                         }
+                                        disabled={isPosting}
                                         style={{
                                           resize: "vertical",
                                           fontSize: "0.85rem",
@@ -1180,6 +1254,7 @@ const StudentTabStream = () => {
                                         onClick={() =>
                                           handleCommentSubmit(cw.id, comment.id)
                                         }
+                                        disabled={isPosting}
                                         style={{ height: "32px" }}
                                       >
                                         <i className="bi bi-send-fill fs-6"></i>
@@ -1187,6 +1262,7 @@ const StudentTabStream = () => {
                                       <button
                                         className="btn btn-sm btn-light border shadow-sm rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 mt-1 text-muted"
                                         onClick={() => setActiveReplyBox(null)}
+                                        disabled={isPosting}
                                         style={{
                                           width: "32px",
                                           height: "32px",
@@ -1202,6 +1278,7 @@ const StudentTabStream = () => {
                           </div>
                         )}
 
+                        {/* MAIN COMMENT INPUT BOX */}
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div
                             className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0 mt-1"
@@ -1224,6 +1301,7 @@ const StudentTabStream = () => {
                                 [cw.id]: e.target.value,
                               })
                             }
+                            disabled={isPosting}
                             style={{
                               resize: "vertical",
                               fontSize: "0.9rem",
@@ -1234,6 +1312,7 @@ const StudentTabStream = () => {
                             className="btn btn-campusloop shadow-sm rounded-pill d-flex justify-content-center align-items-center flex-shrink-0 px-4 mt-1"
                             title="Post Comment"
                             onClick={() => handleCommentSubmit(cw.id)}
+                            disabled={isPosting}
                             style={{ height: "38px" }}
                           >
                             <i className="bi bi-send-fill fs-6 me-1"></i> Send
