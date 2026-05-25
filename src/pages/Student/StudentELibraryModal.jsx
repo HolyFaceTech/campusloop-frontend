@@ -18,42 +18,6 @@ const StudentELibraryModal = ({ viewingItem }) => {
         color: "#dc3545",
         bg: "#f8d7da",
       };
-    if (["doc", "docx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-word-fill",
-        color: "#0d6efd",
-        bg: "#cfe2ff",
-      };
-    if (["xls", "xlsx", "csv"].includes(ext))
-      return {
-        icon: "bi-file-earmark-excel-fill",
-        color: "#198754",
-        bg: "#d1e7dd",
-      };
-    if (["ppt", "pptx"].includes(ext))
-      return {
-        icon: "bi-file-earmark-ppt-fill",
-        color: "#fd7e14",
-        bg: "#ffe5d0",
-      };
-    if (["png", "jpg", "jpeg", "gif", "webp"].includes(ext))
-      return {
-        icon: "bi-file-earmark-image-fill",
-        color: "#6f42c1",
-        bg: "#e0cffc",
-      };
-    if (["mp4", "avi", "mov"].includes(ext))
-      return {
-        icon: "bi-file-earmark-play-fill",
-        color: "#0dcaf0",
-        bg: "#cff4fc",
-      };
-    if (["zip", "rar"].includes(ext))
-      return {
-        icon: "bi-file-earmark-zip-fill",
-        color: "#6c757d",
-        bg: "#e2e3e5",
-      };
     return { icon: "bi-file-earmark-fill", color: "#6c757d", bg: "#e2e3e5" };
   };
 
@@ -162,14 +126,10 @@ const StudentELibraryModal = ({ viewingItem }) => {
                             </div>
                           </div>
                           <button
-                            className="btn btn-campusloop btn-sm fw-bold px-3 rounded-3 shadow-sm text-nowrap flex-shrink-0"
+                            className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                             onClick={() => handleViewDocument(file.path)}
                           >
-                            View{" "}
-                            <i
-                              className="bi bi-box-arrow-up-right ms-1"
-                              style={{ fontSize: "0.7rem" }}
-                            ></i>
+                            <i className="bi bi-box-arrow-up-right"></i>
                           </button>
                         </div>
                       );
