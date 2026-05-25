@@ -11,6 +11,15 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentTakeForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,16 +30,17 @@ const StudentTakeForm = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // SECTIONING STATE
+  const [isSaving, setIsSaving] = useState(false);
+  const initialRender = useRef(true);
+
   const [groupedQuestions, setGroupedQuestions] = useState([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
 
-  // RESULT STATE (Para sa Congratulation Card)
   const [isDone, setIsDone] = useState(false);
   const [resultData, setResultData] = useState(null);
 
-  // TIMER STATE
   const [timeLeft, setTimeLeft] = useState(null);
+  const [timerInitialized, setTimerInitialized] = useState(false);
   const timerRef = useRef(null);
   const isAutoSubmitting = useRef(false);
 
@@ -42,14 +52,9 @@ const StudentTakeForm = () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/forms/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
+        getAuthHeader(),
       );
 
-      // KUNG TAPOS NA PALA SIYA, DIRETSO SA RESULT CARD
       if (res.data.already_submitted) {
         setResultData(res.data);
         setIsDone(true);
@@ -60,7 +65,6 @@ const StudentTakeForm = () => {
       const formData = res.data.form;
       setForm(formData);
 
-      // SHUFFLE LOGIC
       let fetchedQuestions = formData.questions || [];
       if (formData.is_shuffle_questions) {
         fetchedQuestions = [...fetchedQuestions].sort(
@@ -69,7 +73,6 @@ const StudentTakeForm = () => {
       }
       setQuestions(fetchedQuestions);
 
-      // GROUPING LOGIC
       const groups = [];
       fetchedQuestions.forEach((q) => {
         const secName = q.section || "";
@@ -89,17 +92,37 @@ const StudentTakeForm = () => {
       });
       setGroupedQuestions(groups);
 
-      // TIMER INITIALIZATION
-      if (formData.timer && formData.timer > 0) {
+      if (
+        res.data.saved_answers &&
+        Object.keys(res.data.saved_answers).length > 0
+      ) {
+        setAnswers(res.data.saved_answers);
+      }
+
+      if (
+        res.data.time_left_seconds !== undefined &&
+        res.data.time_left_seconds !== null
+      ) {
+        setTimeLeft(res.data.time_left_seconds);
+
+        if (res.data.time_left_seconds <= 0 && !isAutoSubmitting.current) {
+          isAutoSubmitting.current = true;
+          setTimeout(() => {
+            const m = new Modal(document.getElementById("timeUpModal"));
+            m.show();
+          }, 800);
+        }
+      } else if (formData.timer && formData.timer > 0) {
         setTimeLeft(formData.timer * 60);
       }
 
+      setTimerInitialized(true);
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching form", error);
       sileo.error({
         title: "Error",
-        description: "Cannot load the form.",
+        description: error.response?.data?.message || "Cannot load the form.",
         ...darkToast,
       });
       navigate(-1);
@@ -107,22 +130,55 @@ const StudentTakeForm = () => {
   };
 
   useEffect(() => {
-    if (isDone) return; // Stop timer if already submitted
-
-    if (timeLeft !== null && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !isAutoSubmitting.current) {
-      clearInterval(timerRef.current);
-      isAutoSubmitting.current = true;
-      const m = new Modal(document.getElementById("timeUpModal"));
-      m.show();
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
     }
-    return () => clearInterval(timerRef.current);
-  }, [timeLeft, isDone]);
 
-  const formatTime = (seconds) => {
+    if (isDone || isLoading || Object.keys(answers).length === 0) return;
+
+    const autoSaveTimer = setTimeout(async () => {
+      setIsSaving(true);
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/student/forms/${id}/save-progress`,
+          { answers },
+          getAuthHeader(),
+        );
+      } catch (error) {
+        console.error("Auto-save failed", error);
+      } finally {
+        setIsSaving(false);
+      }
+    }, 1500);
+
+    return () => clearTimeout(autoSaveTimer);
+  }, [answers, id, isDone, isLoading]);
+
+  useEffect(() => {
+    if (isDone || !timerInitialized || timeLeft === null || timeLeft <= 0)
+      return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          if (!isAutoSubmitting.current) {
+            isAutoSubmitting.current = true;
+            const m = new Modal(document.getElementById("timeUpModal"));
+            m.show();
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [isDone, timerInitialized]);
+
+  const formatTime = (rawSeconds) => {
+    const seconds = Math.floor(rawSeconds);
     const m = Math.floor(seconds / 60)
       .toString()
       .padStart(2, "0");
@@ -132,19 +188,19 @@ const StudentTakeForm = () => {
 
   useEffect(() => {
     if (form && form.is_focus_mode && !isDone) {
-      const handleVisibilityChange = () => {
-        if (document.hidden && !isAutoSubmitting.current) {
-          isAutoSubmitting.current = true;
-          const m = new Modal(document.getElementById("focusViolationModal"));
-          m.show();
-        }
-      };
-      const handleWindowBlur = () => {
+      const triggerFocusViolation = () => {
         if (!isAutoSubmitting.current) {
           isAutoSubmitting.current = true;
           const m = new Modal(document.getElementById("focusViolationModal"));
           m.show();
         }
+      };
+
+      const handleVisibilityChange = () => {
+        if (document.hidden) triggerFocusViolation();
+      };
+      const handleWindowBlur = () => {
+        triggerFocusViolation();
       };
 
       document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -181,7 +237,6 @@ const StudentTakeForm = () => {
     setAnswers({ ...answers, [questionId]: value });
   };
 
-  // Check if current section is fully answered
   const isCurrentSectionComplete = () => {
     if (groupedQuestions.length === 0) return false;
     const currentGroup = groupedQuestions[currentSectionIndex];
@@ -191,7 +246,6 @@ const StudentTakeForm = () => {
     });
   };
 
-  // Check if ALL questions in the form are answered
   const isFormComplete = () => {
     return questions.every((q) => {
       const ans = answers[q.id];
@@ -228,11 +282,7 @@ const StudentTakeForm = () => {
         const res = await axios.post(
           `${import.meta.env.VITE_API_BASE_URL}/student/forms/${id}/submit`,
           { answers },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-            },
-          },
+          getAuthHeader(),
         );
         sileo.success({
           title: "Submitted",
@@ -240,7 +290,6 @@ const StudentTakeForm = () => {
           ...darkToast,
         });
 
-        // SHOW CONGRATULATION CARD
         setResultData(res.data);
         setIsDone(true);
         setIsSubmitting(false);
@@ -251,7 +300,9 @@ const StudentTakeForm = () => {
           ...darkToast,
         });
         setIsSubmitting(false);
-        navigate(-1);
+        if (error.response?.status === 403 || error.response?.status === 404) {
+          navigate(-1);
+        }
       }
     }, 400);
   };
@@ -320,8 +371,10 @@ const StudentTakeForm = () => {
                     / {resultData?.total_points}
                   </span>
                 </h1>
-                <span className="badge bg-success mt-3 px-3 py-2 fw-medium">
-                  <i className="bi bi-check-all me-1"></i> Successfully Recorded
+                <span className="badge bg-success mt-3 px-3 py-2 fw-medium w-100">
+                  <i className="bi bi-check-all me-1"></i>{" "}
+                  <span className="d-none d-sm-inline">Successfully</span>{" "}
+                  Recorded
                 </span>
               </div>
 
@@ -338,36 +391,54 @@ const StudentTakeForm = () => {
       ) : (
         <>
           <div className="mx-auto pb-5 px-3 pt-4" style={{ maxWidth: "770px" }}>
-            {/* FLOATING HEADER BAR (TIMER & FOCUS) */}
-            {(form.is_focus_mode || timeLeft !== null) && (
+            <div
+              className="sticky-top d-flex justify-content-between align-items-start z-3 mb-3"
+              style={{ top: "80px", pointerEvents: "none" }}
+            >
               <div
-                className="sticky-top d-flex justify-content-between align-items-start z-3 mb-3"
-                style={{ top: "80px", pointerEvents: "none" }}
+                style={{
+                  pointerEvents: "auto",
+                  display: "flex",
+                  gap: "10px",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}
               >
-                <div style={{ pointerEvents: "auto" }}>
-                  {form.is_focus_mode && (
-                    <span
-                      className="badge bg-danger px-3 py-2 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite"
-                      style={{ fontSize: "0.8rem", letterSpacing: "0.5px" }}
-                    >
-                      <i className="bi bi-eye-fill me-2"></i> FOCUS MODE ON
-                    </span>
-                  )}
-                </div>
-                <div style={{ pointerEvents: "auto" }}>
-                  {timeLeft !== null && (
-                    <span
-                      className={`badge px-4 py-2 fs-5 rounded-pill shadow-sm ${timeLeft <= 60 ? "bg-danger animate__animated animate__flash animate__infinite" : "bg-dark"}`}
-                    >
-                      <i className="bi bi-stopwatch me-2"></i>{" "}
-                      {formatTime(timeLeft)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+                {form.is_focus_mode && (
+                  <span
+                    className="badge bg-danger px-3 py-2 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite"
+                    style={{ fontSize: "0.8rem", letterSpacing: "0.5px" }}
+                  >
+                    <i className="bi bi-eye-fill me-2"></i>{" "}
+                    <span className="d-none d-sm-inline">FOCUS MODE ON</span>
+                  </span>
+                )}
 
-            {/* TITLE WARNING */}
+                {Object.keys(answers).length > 0 &&
+                  (isSaving ? (
+                    <span className="badge bg-secondary bg-opacity-75 px-3 py-2 rounded-pill shadow-sm animate__animated animate__fadeIn">
+                      <i className="bi bi-cloud-arrow-up-fill me-1"></i>{" "}
+                      <span className="d-none d-sm-inline">Saving</span>...
+                    </span>
+                  ) : (
+                    <span className="badge bg-success fw-medium px-3 py-2 rounded-pill shadow-sm animate__animated animate__fadeIn">
+                      <i className="bi bi-cloud-check-fill me-1"></i>{" "}
+                      <span className="d-none d-sm-inline">Saved</span>
+                    </span>
+                  ))}
+              </div>
+              <div style={{ pointerEvents: "auto" }}>
+                {timeLeft !== null && (
+                  <span
+                    className={`badge px-4 py-2 fs-5 rounded-3 fw-medium shadow-sm ${timeLeft <= 60 ? "bg-danger animate__animated animate__flash animate__infinite" : "bg-dark"}`}
+                  >
+                    <i className="bi bi-stopwatch me-2"></i>{" "}
+                    {formatTime(timeLeft)}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div
               className="card bg-white shadow-sm mb-4 position-relative"
               style={{
@@ -423,13 +494,11 @@ const StudentTakeForm = () => {
               </div>
             </div>
 
-            {/* SECTION RENDERER */}
             {currentGroup && (
               <form
                 onSubmit={promptSubmit}
                 className="animate__animated animate__fadeIn"
               >
-                {/* SECTION HEADER */}
                 {currentGroup.sectionName !== "" && (
                   <div className="position-relative mt-5 mb-3">
                     <div
@@ -473,7 +542,6 @@ const StudentTakeForm = () => {
                   </div>
                 )}
 
-                {/* SECTION QUESTIONS */}
                 <div className="d-flex flex-column gap-3 mt-3">
                   {currentGroup.questions.map((q, index) => (
                     <div
@@ -526,6 +594,9 @@ const StudentTakeForm = () => {
                                       handleAnswerChange(q.id, choice)
                                     }
                                     required
+                                    disabled={
+                                      timeLeft !== null && timeLeft <= 0
+                                    }
                                     style={{
                                       width: "20px",
                                       height: "20px",
@@ -557,6 +628,7 @@ const StudentTakeForm = () => {
                                   handleAnswerChange(q.id, e.target.value)
                                 }
                                 required
+                                disabled={timeLeft !== null && timeLeft <= 0}
                               />
                             </div>
                           )}
@@ -566,16 +638,16 @@ const StudentTakeForm = () => {
                   ))}
                 </div>
 
-                {/* NAVIGATION BUTTONS RESPONSIVE FIX */}
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-5 pb-5">
                   <div className="flex-grow-1 d-flex justify-content-start">
                     {currentSectionIndex > 0 && (
                       <button
                         type="button"
-                        className="btn btn-light border fw-bold shadow-sm px-4 py-2 rounded-3 w-80 w-sm-auto"
+                        className="btn btn-light border fw-medium shadow-sm px-4 py-2 rounded-3 w-80 w-sm-auto"
                         onClick={handlePrevSection}
                       >
-                        <i className="bi bi-arrow-left me-2"></i> Back
+                        <i className="bi bi-arrow-left me-2"></i>{" "}
+                        <span className="d-none d-sm-inline">Back</span>
                       </button>
                     )}
                   </div>
@@ -584,11 +656,12 @@ const StudentTakeForm = () => {
                     {!isLastSection ? (
                       <button
                         type="button"
-                        className={`btn fw-bold shadow-sm px-5 py-2 rounded-3 w-80 w-sm-auto ${isCurrentSectionComplete() ? "btn-campusloop" : "btn-secondary opacity-50"}`}
+                        className={`btn fw-medium shadow-sm px-4 py-2 rounded-3 w-80 w-sm-auto ${isCurrentSectionComplete() ? "btn-campusloop" : "btn-secondary opacity-50"}`}
                         onClick={handleNextSection}
                         disabled={!isCurrentSectionComplete()}
                       >
-                        Next <i className="bi bi-arrow-right ms-2"></i>
+                        <span className="d-none d-sm-inline">Next</span>{" "}
+                        <i className="bi bi-arrow-right ms-2"></i>
                       </button>
                     ) : (
                       <button
@@ -596,7 +669,8 @@ const StudentTakeForm = () => {
                         className={`btn fw-bold shadow-lg px-5 py-2 rounded-3 w-80 w-sm-auto ${isFormComplete() ? "btn-campusloop" : "btn-secondary opacity-50"}`}
                         disabled={!isFormComplete()}
                       >
-                        <i className="bi bi-send-check-fill me-2"></i> Submit
+                        <i className="bi bi-send-check-fill me-2"></i>{" "}
+                        <span className="d-none d-sm-inline">Submit</span>
                       </button>
                     )}
                   </div>

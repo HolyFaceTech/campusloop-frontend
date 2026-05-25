@@ -46,7 +46,7 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0">
               <button
                 type="button"
-                className="btn btn-danger px-5 fw-bold shadow-sm rounded-3"
+                className="btn btn-danger px-5 fw-medium shadow-sm rounded-3"
                 onClick={() => handleForceSubmit("focusViolationModal")}
               >
                 Okay, Got it!
@@ -88,7 +88,7 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0">
               <button
                 type="button"
-                className="btn btn-warning px-5 fw-bold shadow-sm rounded-3"
+                className="btn btn-warning px-5 fw-medium shadow-sm rounded-3"
                 onClick={() => handleForceSubmit("timeUpModal")}
               >
                 Okay, Got it!
@@ -110,12 +110,16 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
           <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <div className="modal-header border-0 pb-0 justify-content-center mt-4">
               <div
-                className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center"
-                style={{ width: "80px", height: "80px" }}
+                className="rounded-circle bg-opacity-10 d-flex justify-content-center align-items-center"
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  backgroundColor: "rgba(98, 111, 71, 0.1)",
+                }}
               >
                 <i
-                  className="bi bi-question-circle-fill text-primary"
-                  style={{ fontSize: "3rem" }}
+                  className="bi bi-question-circle-fill"
+                  style={{ fontSize: "3rem", color: "var(--primary-color)" }}
                 ></i>
               </div>
             </div>
@@ -136,7 +140,7 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
                 onClick={() => handleForceSubmit("submitConfirmModal")}
               >
                 Yes, Submit
