@@ -2,53 +2,82 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 
+// Centralized Token Helper
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const StudentGrades = () => {
   const [grades, setGrades] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Grades...");
 
-  // Datatable & Filter States
+  // Server-Side Pagination States
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSY, setFilterSY] = useState("all");
   const [filterSem, setFilterSem] = useState("all");
-
-  // STATE PARA SA ACTIVE SETTING
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [activeSetting, setActiveSetting] = useState(null);
-
-  useEffect(() => {
-    fetchGrades();
-  }, []);
+  const [uniqueSchoolYears, setUniqueSchoolYears] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Reset pagination kapag may binagong filter
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage, filterSY, filterSem]);
 
+  // 500ms Server-Side Debounce Effect
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchGrades();
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, currentPage, entriesPerPage, filterSY, filterSem]);
+
   const fetchGrades = async () => {
     setIsLoading(true);
-    setLoadingText("Fetching official grades...");
+    setLoadingText("Loading official grades...");
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/student/grades`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          ...getAuthHeader(),
+          params: {
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
+            sy: filterSY,
+            sem: filterSem,
           },
         },
       );
 
-      const { active_setting, grades: fetchedGrades } = res.data;
+      const {
+        active_setting,
+        unique_school_years,
+        grades: paginatedGrades,
+      } = res.data;
 
-      // I-set agad yung default SY at Semester kung ano yung active sa system settings
-      if (active_setting) {
-        setActiveSetting(active_setting); // I-save sa state
+      setUniqueSchoolYears(unique_school_years || []);
+
+      if (!isInitialized && active_setting) {
+        setActiveSetting(active_setting);
         setFilterSY(active_setting.school_year || "all");
         setFilterSem(active_setting.semester || "all");
+        setIsInitialized(true);
       }
 
-      setGrades(fetchedGrades || []);
+      setGrades(paginatedGrades.data || []);
+      setTotalPages(paginatedGrades.last_page || 1);
+      setTotalRecords(paginatedGrades.total || 0);
     } catch (error) {
       console.error("Failed to fetch grades", error);
     } finally {
@@ -56,54 +85,47 @@ const StudentGrades = () => {
     }
   };
 
-  // SINIGURO NATIN NA LAGING KASAMA ANG ACTIVE SCHOOL YEAR SA DROPDOWN
-  const uniqueSchoolYears = [
-    ...new Set([
-      activeSetting?.school_year, // Isama ang active SY kahit walang grades
-      ...(grades || []).map((g) => g?.school_year),
-    ]),
-  ].filter(Boolean); // Tatanggalin nito ang null or undefined
-
-  // BULLET-PROOF LOGIC PARA SA FILTERING AT SEARCHING
-  const filteredGrades = (grades || []).filter((g) => {
-    if (!g) return false;
-
-    const safeSearch = typeof searchQuery === "string" ? searchQuery : "";
-    const safeCode =
-      typeof g.subject_code === "string"
-        ? g.subject_code
-        : String(g.subject_code || "");
-    const safeDesc =
-      typeof g.subject_description === "string"
-        ? g.subject_description
-        : String(g.subject_description || "");
-
-    const matchesSearch = `${safeCode} ${safeDesc}`
-      .toLowerCase()
-      .includes(safeSearch.toLowerCase());
-
-    const matchesSY = filterSY === "all" || g.school_year === filterSY;
-
-    // I-format nang tama para tugma sa data ng database ('1st' or '1st Sem' base sa setup mo)
-    let formatSem = filterSem;
-    if (filterSem === "1st" || filterSem === "2nd") {
-      const matchesSemStrict =
-        g.semester === filterSem ||
-        g.semester === `${filterSem} Sem` ||
-        g.semester === `${filterSem} Semester`;
-      return matchesSearch && matchesSY && matchesSemStrict;
+  const renderPageNumbers = () => {
+    let pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) pages = [1, 2, 3, 4, "...", totalPages];
+      else if (currentPage >= totalPages - 2)
+        pages = [
+          1,
+          "...",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ];
+      else
+        pages = [
+          1,
+          "...",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "...",
+          totalPages,
+        ];
     }
-
-    const matchesSem = filterSem === "all" || g.semester === filterSem;
-
-    return matchesSearch && matchesSY && matchesSem;
-  });
-
-  // LOGIC PARA SA PAGINATION
-  const indexOfLastItem = currentPage * entriesPerPage;
-  const indexOfFirstItem = indexOfLastItem - entriesPerPage;
-  const currentGrades = filteredGrades.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredGrades.length / entriesPerPage);
+    return pages.map((page, index) => (
+      <li
+        key={index}
+        className={`page-item ${currentPage === page ? "active" : ""} ${page === "..." ? "disabled" : ""}`}
+      >
+        <button
+          className={`page-link ${page === "..." ? "border-0 bg-transparent text-muted" : "page-link-summer"}`}
+          onClick={() => page !== "..." && setCurrentPage(page)}
+          style={page === "..." ? { cursor: "default" } : {}}
+        >
+          {page}
+        </button>
+      </li>
+    ));
+  };
 
   return (
     <div className="container-fluid px-0">
@@ -203,21 +225,29 @@ const StudentGrades = () => {
             style={{ minWidth: "1000px" }}
           >
             <thead>
-              <tr>
-                <th className="ps-4" style={{ width: "60px" }}>
+              <tr className="bg-light">
+                <th className="ps-4 py-3" style={{ width: "60px" }}>
                   #
                 </th>
-                <th>School Year & Semester</th>
-                <th>Subject Code & Description</th>
-                <th className="text-center">Final Grade</th>
-                <th className="text-center pe-4">Remarks</th>
+                <th className="text-muted small fw-bold text-uppercase py-3">
+                  School Year & Semester
+                </th>
+                <th className="text-muted small fw-bold text-uppercase py-3">
+                  Subject Code & Description
+                </th>
+                <th className="text-muted small fw-bold text-uppercase text-center py-3">
+                  Final Grade
+                </th>
+                <th className="text-muted small fw-bold text-uppercase text-center pe-4 py-3">
+                  Remarks
+                </th>
               </tr>
             </thead>
             <tbody>
-              {currentGrades.map((item, index) => (
-                <tr key={item.id}>
-                  <td className="ps-4 fw-bold text-muted">
-                    {indexOfFirstItem + index + 1}
+              {grades.map((item, index) => (
+                <tr key={item.id} className="hover-bg-light">
+                  <td className="ps-4 py-3 fw-bold text-muted">
+                    {(currentPage - 1) * entriesPerPage + index + 1}
                   </td>
 
                   <td>
@@ -257,27 +287,31 @@ const StudentGrades = () => {
 
                   <td>
                     <div className="d-flex flex-column justify-content-center py-1">
-                      <span className="font-monospace text-primary fw-bold">
+                      <span className="d-block fw-bold font-monospace text-dark">
                         {item.subject_code}
                       </span>
                       <span
-                        className="text-muted small text-wrap"
-                        style={{ maxWidth: "450px" }}
+                        className="d-block text-muted text-truncate fst-italic"
+                        style={{
+                          fontSize: "0.75rem",
+                          maxWidth: "200px",
+                        }}
+                        title={item.subject_description}
                       >
                         {item.subject_description}
                       </span>
                     </div>
                   </td>
 
-                  <td className="text-center">
+                  <td className="text-center py-3">
                     <span
-                      className={`fw-bolder fs-6 ${item.grade >= 75 ? "text-success" : "text-danger"}`}
+                      className={`fw-bolder fs-5 ${item.grade >= 75 ? "text-success" : "text-danger"}`}
                     >
                       {item.grade}
                     </span>
                   </td>
 
-                  <td className="text-center pe-4">
+                  <td className="text-center pe-4 py-3">
                     <span
                       className={`badge ${item.grade >= 75 ? "bg-success bg-opacity-10 text-success border border-success" : "bg-danger bg-opacity-10 text-danger border border-danger"} px-3 py-2 rounded-3 shadow-sm`}
                       style={{
@@ -301,20 +335,23 @@ const StudentGrades = () => {
                 </tr>
               ))}
 
-              {currentGrades.length === 0 && !isLoading && (
+              {grades.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-muted">
-                    {grades.length === 0 ? (
-                      <>
-                        <i className="bi bi-award fs-1 d-block mb-2 opacity-50"></i>
-                        No official grades available yet for this semester.
-                      </>
-                    ) : (
-                      <>
-                        <i className="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                        No matching records found.
-                      </>
-                    )}
+                  <td colSpan="5" className="p-4 bg-light border-bottom-0">
+                    <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                      <i
+                        className="bi bi-inbox text-muted d-block mb-3"
+                        style={{ fontSize: "3rem", opacity: 0.5 }}
+                      ></i>
+                      <h5 className="fw-bold text-dark">No records found.</h5>
+                      <p className="text-muted small mb-0">
+                        {searchQuery ||
+                        filterSY !== "all" ||
+                        filterSem !== "all"
+                          ? "No matching official grades for your search."
+                          : "No official grades available yet."}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -323,15 +360,15 @@ const StudentGrades = () => {
         </div>
       </div>
 
-      {filteredGrades.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-4">
-          <p className="text-muted small mb-0">
-            Showing {indexOfFirstItem + 1} to{" "}
-            {Math.min(indexOfLastItem, filteredGrades.length)} of{" "}
-            {filteredGrades.length} entries
-          </p>
+      {totalRecords > 0 && !isLoading && (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 px-2 gap-3">
+          <span className="text-muted small">
+            Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
+            {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
+            {totalRecords} entries
+          </span>
           <nav>
-            <ul className="pagination pagination-sm mb-0">
+            <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">
               <li
                 className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
               >
@@ -344,19 +381,7 @@ const StudentGrades = () => {
                   Previous
                 </button>
               </li>
-              {[...Array(totalPages)].map((_, i) => (
-                <li
-                  key={i}
-                  className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
-                >
-                  <button
-                    className="page-link page-link-summer"
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                </li>
-              ))}
+              {renderPageNumbers()}
               <li
                 className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
               >
