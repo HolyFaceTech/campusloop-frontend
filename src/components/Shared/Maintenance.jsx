@@ -31,7 +31,6 @@ const Maintenance = () => {
         className="card border-0 shadow-lg rounded-4 overflow-hidden"
         style={{ maxWidth: "600px", width: "90%" }}
       >
-        {/* TOP ACCENT BAR */}
         <div className="w-100 bg-danger" style={{ height: "6px" }}></div>
 
         <div className="card-body p-5 text-center bg-white">
@@ -49,7 +48,6 @@ const Maintenance = () => {
             undergoing scheduled maintenance to improve your experience.
           </p>
 
-          {/* REAL TIME CLOCK BOX */}
           <div className="bg-light rounded-4 p-4 mb-4 border border-danger border-opacity-25">
             <h6
               className="fw-bold text-muted text-uppercase mb-2"
@@ -62,7 +60,6 @@ const Maintenance = () => {
             </h1>
           </div>
 
-          {/* ADVISORY MESSAGE */}
           <div className="alert alert-warning border-warning bg-warning bg-opacity-10 text-dark d-flex align-items-start gap-3 text-start mb-0 rounded-4">
             <i className="bi bi-info-circle-fill text-warning fs-3"></i>
             <div>
