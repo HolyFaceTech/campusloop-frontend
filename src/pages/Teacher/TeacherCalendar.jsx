@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -16,24 +16,33 @@ const darkToast = {
   styles: { title: "sileo-toast-title", description: "sileo-toast-desc" },
 };
 
+// XSS Protection Helper
+const getAuthHeader = () => {
+  const token =
+    localStorage.getItem("campusloop_token") ||
+    sessionStorage.getItem("campusloop_token");
+  return {
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+  };
+};
+
 const TeacherCalendar = () => {
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  // Dinadala sa backend ang range para DoS Protection
+  const fetchEvents = async (startStr, endStr) => {
     setIsLoading(true);
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/calendar/teacher/events`,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+          ...getAuthHeader(),
+          params: {
+            start: startStr,
+            end: endStr,
           },
         },
       );
@@ -42,14 +51,14 @@ const TeacherCalendar = () => {
         if (event.extendedProps && event.extendedProps.type === "Classroom") {
           return {
             ...event,
-            backgroundColor: "#6f42c1", // LEGEND
-            borderColor: "#6f42c1", // border
+            backgroundColor: "#6f42c1",
+            borderColor: "#6f42c1",
           };
         }
         return event;
       });
 
-      setEvents(parsedEvents); // Gagamitin na natin ang pinroseso nating events
+      setEvents(parsedEvents);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -61,10 +70,14 @@ const TeacherCalendar = () => {
     }
   };
 
+  // Window Listener for FullCalendar
+  const handleDatesSet = (dateInfo) => {
+    fetchEvents(dateInfo.startStr, dateInfo.endStr);
+  };
+
   const handleEventClick = (clickInfo) => {
     const eventType = clickInfo.event.extendedProps.type;
 
-    // KUNG ANNOUNCEMENT, BUKSAN ANG MODAL
     if (eventType === "Announcement") {
       setSelectedEvent({
         title: clickInfo.event.title,
@@ -79,9 +92,7 @@ const TeacherCalendar = () => {
 
       const modal = new Modal(document.getElementById("eventDetailsModal"));
       modal.show();
-    }
-    // KUNG CLASSROOM O CLASSWORK, I-REDIRECT SA CLASSROOM VIEW
-    else if (eventType === "Classroom" || eventType === "Classwork") {
+    } else if (eventType === "Classroom" || eventType === "Classwork") {
       const classroomId = clickInfo.event.extendedProps.classroom_id;
       if (classroomId) {
         navigate(`/teacher/classrooms/${classroomId}`);
@@ -93,7 +104,7 @@ const TeacherCalendar = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Calendar..." />
 
-      <div className="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center mb-4 gap-3">
+      <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h3
             className="fw-bold mb-1"
@@ -107,9 +118,8 @@ const TeacherCalendar = () => {
           </p>
         </div>
 
-        {/* LEGEND COLOR INDICATORS SA UPPER RIGHT */}
-        <div className="d-flex flex-wrap align-items-center gap-3 bg-white px-4 py-2 rounded-3 shadow-sm border">
-          <span className="small fw-bold text-muted me-1 border-end pe-3">
+        <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 bg-white px-3 py-2 rounded-3 shadow-sm border">
+          <span className="small fw-bold text-muted me-1 border-end pe-3 d-none d-sm-block">
             Legend
           </span>
           <div className="d-flex align-items-center gap-1 small text-dark fw-medium">
@@ -158,12 +168,11 @@ const TeacherCalendar = () => {
                 display: "inline-block",
               }}
             ></span>{" "}
-            Classwork Deadline
+            Deadline
           </div>
         </div>
       </div>
 
-      {/* CALENDAR CONTAINER */}
       <div className="card border-0 shadow-sm rounded-4 bg-white p-4">
         <FullCalendar
           plugins={[
@@ -178,6 +187,7 @@ const TeacherCalendar = () => {
             center: "title",
             right: "dayGridMonth,listWeek,listDay",
           }}
+          datesSet={handleDatesSet}
           events={events}
           eventClick={handleEventClick}
           height="auto"
