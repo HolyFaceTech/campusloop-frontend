@@ -14,22 +14,18 @@ const darkToast = {
 };
 
 const AdminFiles = () => {
-  const [view, setView] = useState("folders"); // "folders" or "files"
+  const [view, setView] = useState("folders");
   const [currentFolder, setCurrentFolder] = useState(null);
-
   const [folders, setFolders] = useState([]);
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // SHARED FILTER & PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedIds, setSelectedIds] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
-  const entriesPerPage = 12; // Fixed sa 12 for grid layout
+  const entriesPerPage = 12;
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
@@ -48,7 +44,7 @@ const AdminFiles = () => {
     }
   }, [searchQuery, currentPage, view]);
 
-  // DEBOUNCE EFFECT PARA SA "FILES" VIEW
+  // DEBOUNCE EFFECT
   useEffect(() => {
     if (view === "files" && currentFolder) {
       const delayDebounceFn = setTimeout(() => {
@@ -110,7 +106,7 @@ const AdminFiles = () => {
       setFiles(data.data || []);
       setTotalPages(data.last_page || 1);
       setTotalRecords(data.total || 0);
-      setSelectedIds([]); // reset selections on page load
+      setSelectedIds([]);
     } catch (error) {
       console.error("Failed to fetch files", error);
       setFiles([]);
@@ -125,7 +121,7 @@ const AdminFiles = () => {
     setTypeFilter("all");
     setSortOrder("newest");
     setSelectedIds([]);
-    setCurrentPage(1); // Reset page bago lumipat
+    setCurrentPage(1);
     setView("files");
   };
 
@@ -136,10 +132,9 @@ const AdminFiles = () => {
     setTypeFilter("all");
     setSortOrder("newest");
     setSelectedIds([]);
-    setCurrentPage(1); // Reset page bago lumipat
+    setCurrentPage(1);
   };
 
-  // --- HELPERS ---
   const formatBytes = (bytes) => {
     if (bytes === 0 || !bytes) return "0 Bytes";
     const k = 1024;
@@ -214,7 +209,6 @@ const AdminFiles = () => {
     window.open(`${baseUrl}${formattedPath}`, "_blank");
   };
 
-  // --- SELECTION & ACTIONS ---
   const toggleSelection = (id) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id],
@@ -223,9 +217,9 @@ const AdminFiles = () => {
 
   const toggleSelectAll = () => {
     if (selectedIds.length === files.length && files.length > 0) {
-      setSelectedIds([]); // Unselect all
+      setSelectedIds([]);
     } else {
-      setSelectedIds(files.map((file) => file.id)); // Select all items ON THIS PAGE
+      setSelectedIds(files.map((file) => file.id));
     }
   };
 
@@ -269,7 +263,6 @@ const AdminFiles = () => {
     } catch (error) {
       let errorMsg = "Error compressing files.";
 
-      // Kung ang error data ay na-convert into Blob (dahil sa responseType: "blob")
       if (error.response && error.response.data instanceof Blob) {
         try {
           const textData = await error.response.data.text();
@@ -279,7 +272,6 @@ const AdminFiles = () => {
           console.error("Failed to parse blob error message.");
         }
       } else if (error.response?.data?.message) {
-        // Fallback kung sakaling hindi siya nag-blob
         errorMsg = error.response.data.message;
       }
 
@@ -313,7 +305,7 @@ const AdminFiles = () => {
         ...darkToast,
       });
       setSelectedIds([]);
-      fetchUserFiles(currentFolder.id); // refresh folder contents
+      fetchUserFiles(currentFolder.id);
     } catch (error) {
       sileo.error({
         title: "Failed",
@@ -325,7 +317,6 @@ const AdminFiles = () => {
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -375,7 +366,6 @@ const AdminFiles = () => {
     <div className="container-fluid px-0">
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER SECTION */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-4 gap-3">
         <div>
           <h3
@@ -446,7 +436,6 @@ const AdminFiles = () => {
                         borderTopRightRadius: "1rem",
                       }}
                     >
-                      {/* Decorative Circles */}
                       <div
                         className="position-absolute rounded-circle"
                         style={{
@@ -477,7 +466,7 @@ const AdminFiles = () => {
                         >
                           {folder.name}
                         </h4>
-                        <span className="badge bg-white text-dark bg-opacity-25 px-2 py-1 fw-semibold shadow-sm text-uppercase">
+                        <span className="badge bg-white text-dark bg-opacity-25 px-2 py-1 fw-semibold shadow-sm text-uppercase shadow-sm">
                           <i
                             className={`bi ${folder.role === "teacher" ? "bi-person-video3" : folder.role === "system" ? "bi-hdd-network" : "bi-person-badge"} me-1`}
                           ></i>{" "}
@@ -537,11 +526,10 @@ const AdminFiles = () => {
                       <div className="bg-light rounded-4 p-3 mb-3 border border-light-subtle d-flex align-items-center justify-content-between">
                         <div className="d-flex align-items-center overflow-hidden pe-2">
                           <div
-                            className="rounded-circle text-white shadow-sm d-flex justify-content-center align-items-center me-2 flex-shrink-0 fw-bold"
+                            className="rounded-circle bg-primary text-white shadow-sm d-flex justify-content-center align-items-center me-2 flex-shrink-0 fw-bold"
                             style={{
                               width: "35px",
                               height: "35px",
-                              backgroundColor: "var(--primary-color)",
                             }}
                           >
                             <i className="bi bi-files"></i>
@@ -587,7 +575,7 @@ const AdminFiles = () => {
               ))
             ) : (
               <div className="col-12">
-                <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                <div className="p-5 bg-white rounded-4 shadow-sm text-center border premium-hover-card">
                   <i
                     className="bi bi-inbox text-muted d-block mb-3"
                     style={{ fontSize: "3rem", opacity: 0.5 }}
@@ -603,7 +591,6 @@ const AdminFiles = () => {
             )}
           </div>
 
-          {/* FOLDERS PAGINATION FOOTER */}
           {!isLoading && totalRecords > 0 && (
             <div className="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-5 gap-3 px-2">
               <p className="text-muted small mb-0">
@@ -650,11 +637,9 @@ const AdminFiles = () => {
       {/* FILES */}
       {view === "files" && (
         <>
-          {/* CONTROLS & BULK ACTIONS TRAY */}
-          <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+          <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
             <div className="card-body p-0">
               <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-                {/* SELECT ALL CHECKBOX */}
                 <div className="d-flex align-items-center flex-shrink-0 pe-2">
                   <div className="form-check m-0 d-flex align-items-center">
                     <input
@@ -678,7 +663,7 @@ const AdminFiles = () => {
                     >
                       Select All
                       <span
-                        className="badge bg-primary fw-medium rounded-3 ms-2"
+                        className="badge bg-primary fw-medium rounded-3 ms-2 shadow-sm"
                         style={{ fontSize: "0.75rem" }}
                       >
                         {selectedIds.length}
@@ -687,10 +672,9 @@ const AdminFiles = () => {
                   </div>
                 </div>
 
-                {/* SEARCH INPUT */}
                 <div
-                  className="input-group flex-grow-1"
-                  style={{ minWidth: "400px" }}
+                  className="input-group flex-shrink-0"
+                  style={{ maxWidth: "360px" }}
                 >
                   <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                     <i className="bi bi-search"></i>
@@ -704,10 +688,9 @@ const AdminFiles = () => {
                   />
                 </div>
 
-                {/* FILE TYPE FILTER */}
                 <div
                   className="input-group flex-shrink-0"
-                  style={{ width: "400px" }}
+                  style={{ width: "360px" }}
                 >
                   <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                     <i className="bi bi-funnel"></i>
@@ -738,10 +721,9 @@ const AdminFiles = () => {
                   </select>
                 </div>
 
-                {/* SORT ORDER */}
                 <div
                   className="input-group flex-shrink-0"
-                  style={{ width: "200px" }}
+                  style={{ width: "360px" }}
                 >
                   <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                     <i className="bi bi-sort-down"></i>
@@ -756,10 +738,9 @@ const AdminFiles = () => {
                   </select>
                 </div>
 
-                {/* ACTION BUTTONS (DOWNLOAD & DELETE) */}
                 <div className="d-flex gap-2 flex-shrink-0 ms-auto ps-2">
                   <button
-                    className="btn btn-outline-dark fw-medium rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
+                    className="btn btn-outline-primary fw-medium rounded-3 shadow-sm d-flex align-items-center gap-2 py-2 px-3"
                     disabled={selectedIds.length === 0}
                     onClick={() => openModal("downloadZipModal")}
                   >
@@ -790,7 +771,7 @@ const AdminFiles = () => {
                     key={file.id}
                   >
                     <div
-                      className={`card border-0 shadow-sm rounded-4 h-100 bg-white transition-all ${isSelected ? "border-primary" : "hover-shadow"}`}
+                      className={`card border-0 shadow-sm rounded-4 h-100 bg-white transition-all ${isSelected ? "border-primary" : "hover-shadow"} premium-hover-card`}
                       style={{
                         border: isSelected
                           ? "2px solid var(--primary-color)"
@@ -850,7 +831,7 @@ const AdminFiles = () => {
                                 {file.file_extension}
                               </span>
                               <span
-                                className={`badge ${badgeStyle} bg-opacity-10 fw-medium border`}
+                                className={`badge ${badgeStyle} bg-opacity-10 fw-medium border shadow-sm`}
                                 style={{
                                   fontSize: "0.60rem",
                                   letterSpacing: "0.5px",
@@ -906,7 +887,7 @@ const AdminFiles = () => {
               })
             ) : (
               <div className="col-12 mt-2">
-                <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+                <div className="p-5 bg-white rounded-4 shadow-sm text-center border premium-hover-card">
                   {searchQuery || typeFilter !== "all" ? (
                     <>
                       <i
@@ -940,7 +921,6 @@ const AdminFiles = () => {
             )}
           </div>
 
-          {/* FILES PAGINATION FOOTER */}
           {!isLoading && totalRecords > 0 && (
             <div className="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-5 gap-3 px-2">
               <p className="text-muted small mb-0">

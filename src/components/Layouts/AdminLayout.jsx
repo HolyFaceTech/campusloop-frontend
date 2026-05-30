@@ -19,16 +19,12 @@ const AdminLayout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
-
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
   const [hasTodayAnnouncement, setHasTodayAnnouncement] = useState(false);
-
-  // MGA STATES PARA SA NOTIFICATIONS
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
 
@@ -50,7 +46,7 @@ const AdminLayout = () => {
     fetchActiveSettings();
     fetchActiveIndicator();
     checkTodayAnnouncements();
-    fetchNotifications(); // Kunin ang notifications pagka-load
+    fetchNotifications();
 
     window.addEventListener("settingsChanged", fetchActiveSettings);
     window.addEventListener("announcementsChanged", checkTodayAnnouncements);
@@ -174,12 +170,12 @@ const AdminLayout = () => {
             },
           },
         );
-        fetchNotifications(); // Update list instantly
+        fetchNotifications();
       } catch (error) {
         console.error("Failed to mark as read", error);
       }
     }
-    navigate(notif.link); // Redirect to the specific page
+    navigate(notif.link);
   };
 
   useEffect(() => {
@@ -238,7 +234,6 @@ const AdminLayout = () => {
     });
   };
 
-  // PROGRAMMATIC MODAL OPENERS
   const openActivityLogs = () => {
     setShowAvatar(false);
     const modalElement = document.getElementById("adminActivityLogsModal");
@@ -287,7 +282,7 @@ const AdminLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium shadow-sm"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-shield-lock me-1"></i> ADMIN
@@ -531,7 +526,7 @@ const AdminLayout = () => {
                 <i className="bi bi-list"></i>
               </button>
 
-              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
+              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light shadow-sm">
                 <span className="fw-medium text-dark small">
                   <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
@@ -606,8 +601,8 @@ const AdminLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
-                        {unreadCount} Unread
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle shadow-sm">
+                        {unreadCount} Unread{unreadCount > 1 ? "s" : ""}
                       </span>
                     )}
                   </div>

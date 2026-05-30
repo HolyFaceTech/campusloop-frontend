@@ -10,7 +10,6 @@ const SettingsFormModal = ({
 }) => {
   return (
     <>
-      {/* SETTINGS FORM MODAL */}
       <div
         className="modal fade"
         id="setSettingsModal"
@@ -102,7 +101,6 @@ const SettingsFormModal = ({
         </div>
       </div>
 
-      {/* RESET MODAL */}
       <div
         className="modal fade"
         id="resetConfirmModal"
@@ -151,7 +149,6 @@ const SettingsFormModal = ({
         </div>
       </div>
 
-      {/* MAINTENANCE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="maintenanceConfirmModal"

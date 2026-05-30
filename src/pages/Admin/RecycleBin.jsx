@@ -22,20 +22,14 @@ const RecycleBin = () => {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [selectedItems, setSelectedItems] = useState([]); // format: [{id, type}]
   const [categoryOptions, setCategoryOptions] = useState([]);
-
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
-  // Action State
   const [actionType, setActionType] = useState(""); // "restore" or "delete"
 
   // I-reset sa page 1 kapag nagbago ang filter
@@ -168,7 +162,6 @@ const RecycleBin = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -218,7 +211,6 @@ const RecycleBin = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER SECTION */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3
@@ -233,11 +225,9 @@ const RecycleBin = () => {
         </div>
       </div>
 
-      {/* TOOLBAR SECTION */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SHOW ENTRIES DROPDOWN */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
               Show
               <select
@@ -288,7 +278,6 @@ const RecycleBin = () => {
               </select>
             </div>
 
-            {/* ACTION BUTTONS */}
             <button
               className="btn btn-success d-flex align-items-center justify-content-center gap-2 py-2 px-4 flex-shrink-0 rounded-3 shadow-sm"
               disabled={selectedItems.length === 0}
@@ -310,9 +299,7 @@ const RecycleBin = () => {
           </div>
         </div>
       </div>
-
-      {/* TABLE SECTION */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -363,7 +350,7 @@ const RecycleBin = () => {
                   </td>
                   <td>
                     <span
-                      className="badge border border-dark-subtle text-dark bg-opacity-10 fw-medium rounded-3 px-2 py-1"
+                      className="badge border border-dark-subtle text-dark bg-opacity-10 fw-medium rounded-3 px-2 py-1 shadow-sm"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {item.type}
@@ -417,7 +404,6 @@ const RecycleBin = () => {
         </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">
@@ -459,7 +445,6 @@ const RecycleBin = () => {
         </div>
       )}
 
-      {/* ACTION MODAL COMPONENT */}
       <RecycleBinModals
         actionType={actionType}
         selectedCount={selectedItems.length}

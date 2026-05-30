@@ -16,22 +16,16 @@ const AdminTabPeople = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // FILTERS & SEARCH
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-
-  // SERVER-SIDE PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
-
-  const [actionType, setActionType] = useState(""); // 'approve', 'decline', 'remove'
+  const [actionType, setActionType] = useState("");
 
   // RESET PAGE TO 1 KAPAG MAY NAGBAGONG FILTER O SEARCH
   useEffect(() => {
@@ -43,7 +37,7 @@ const AdminTabPeople = () => {
     if (classroom && classroom.id) {
       const delayDebounceFn = setTimeout(() => {
         fetchStudents();
-      }, 500); // 500ms delay para sa debounce
+      }, 500);
 
       return () => clearTimeout(delayDebounceFn);
     }
@@ -75,15 +69,20 @@ const AdminTabPeople = () => {
           },
         },
       );
-
-      // Saluhin ang array mula sa backend pagination object
       setStudents(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
-      setSelectedIds([]); // Reset selection tuwing naglo-load ng bagong page
+      setSelectedIds([]);
     } catch (error) {
       console.error("Error fetching students", error);
       setStudents([]);
+      const errorMsg =
+        error.response?.data?.message || "Failed to load students.";
+      sileo.error({
+        title: "Error",
+        description: errorMsg,
+        ...darkToast,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -140,9 +139,11 @@ const AdminTabPeople = () => {
       }
       fetchStudents();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Action could not be completed.";
       sileo.error({
         title: "Failed",
-        description: "Action could not be completed.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -155,7 +156,6 @@ const AdminTabPeople = () => {
     else setSelectedIds([]);
   };
 
-  // CHECKERS PARA SA BUTTONS (Disabled kung walang tamang selected)
   const hasPendingSelected = selectedIds.some(
     (id) => students.find((s) => s.id === id)?.pivot?.status === "pending",
   );
@@ -164,7 +164,6 @@ const AdminTabPeople = () => {
     (id) => students.find((s) => s.id === id)?.pivot?.status === "approved",
   );
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -217,7 +216,6 @@ const AdminTabPeople = () => {
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* ENTRIES PER PAGE DROPDOWN */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -236,7 +234,7 @@ const AdminTabPeople = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              style={{ minWidth: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -250,7 +248,7 @@ const AdminTabPeople = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -265,7 +263,7 @@ const AdminTabPeople = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -280,7 +278,6 @@ const AdminTabPeople = () => {
               </select>
             </div>
 
-            {/* ACTION BUTTONS */}
             <div className="d-flex gap-2 flex-shrink-0">
               <button
                 className="btn btn-success text-light  d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
@@ -434,13 +431,14 @@ const AdminTabPeople = () => {
                         className="fw-bold font-monospace tracking-wide text-dark"
                         style={{ fontSize: "0.90rem" }}
                       >
+                        <i className="bi bi-123 me-1 text-muted"></i>{" "}
                         {student.lrn || "N/A"}
                       </span>
                     </td>
 
                     <td>
                       <span
-                        className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
+                        className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle shadow-sm"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {student.strand?.name || "N/A"}
@@ -456,14 +454,14 @@ const AdminTabPeople = () => {
                     <td>
                       {student.pivot?.status === "approved" ? (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Enrolled
                         </span>
                       ) : (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-2 py-1 border border-warning-subtle"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-2 py-1 border border-warning-subtle shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Pending
@@ -495,7 +493,6 @@ const AdminTabPeople = () => {
         </div>
       </div>
 
-      {/* PAGINATION FOOTER */}
       {!isLoading && totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">
@@ -537,7 +534,6 @@ const AdminTabPeople = () => {
         </div>
       )}
 
-      {/* MODALS AND DRAWERS */}
       <AdminStudentViewDrawer
         student={selectedStudent}
         actionType={actionType}

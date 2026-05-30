@@ -116,7 +116,6 @@ const AnnouncementFormModal = ({
 
   return (
     <>
-      {/* MAIN FORM MODAL */}
       <div
         className="modal fade"
         id="announcementFormModal"
@@ -278,6 +277,10 @@ const AnnouncementFormModal = ({
 
               {includeFiles && (
                 <div className="mb-3">
+                  <label className="form-label small fw-bold text-dark d-block text-center">
+                    <i className="bi bi-file-earmark-arrow-up me-1 text-muted"></i>{" "}
+                    Upload Files
+                  </label>
                   <div
                     className="p-5 text-center mb-4 rounded-4"
                     style={{
@@ -450,7 +453,7 @@ const AnnouncementFormModal = ({
               >
                 {modalMode === "create" ? (
                   <>
-                    <i className="bi bi-send-fill me-2"></i> Post
+                    <i className="bi bi-send-check-fill me-2"></i> Post
                   </>
                 ) : (
                   <>
@@ -464,7 +467,6 @@ const AnnouncementFormModal = ({
         </div>
       </div>
 
-      {/* CONFIRMATION MODALS */}
       <div
         className="modal fade"
         id="createConfirmModal"
@@ -657,7 +659,10 @@ const AnnouncementFormModal = ({
                 {selectedItem ? (
                   <b>"{selectedItem.title}"</b>
                 ) : (
-                  <b>{selectedIds.length} selected announcement(s)</b>
+                  <b>
+                    {selectedIds.length} selected announcement
+                    {selectedIds.length > 1 ? "s" : ""}
+                  </b>
                 )}{" "}
                 to the Recycle Bin?
               </p>

@@ -8,8 +8,6 @@ const AdminTabGrades = () => {
   const [students, setStudents] = useState([]);
   const [classworks, setClassworks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Filters & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -101,38 +99,40 @@ const AdminTabGrades = () => {
   };
 
   const getStudentGrade = (student, cw) => {
-    // Hanapin kung may submission yung student sa specific na classwork
     const submission = student.submissions?.find(
       (s) => s.classwork_id === cw.id,
     );
 
-    // I-setup ang time logic para sa Late at Missing
     const hasDeadline = cw.deadline ? true : false;
     const deadlineTime = hasDeadline ? new Date(cw.deadline).getTime() : null;
+
     const submitTime =
       submission && submission.submitted_at
         ? new Date(submission.submitted_at).getTime()
         : null;
-    const currentTime = new Date().getTime();
 
+    const currentTime = new Date().getTime();
     // I-define ang mga status boolean variables (katulad sa Respondents Modal)
     // Naglalagay ang backend natin ng status = 'missing' kapag lagpas na deadline.
     const hasSubmission = submission && submission.status !== "missing";
+
     const isGraded =
       hasSubmission &&
       submission.grade !== null &&
       submission.grade !== undefined;
+
     const isReturned =
       hasSubmission &&
       !isGraded &&
       (submission.teacher_feedback || submission.status === "returned");
+
     const isDoneLate =
       hasDeadline && hasSubmission && submitTime > deadlineTime;
+
     const isMissing =
       submission?.status === "missing" ||
       (hasDeadline && !hasSubmission && currentTime > deadlineTime);
 
-    // RENDER BADGES BATAY SA STATUS HIERARCHY
     if (isGraded) {
       return (
         <div className="d-flex flex-column align-items-center justify-content-center">
@@ -144,7 +144,7 @@ const AdminTabGrades = () => {
           </span>
           {isDoneLate && (
             <span
-              className="badge bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning fw-medium mt-1 rounded-3"
+              className="badge bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning fw-medium mt-1 rounded-3 shadow-sm"
               style={{ fontSize: "0.6rem" }}
             >
               Done Late
@@ -157,7 +157,7 @@ const AdminTabGrades = () => {
     if (isReturned) {
       return (
         <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Returned
@@ -168,7 +168,7 @@ const AdminTabGrades = () => {
     if (isDoneLate) {
       return (
         <span
-          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Done Late
@@ -179,7 +179,7 @@ const AdminTabGrades = () => {
     if (hasSubmission) {
       return (
         <span
-          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Turned In
@@ -190,7 +190,7 @@ const AdminTabGrades = () => {
     if (isMissing) {
       return (
         <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Missing
@@ -198,10 +198,9 @@ const AdminTabGrades = () => {
       );
     }
 
-    // Default status kung wala pang pinapasa at hindi pa lumalagpas ang deadline
     return (
       <span
-        className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+        className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
         style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
       >
         Pending
@@ -209,7 +208,6 @@ const AdminTabGrades = () => {
     );
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -259,10 +257,9 @@ const AdminTabGrades = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Class Record..." />
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* LEFT SIDE: Show Entries */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -279,10 +276,9 @@ const AdminTabGrades = () => {
               entries
             </div>
 
-            {/* RIGHT SIDE: Search Bar */}
             <div
               className="input-group flex-shrink-0"
-              style={{ maxWidth: "350px", minWidth: "280px" }}
+              style={{ maxWidth: "400px", minWidth: "350px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -299,7 +295,7 @@ const AdminTabGrades = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div
           className="table-responsive custom-scrollbar"
           style={{ maxHeight: "650px" }}
@@ -317,7 +313,6 @@ const AdminTabGrades = () => {
                   #
                 </th>
 
-                {/* STICKY COLUMN FOR STUDENT DETAILS */}
                 <th
                   className="py-3 px-4 border-bottom align-middle bg-light"
                   style={{
@@ -371,7 +366,9 @@ const AdminTabGrades = () => {
                                 padding: "0.25rem 0.4rem",
                               }}
                             >
-                              {cw.points ? `${cw.points} PTS` : "NO PTS"}
+                              {cw.points
+                                ? `${cw.points} PT${cw.points > 1 ? "s" : ""}`
+                                : "NO PTS"}
                             </span>
                             <i
                               className="bi bi-dot opacity-50"
@@ -430,7 +427,6 @@ const AdminTabGrades = () => {
                       {(currentPage - 1) * entriesPerPage + index + 1}
                     </td>
 
-                    {/* STICKY DATA FOR STUDENT NAME */}
                     <td
                       className="px-4 py-3 bg-white"
                       style={{
@@ -464,13 +460,13 @@ const AdminTabGrades = () => {
                             className="text-muted small d-block font-monospace tracking-wide mt-1"
                             style={{ fontSize: "0.75rem" }}
                           >
-                            LRN: {student.lrn || "N/A"}
+                            <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                            {student.lrn || "N/A"}
                           </span>
                         </div>
                       </div>
                     </td>
 
-                    {/* DYNAMIC GRADES CELLS */}
                     {classworks.length === 0 ? (
                       <td className="text-center bg-white border-end"></td>
                     ) : (
@@ -491,7 +487,6 @@ const AdminTabGrades = () => {
         </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">

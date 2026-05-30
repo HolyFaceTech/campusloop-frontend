@@ -7,7 +7,6 @@ const AdminStreamModals = ({
 }) => {
   return (
     <>
-      {/* DELETE CLASSWORKS CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteClassworksModal"
@@ -30,7 +29,11 @@ const AdminStreamModals = ({
               <h4 className="fw-bold text-dark mt-2">Delete Classworks</h4>
               <p className="text-muted mb-4">
                 Are you sure you want to move the{" "}
-                <b>{selectedCount} selected classwork(s)</b> to the recycle bin?
+                <b>
+                  {selectedCount} selected classwork
+                  {selectedCount > 1 ? "s" : ""}
+                </b>{" "}
+                to the recycle bin?
               </p>
               <div className="d-flex justify-content-center gap-2">
                 <button
@@ -54,7 +57,6 @@ const AdminStreamModals = ({
         </div>
       </div>
 
-      {/* DELETE COMMENT CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteCommentModal"

@@ -13,7 +13,6 @@ const SubjectFormModal = ({
 }) => {
   return (
     <>
-      {/* MAIN FORM MODAL */}
       <div
         className="modal fade"
         id="subjectFormModal"
@@ -169,7 +168,6 @@ const SubjectFormModal = ({
         </div>
       </div>
 
-      {/* UPDATE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -223,7 +221,6 @@ const SubjectFormModal = ({
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL (Single & Bulk) */}
       <div
         className="modal fade"
         id="deleteConfirmModal"
@@ -251,7 +248,10 @@ const SubjectFormModal = ({
                 {selectedSubject ? (
                   <b>{selectedSubject.code}</b>
                 ) : (
-                  <b>{selectedIdsCount} selected subject(s)</b>
+                  <b>
+                    {selectedIdsCount} selected subject
+                    {selectedIdsCount > 1 ? "s" : ""}
+                  </b>
                 )}{" "}
                 to the Recycle Bin?
               </p>

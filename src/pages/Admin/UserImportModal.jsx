@@ -228,52 +228,45 @@ const UserImportModal = ({ fetchUsers, setIsLoading, setLoadingText }) => {
                   <span className="small text-muted mb-2 d-block fw-bold">
                     File to Import:
                   </span>
-                  <div
-                    className="d-flex flex-column gap-2 custom-scrollbar"
-                    style={{ maxHeight: "200px", overflowY: "auto" }}
-                  >
-                    <div
-                      className="d-flex align-items-center justify-content-between p-2 bg-white border rounded-3 shadow-sm"
-                      style={{ borderLeft: "4px solid #198754" }}
-                    >
-                      <div className="d-flex align-items-center">
-                        <div
-                          className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                  <div className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm">
+                    <div className="d-flex align-items-center">
+                      <div
+                        className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          backgroundColor: "rgba(70, 165, 121, 0.25)",
+                          color: "#198754",
+                        }}
+                      >
+                        <i className="bi bi-file-earmark-excel-fill fs-5"></i>
+                      </div>
+                      <div>
+                        <p
+                          className="mb-0 fw-bold text-dark text-truncate"
                           style={{
-                            width: "35px",
-                            height: "35px",
-                            backgroundColor: "rgba(70, 165, 121, 0.25)",
-                            color: "#198754",
+                            fontSize: "0.85rem",
+                            maxWidth: "250px",
                           }}
                         >
-                          <i className="bi bi-file-earmark-excel-fill fs-6"></i>
-                        </div>
-                        <div>
-                          <p
-                            className="mb-0 fw-bold text-dark text-truncate"
-                            style={{
-                              fontSize: "0.80rem",
-                              maxWidth: "250px",
-                            }}
-                          >
-                            {importFile.name}
-                          </p>
-                          <p
-                            className="mb-0 text-muted"
-                            style={{ fontSize: "0.65rem" }}
-                          >
-                            {formatBytes(importFile.size)}
-                          </p>
-                        </div>
+                          {importFile.name}
+                        </p>
+                        <p
+                          className="mb-0 text-muted"
+                          style={{ fontSize: "0.70rem" }}
+                        >
+                          {formatBytes(importFile.size)} •{" "}
+                          {importFile.name.split(".").pop().toUpperCase()}
+                        </p>
                       </div>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-light rounded-circle text-muted"
-                        onClick={() => setImportFile(null)}
-                      >
-                        <i className="bi bi-x-lg"></i>
-                      </button>
                     </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-light rounded-circle text-muted"
+                      onClick={() => setImportFile(null)}
+                    >
+                      <i className="bi bi-x-lg"></i>
+                    </button>
                   </div>
                 </div>
               )}
@@ -294,7 +287,7 @@ const UserImportModal = ({ fetchUsers, setIsLoading, setLoadingText }) => {
                 onClick={triggerConfirmation}
                 disabled={!importFile}
               >
-                <i className="bi bi-check2-circle me-2"></i> Submit
+                <i className="bi bi-plus-circle-fill me-2"></i> Submit
               </button>
             </div>
           </div>
@@ -343,7 +336,7 @@ const UserImportModal = ({ fetchUsers, setIsLoading, setLoadingText }) => {
               </button>
               <button
                 type="button"
-                className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
+                className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
                 onClick={() => {
                   const m = Modal.getInstance(
                     document.getElementById("importConfirmModal"),

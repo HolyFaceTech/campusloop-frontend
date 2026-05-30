@@ -23,19 +23,14 @@ const UserRecords = () => {
       "{}",
   );
 
-  // Filters & Search
   const [filterRole, setFilterRole] = useState("all");
   const [filterGender, setFilterGender] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
-  // Drawer States
   const [drawerMode, setDrawerMode] = useState("");
   const [userToUpdate, setUserToUpdate] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -67,7 +62,6 @@ const UserRecords = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, filterRole, filterGender, currentPage, entriesPerPage]);
 
-  // Hindi na ipapasa ang filter params sa API. Kukunin lahat para mabilis ang filter!
   const fetchUsers = async () => {
     setIsLoading(true);
     setLoadingText("Loading users...");
@@ -78,20 +72,21 @@ const UserRecords = () => {
           params: {
             role: filterRole,
             gender: filterGender,
-            search: searchQuery, // Ipapasa na ang search text sa backend
-            page: currentPage, // Ipapasa ang page number
-            entries: entriesPerPage, // Limit per page
+            search: searchQuery,
+            page: currentPage,
+            entries: entriesPerPage,
           },
         },
       );
-      // Laravel Pagination format (response.data.data ang mismong array ng users)
       setUsers(response.data.data || []);
       setTotalPages(response.data.last_page || 1);
       setTotalRecords(response.data.total || 0);
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Failed to fetch records.";
       sileo.error({
         title: "Error",
-        description: "Failed to fetch records.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -181,16 +176,13 @@ const UserRecords = () => {
       drawerMode === "create" ? "Creating Account..." : "Saving Changes...",
     );
 
-    // Linisin ang data bago ipadala sa Laravel
     const payload = { ...formData };
 
-    // Kung walang nilagay na password, tanggalin sa payload para Laravel ang mag-generate
     if (!payload.password || payload.password.trim() === "") {
       delete payload.password;
       delete payload.password_confirmation;
     }
 
-    // Kung hindi student ang role, siguraduhing null ang LRN at Strand para iwas error
     if (payload.role !== "student") {
       payload.lrn = null;
       payload.strand_id = null;
@@ -198,10 +190,7 @@ const UserRecords = () => {
 
     try {
       if (drawerMode === "create") {
-        await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/users`,
-          payload, // Dito ipapasa ang malinis na payload
-        );
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/users`, payload);
         sileo.success({
           title: "User Created",
           description: "Account created successfully.",
@@ -235,7 +224,6 @@ const UserRecords = () => {
     } catch (error) {
       sileo.error({
         title: "Action Failed",
-        // Ipapakita na ang mismong specific error galing sa Laravel para hindi manghula!
         description:
           error.response?.data?.message || "Please check your inputs.",
         ...darkToast,
@@ -244,20 +232,18 @@ const UserRecords = () => {
     }
   };
 
-  // Unified Confirmation functions
   const confirmDelete = (user) => {
-    setUserToDelete(user); // Set the specific user to delete
+    setUserToDelete(user);
     const modal = new Modal(document.getElementById("deleteConfirmModal"));
     modal.show();
   };
 
   const confirmBulkDelete = () => {
-    setUserToDelete(null); // I-clear ang userToDelete para alam ng modal na BULK ang gagawin
+    setUserToDelete(null);
     const modal = new Modal(document.getElementById("deleteConfirmModal"));
     modal.show();
   };
 
-  // Unified Execution Function (Handles both Single at Bulk)
   const executeDelete = () => {
     setTimeout(async () => {
       document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
@@ -272,12 +258,10 @@ const UserRecords = () => {
 
       try {
         if (userToDelete) {
-          // SINGLE DELETE LOGIC
           await axios.delete(
             `${import.meta.env.VITE_API_BASE_URL}/users/${userToDelete.id}`,
           );
         } else {
-          // BULK DELETE LOGIC
           await axios.post(
             `${import.meta.env.VITE_API_BASE_URL}/users/bulk-delete`,
             { ids: selectedIds },
@@ -296,9 +280,11 @@ const UserRecords = () => {
         setCurrentPage(1);
         fetchUsers();
       } catch (error) {
+        const errorMsg =
+          error.response?.data?.message || "Could not process deletion.";
         sileo.error({
           title: "Failed",
-          description: "Could not process deletion.",
+          description: errorMsg,
           ...darkToast,
         });
         setIsLoading(false);
@@ -311,7 +297,6 @@ const UserRecords = () => {
     modal.show();
   };
 
-  // Selectable users para sa checkbox (Current Page View Only)
   const selectableCurrentUsers = users.filter((u) => u.id !== currentUser.id);
 
   const handleSelectAll = (e) => {
@@ -327,7 +312,6 @@ const UserRecords = () => {
     else setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -392,7 +376,7 @@ const UserRecords = () => {
         <div className="flex-shrink-0 d-flex gap-2">
           <button
             onClick={openImportModal}
-            className="btn btn-outline-dark border-dark shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
+            className="btn btn-outline-success border-success shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
           >
             <i className="bi bi-file-earmark-arrow-up fs-5"></i>
             <span className="d-none d-sm-inline">Import CSV</span>
@@ -408,7 +392,7 @@ const UserRecords = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -429,7 +413,7 @@ const UserRecords = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              style={{ minWidth: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -443,7 +427,7 @@ const UserRecords = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-shield-lock"></i>
               </span>
@@ -459,7 +443,7 @@ const UserRecords = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -485,7 +469,7 @@ const UserRecords = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -526,7 +510,6 @@ const UserRecords = () => {
                     />
                   </td>
                   <td className="fw-bold text-muted">
-                    {/* Dynamic Row Numbering */}
                     {(currentPage - 1) * entriesPerPage + index + 1}
                   </td>
 
@@ -552,14 +535,14 @@ const UserRecords = () => {
                           </span>
                           {user.status === "active" ? (
                             <span
-                              className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle"
+                              className="badge bg-success bg-opacity-10 text-success shadow-sm fw-medium rounded-3 px-2 py-1 border border-success-subtle"
                               style={{ fontSize: "0.65rem" }}
                             >
                               Active
                             </span>
                           ) : (
                             <span
-                              className="badge bg-danger bg-opacity-10 text-danger fw-medium rounded-3 px-2 py-1 border border-danger-subtle"
+                              className="badge bg-danger bg-opacity-10 text-danger shadow-sm fw-medium rounded-3 px-2 py-1 border border-danger-subtle"
                               style={{ fontSize: "0.65rem" }}
                             >
                               Inactive
@@ -567,7 +550,7 @@ const UserRecords = () => {
                           )}
                           {user.id === currentUser.id && (
                             <span
-                              className="badge bg-secondary rounded-3 px-2 py-1 fw-medium"
+                              className="badge bg-secondary rounded-3 px-2 py-1 fw-medium shadow-sm"
                               style={{ fontSize: "0.65rem" }}
                             >
                               You
@@ -587,7 +570,7 @@ const UserRecords = () => {
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <span
-                        className="badge bg-opacity-10 border border-dark-subtle text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                        className="badge bg-opacity-10 border border-dark-subtle shadow-sm text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {user.role}
@@ -674,7 +657,6 @@ const UserRecords = () => {
         </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">

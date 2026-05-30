@@ -15,24 +15,18 @@ const Subjects = () => {
   const [strandsList, setStrandsList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStrand, setFilterStrand] = useState("all");
   const [filterGrade, setFilterGrade] = useState("all");
   const [filterSemester, setFilterSemester] = useState("all");
-
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
-  // Modal & Form States
   const [modalMode, setModalMode] = useState("");
   const [selectedSubject, setSelectedSubject] = useState(null);
+
   const [formData, setFormData] = useState({
     code: "",
     description: "",
@@ -41,7 +35,6 @@ const Subjects = () => {
     semester: "",
   });
 
-  // Helper function para laging updated ang token na kukunin
   const getAuthToken = () => {
     return (
       localStorage.getItem("campusloop_token") ||
@@ -58,7 +51,7 @@ const Subjects = () => {
     setCurrentPage(1);
   }, [searchQuery, filterStrand, filterGrade, filterSemester, entriesPerPage]);
 
-  // DEBOUNCE EFFECT: Mag-fe-fetch sa server kapag nag-stop na mag-type
+  // DEBOUNCE EFFECT
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchSubjects(true);
@@ -110,14 +103,15 @@ const Subjects = () => {
           },
         },
       );
-      // Galing na sa server ang naka-paginate na data
       setSubjects(response.data.data || []);
       setTotalPages(response.data.last_page || 1);
       setTotalRecords(response.data.total || 0);
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Failed to fetch subjects.";
       sileo.error({
         title: "Error",
-        description: "Failed to fetch subjects.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -224,12 +218,13 @@ const Subjects = () => {
         });
       }
       fetchSubjects();
-      setSelectedIds([]); // Clear selection incase they edited something that is selected
+      setSelectedIds([]);
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Please check your inputs.";
       sileo.error({
         title: "Failed",
-        description:
-          error.response?.data?.message || "Please check your inputs.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -238,7 +233,7 @@ const Subjects = () => {
   };
 
   const confirmDelete = (subject = null) => {
-    setSelectedSubject(subject); // If null, it means bulk delete
+    setSelectedSubject(subject);
     const modal = new Modal(document.getElementById("deleteConfirmModal"));
     modal.show();
   };
@@ -278,12 +273,13 @@ const Subjects = () => {
           description: "Moved to recycle bin.",
           ...darkToast,
         });
-        setCurrentPage(1); // Balik page 1 kapag nakadelete
+        setCurrentPage(1);
         fetchSubjects();
       } catch (error) {
+        const errorMsg = error.response?.data?.message || "Could not delete.";
         sileo.error({
           title: "Failed",
-          description: "Could not delete.",
+          description: errorMsg,
           ...darkToast,
         });
       } finally {
@@ -297,7 +293,6 @@ const Subjects = () => {
     else setSelectedIds([]);
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -368,8 +363,7 @@ const Subjects = () => {
         </button>
       </div>
 
-      {/* FILTER TOOLBAR */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -390,7 +384,7 @@ const Subjects = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              style={{ minWidth: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -463,8 +457,7 @@ const Subjects = () => {
         </div>
       </div>
 
-      {/* DATATABLE */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -527,7 +520,7 @@ const Subjects = () => {
                   </td>
                   <td>
                     <span
-                      className="badge bg-opacity-10 rounded-3 text-dark fw-medium px-2 py-1 border border-dark-subtle"
+                      className="badge bg-opacity-10 rounded-3 text-dark fw-medium px-2 py-1 border border-dark-subtle shadow-sm"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {subject.strand?.name || "N/A"}
@@ -537,7 +530,7 @@ const Subjects = () => {
                     <div className="d-flex align-items-center gap-2">
                       <span className="fw-bold text-muted small">
                         <i
-                          className="bi bi-mortarboard-fill me-1"
+                          className="bi bi-mortarboard me-1"
                           style={{ color: "var(--primary-color)" }}
                         ></i>{" "}
                         Grade {subject.grade_level}
@@ -556,10 +549,7 @@ const Subjects = () => {
                       style={{ width: "35px", height: "35px" }}
                       title="Edit Subject"
                     >
-                      <i
-                        className="bi bi-pencil-fill"
-                        style={{ color: "var(--primary-color)" }}
-                      ></i>
+                      <i className="bi bi-pencil-fill text-dark"></i>
                     </button>
                     <button
                       onClick={() => confirmDelete(subject)}
@@ -595,7 +585,6 @@ const Subjects = () => {
         </div>
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">

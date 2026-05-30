@@ -36,7 +36,11 @@ const RecycleBinModals = ({ actionType, selectedCount, executeAction }) => {
             <p className="text-muted mb-0">
               Are you sure you want to{" "}
               {actionType === "restore" ? "restore" : "permanently delete"}{" "}
-              <b>{selectedCount} selected item(s)</b>?
+              <b>
+                {selectedCount} selected item
+                {selectedCount > 1 ? "s" : ""}
+              </b>
+              ?
               <br />
               {actionType === "restore" ? (
                 "They will be returned to their active status."

@@ -16,19 +16,14 @@ const AdminForms = () => {
   const [uniqueTeachers, setUniqueTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading forms...");
-
-  // STATES PARA SA SERVER-SIDE SEARCH AT FILTERS
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterTeacher, setFilterTeacher] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // STATES PARA SA PAGINATION (Fixed at 12 items per page)
   const [currentPage, setCurrentPage] = useState(1);
   const entriesPerPage = 12;
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const navigate = useNavigate();
 
   // RESET PAGE TO 1 KAPAG NAGBAGO ANG SEARCH O FILTER
@@ -72,9 +67,11 @@ const AdminForms = () => {
       if (data.teachers) {
         setUniqueTeachers(data.teachers);
       }
-      setSelectedIds([]); // Reset selection on page load
+      setSelectedIds([]);
     } catch (error) {
       console.error(error);
+      const errorMsg = error.response?.data?.message || "Failed to load forms.";
+      sileo.error({ title: "Error", description: errorMsg, ...darkToast });
     } finally {
       setIsLoading(false);
     }
@@ -118,16 +115,13 @@ const AdminForms = () => {
       });
       fetchForms();
     } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Could not delete.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Could not delete forms.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
       setIsLoading(false);
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -177,7 +171,6 @@ const AdminForms = () => {
     <div className="container-fluid px-0">
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER TITLE */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-4 gap-3">
         <div>
           <h3
@@ -193,11 +186,9 @@ const AdminForms = () => {
         </div>
       </div>
 
-      {/* UNIFIED TOP CONTROL BAR */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SELECT ALL CHECKBOX */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
                 <input
@@ -227,10 +218,9 @@ const AdminForms = () => {
               </div>
             </div>
 
-            {/* EXPANDED SEARCH INPUT */}
             <div
-              className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              className="input-group flex-shrink-0"
+              style={{ maxWidth: "399px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -244,10 +234,9 @@ const AdminForms = () => {
               />
             </div>
 
-            {/* FILTER BY TEACHER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "400px" }}
+              style={{ width: "399px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-person-badge"></i>
@@ -266,10 +255,9 @@ const AdminForms = () => {
               </select>
             </div>
 
-            {/* SORT ORDER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "399px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -284,7 +272,6 @@ const AdminForms = () => {
               </select>
             </div>
 
-            {/* DELETE BUTTON */}
             <div className="d-flex gap-2 flex-shrink-0 ms-auto ps-2">
               <button
                 onClick={confirmBulkDelete}
@@ -298,7 +285,6 @@ const AdminForms = () => {
         </div>
       </div>
 
-      {/* GRID CARDS */}
       <div className="row g-4">
         {forms.map((item) => (
           <div className="col-12 col-md-6 col-xl-4" key={item.id}>
@@ -315,7 +301,6 @@ const AdminForms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
-                {/* Decorative Circles */}
                 <div
                   className="position-absolute rounded-circle"
                   style={{
@@ -336,7 +321,6 @@ const AdminForms = () => {
                     left: "20%",
                   }}
                 ></div>
-                {/* ADMIN SELECTION CHECKBOX (Top Right) */}
                 <div
                   className="dropdown position-absolute top-0 end-0 mt-3 me-3"
                   onClick={(e) => e.stopPropagation()}
@@ -373,7 +357,6 @@ const AdminForms = () => {
               </div>
 
               <div className="card-body p-4 d-flex flex-column position-relative">
-                {/* FLOATING ICON */}
                 <div
                   className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center text-white"
                   style={{
@@ -429,17 +412,18 @@ const AdminForms = () => {
                       </span>
                       {item.timer > 0 ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-dark fw-medium border border-warning-subtle bg-opacity-10"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
                           }}
                         >
-                          {item.timer} Mins
+                          {item.timer} Min
+                          {item.timer > 1 ? "s" : ""}
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -463,7 +447,7 @@ const AdminForms = () => {
                       </span>
                       {item.is_focus_mode ? (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle bg-opacity-10"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -473,7 +457,7 @@ const AdminForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle bg-opacity-10"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -497,7 +481,7 @@ const AdminForms = () => {
                       </span>
                       {item.is_shuffle_questions ? (
                         <span
-                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary-subtle bg-opacity-10"
+                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -507,7 +491,7 @@ const AdminForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -550,7 +534,6 @@ const AdminForms = () => {
           </div>
         ))}
 
-        {/* EMPTY STATE */}
         {forms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
@@ -569,7 +552,6 @@ const AdminForms = () => {
         )}
       </div>
 
-      {/* PAGINATION FOOTER */}
       {!isLoading && totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-5 gap-3 px-2">
           <p className="text-muted small mb-0">

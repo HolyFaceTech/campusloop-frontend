@@ -20,18 +20,14 @@ const AdminFormInside = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Form Details...");
   const [activeTab, setActiveTab] = useState("questionnaire");
-
-  // SERVER-SIDE SEARCH & PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [selectedRespondent, setSelectedRespondent] = useState(null);
   const [respondentToUnsubmit, setRespondentToUnsubmit] = useState(null);
 
-  // KUNIN ANG DATA NG FORM SA INITIAL LOAD
   useEffect(() => {
     fetchFormData();
   }, [id]);
@@ -64,7 +60,9 @@ const AdminFormInside = () => {
       );
       setForm(res.data);
     } catch (error) {
-      console.error(error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to load form details.";
+      sileo.error({ title: "Error", description: errorMsg, ...darkToast });
     }
   };
 
@@ -92,7 +90,9 @@ const AdminFormInside = () => {
       setTotalRecords(data.total || 0);
       setIsLoading(false);
     } catch (error) {
-      console.error(error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to load respondents.";
+      sileo.error({ title: "Error", description: errorMsg, ...darkToast });
       setRespondents([]);
       setIsLoading(false);
     }
@@ -132,13 +132,22 @@ const AdminFormInside = () => {
       printWindow.document.write(res.data);
       printWindow.document.close();
     } catch (error) {
-      alert("Failed to generate PDF. Check backend configuration.");
+      let errorMsg = "Failed to generate print view.";
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.message || errorMsg;
+        } catch (e) {}
+      } else {
+        errorMsg = error.response?.data?.message || errorMsg;
+      }
+      sileo.error({ title: "Error", description: errorMsg, ...darkToast });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- UNSUBMIT LOGIC ---
   const executeUnsubmit = async () => {
     const modalEl = document.getElementById("adminUnsubmitFormModal");
     if (modalEl) Modal.getInstance(modalEl)?.hide();
@@ -161,13 +170,11 @@ const AdminFormInside = () => {
         description: "Student submission removed successfully.",
         ...darkToast,
       });
-      fetchRespondents(); // Refresh listahan para mawala siya agad
+      fetchRespondents();
     } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: "Failed to unsubmit form.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Failed to unsubmit form.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
       setIsLoading(false);
     }
   };
@@ -205,7 +212,6 @@ const AdminFormInside = () => {
     ? form.questions.reduce((sum, q) => sum + q.points, 0)
     : 0;
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -255,11 +261,10 @@ const AdminFormInside = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* UNIFIED HEADER CARD */}
-      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
+      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative premium-hover-card">
         <div className="card-body p-4 p-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
-            <div className="flex-grow-1" style={{ maxWidth: "800px" }}>
+            <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div
                   className="rounded-circle text-white d-flex justify-content-center align-items-center shadow-sm flex-shrink-0"
@@ -300,7 +305,6 @@ const AdminFormInside = () => {
 
           <hr className="opacity-10 my-4" />
 
-          {/* COMPACT INFO WIDGET */}
           <div className="d-flex flex-wrap justify-content-center gap-4 gap-md-4 align-items-center bg-light p-3 rounded-4 border border-light-subtle">
             <div className="d-flex align-items-center gap-3 pe-md-4 border-end-md">
               <div
@@ -321,7 +325,9 @@ const AdminFormInside = () => {
                   Time Limit
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {form?.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
+                  {form?.timer > 0
+                    ? `${form.timer} Minute${form.timer > 1 ? "s" : ""}`
+                    : "No Timer"}
                 </span>
               </div>
             </div>
@@ -347,11 +353,11 @@ const AdminFormInside = () => {
                   Security Mode
                 </span>
                 {form?.is_focus_mode ? (
-                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Focus Mode ON
                   </span>
                 ) : (
-                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Normal
                   </span>
                 )}
@@ -379,11 +385,11 @@ const AdminFormInside = () => {
                   Question Order
                 </span>
                 {form?.is_shuffle_questions ? (
-                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Shuffled
                   </span>
                 ) : (
-                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Default Order
                   </span>
                 )}
@@ -409,7 +415,7 @@ const AdminFormInside = () => {
                   Total Points
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {totalPoints} Pts
+                  {totalPoints} Point{totalPoints > 1 ? "s" : ""}
                 </span>
               </div>
             </div>
@@ -417,7 +423,6 @@ const AdminFormInside = () => {
         </div>
       </div>
 
-      {/* SLEEK UNDERLINE TABS */}
       <div className="d-flex justify-content-center gap-4 border-bottom mb-4 px-3 mt-2">
         <button
           className={`btn rounded-0 pb-3 px-3 border-0 d-flex align-items-center gap-2 transition-all ${activeTab === "questionnaire" ? "fw-bolder" : "text-muted fw-medium"}`}
@@ -465,7 +470,6 @@ const AdminFormInside = () => {
         </button>
       </div>
 
-      {/* TAB 1: QUESTIONNAIRE */}
       {activeTab === "questionnaire" && (
         <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
           {groupedQuestions.length > 0 ? (
@@ -486,7 +490,7 @@ const AdminFormInside = () => {
                       Section {gIndex + 1} of {groupedQuestions.length}
                     </div>
                     <div
-                      className="card bg-white shadow-sm position-relative"
+                      className="card bg-white shadow-sm position-relative premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderTopLeftRadius: "0",
@@ -517,7 +521,7 @@ const AdminFormInside = () => {
                 <div className="d-flex flex-column gap-3 mt-3">
                   {group.questions.map((q, index) => (
                     <div
-                      className="card bg-white shadow-sm position-relative transition-all"
+                      className="card bg-white shadow-sm position-relative transition-all premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderLeft: "6px solid var(--primary-color)",
@@ -591,16 +595,16 @@ const AdminFormInside = () => {
           ) : (
             <div className="col-12 mt-4">
               <div
-                className="card bg-white border border-light-subtle shadow-sm text-center py-5"
+                className="card bg-white border border-light-subtle shadow-sm text-center py-5 premium-hover-card"
                 style={{ borderRadius: "8px" }}
               >
                 <div className="card-body py-5">
                   <div
-                    className="rounded-circle bg-light d-flex justify-content-center align-items-center mx-auto mb-4"
+                    className=" d-flex justify-content-center align-items-center mx-auto mb-4"
                     style={{ width: "90px", height: "90px" }}
                   >
                     <i
-                      className="bi bi-ui-radios text-muted opacity-50"
+                      className="bi bi-inbox text-muted opacity-50"
                       style={{ fontSize: "3rem" }}
                     ></i>
                   </div>
@@ -620,10 +624,9 @@ const AdminFormInside = () => {
         </div>
       )}
 
-      {/* TAB 2: RESPONDENTS */}
       {activeTab === "respondents" && (
         <>
-          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden premium-hover-card">
             <div className="card-body p-0">
               <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
                 <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -661,7 +664,7 @@ const AdminFormInside = () => {
             </div>
           </div>
 
-          <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+          <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
             <div className="table-responsive custom-scrollbar">
               <table
                 className="table table-summer align-middle mb-0"
@@ -730,12 +733,13 @@ const AdminFormInside = () => {
                             className="d-block fw-bold font-monospace text-dark tracking-wide"
                             style={{ fontSize: "0.90rem" }}
                           >
+                            <i className="bi bi-123 me-1 text-muted"></i>{" "}
                             {sub.student?.lrn || "N/A"}
                           </span>
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
+                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle shadow-sm"
                             style={{
                               maxWidth: "150px",
                               backgroundColor: "var(--accent-color)",
@@ -758,7 +762,7 @@ const AdminFormInside = () => {
                                 letterSpacing: "1px",
                               }}
                             >
-                              Points
+                              Point{sub.score > 1 ? "s" : ""}
                             </span>
                           </div>
                         </td>
@@ -845,7 +849,6 @@ const AdminFormInside = () => {
             </div>
           </div>
 
-          {/* PAGINATION BUTTONS */}
           {totalRecords > 0 && (
             <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
               <span className="text-muted small">

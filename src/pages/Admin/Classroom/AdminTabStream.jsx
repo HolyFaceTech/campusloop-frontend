@@ -17,22 +17,19 @@ const AdminTabStream = () => {
   const [classworks, setClassworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Stream...");
-
-  // SEARCH AT FILTERS (Nandito na ulit ang sortOrder!)
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
-
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [commentToDelete, setCommentToDelete] = useState(null);
 
-  // SERVER-SIDE DEBOUNCE EFFECT (Para sa Search Lang)
+  // SERVER-SIDE DEBOUNCE EFFECT
   useEffect(() => {
     if (classroom && classroom.id) {
       const delayDebounceFn = setTimeout(() => {
         fetchClassworks();
-      }, 500); // 500ms delay bago pumutok ang API request
+      }, 500);
 
       return () => clearTimeout(delayDebounceFn);
     }
@@ -53,7 +50,6 @@ const AdminTabStream = () => {
         },
       );
 
-      // Sinasalo natin ang data mula sa backend
       if (Array.isArray(res.data)) {
         setClassworks(res.data);
       } else {
@@ -68,19 +64,16 @@ const AdminTabStream = () => {
     }
   };
 
-  // CLIENT-SIDE FILTERING AT SORTING
   let filteredClassworks = classworks.filter((cw) => {
     return filterType === "all" || cw.type === filterType;
   });
 
-  // IBINALIK ANG SORTING LOGIC
   filteredClassworks.sort((a, b) => {
     const dateA = new Date(a?.created_at || 0).getTime();
     const dateB = new Date(b?.created_at || 0).getTime();
     return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
   });
 
-  // CHECKBOX LOGIC
   const handleSelect = (id) => {
     if (selectedIds.includes(id)) {
       setSelectedIds(selectedIds.filter((itemId) => itemId !== id));
@@ -94,7 +87,6 @@ const AdminTabStream = () => {
     else setSelectedIds([]);
   };
 
-  // BULK DELETE CLASSWORKS
   const confirmBulkDelete = () => {
     const modal = new Modal(document.getElementById("deleteClassworksModal"));
     modal.show();
@@ -118,7 +110,7 @@ const AdminTabStream = () => {
         description: "Classworks moved to recycle bin.",
         ...darkToast,
       });
-      fetchClassworks(); // Re-fetch para ma-refresh ang list
+      fetchClassworks();
     } catch (error) {
       sileo.error({
         title: "Failed",
@@ -129,7 +121,6 @@ const AdminTabStream = () => {
     }
   };
 
-  // DELETE COMMENT LOGIC
   const confirmDeleteComment = (commentId) => {
     setCommentToDelete(commentId);
     const modal = new Modal(document.getElementById("deleteCommentModal"));
@@ -155,16 +146,17 @@ const AdminTabStream = () => {
       });
       fetchClassworks();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Could not delete comment.";
       sileo.error({
         title: "Failed",
-        description: "Could not delete comment.",
+        description: errorMsg,
         ...darkToast,
       });
       setIsLoading(false);
     }
   };
 
-  // SAFE PROGRAMMATIC CALL SA RESPONDENTS MODAL
   const openRespondentsModal = (cw) => {
     setSelectedItem(cw);
     setTimeout(() => {
@@ -324,11 +316,9 @@ const AdminTabStream = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* UNIFIED TOP CONTROL BAR */}
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SELECT ALL CHECKBOX */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
                 <input
@@ -362,7 +352,6 @@ const AdminTabStream = () => {
               </div>
             </div>
 
-            {/* SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
               style={{ minWidth: "400px" }}
@@ -379,10 +368,9 @@ const AdminTabStream = () => {
               />
             </div>
 
-            {/* CLASSWORK TYPE FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
@@ -401,10 +389,9 @@ const AdminTabStream = () => {
               </select>
             </div>
 
-            {/* IBINALIK NATIN ANG SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -419,7 +406,6 @@ const AdminTabStream = () => {
               </select>
             </div>
 
-            {/* BULK DELETE BUTTON */}
             <div className="d-flex gap-2 flex-shrink-0 ms-auto ps-2">
               <button
                 onClick={confirmBulkDelete}
@@ -434,7 +420,6 @@ const AdminTabStream = () => {
       </div>
 
       <div className="row g-4">
-        {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div
             className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
@@ -505,7 +490,7 @@ const AdminTabStream = () => {
                                   {task.title}
                                 </span>
                                 <span
-                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1`}
+                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1 shadow-sm`}
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   {task?.type?.toUpperCase()}
@@ -562,7 +547,6 @@ const AdminTabStream = () => {
           </div>
         </div>
 
-        {/* FEED / STREAM */}
         <div className="col-12 col-lg-9 pb-5">
           {filteredClassworks.length === 0 ? (
             <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
@@ -595,7 +579,6 @@ const AdminTabStream = () => {
                   }}
                 >
                   <div className="card-body p-4 p-md-5 pb-4">
-                    {/* PREMIUM HEADER */}
                     <div className="d-flex justify-content-between align-items-start mb-4">
                       <div className="d-flex align-items-center gap-3">
                         <div
@@ -613,7 +596,7 @@ const AdminTabStream = () => {
                           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2 flex-wrap">
                             {cw.title}
                             <span
-                              className={`badge bg-opacity-10 border text-uppercase px-2 py-1 ${typeStyle.badge}`}
+                              className={`badge bg-opacity-10 border text-uppercase px-2 py-1 ${typeStyle.badge} shadow-sm`}
                               style={{
                                 fontSize: "0.65rem",
                                 letterSpacing: "1px",
@@ -656,7 +639,6 @@ const AdminTabStream = () => {
                         </div>
                       </div>
 
-                      {/* ACTIONS & CHECKBOX */}
                       <div className="d-flex align-items-center gap-3 position-relative ms-3">
                         {!isMaterial && (
                           <button
@@ -744,7 +726,7 @@ const AdminTabStream = () => {
                               }
                               onClick={(e) => {
                                 if (getSafeLink(cw.link) === "#") {
-                                  e.preventDefault(); // Pipigilang mag-click kung unsafe
+                                  e.preventDefault();
                                 }
                               }}
                             >
@@ -850,7 +832,6 @@ const AdminTabStream = () => {
                           })}
                       </div>
 
-                      {/* POINTS FOR TEACHER VIEW (HIDDEN FOR MATERIAL) */}
                       {!isMaterial && (
                         <div className="d-flex align-items-center justify-content-end mt-2 mb-4 px-1">
                           <div className="d-flex align-items-center gap-2">
@@ -873,7 +854,6 @@ const AdminTabStream = () => {
                         </div>
                       )}
 
-                      {/* FB-STYLE COMMENTS THREAD WITH DELETE CAPABILITY */}
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">

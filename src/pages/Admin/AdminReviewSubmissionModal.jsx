@@ -10,7 +10,6 @@ const AdminReviewSubmissionModal = ({
   setIsLoading,
   setLoadingText,
 }) => {
-  // Group Questions Logic
   const groupedQuestions = [];
   const existingSections = [];
 
@@ -36,7 +35,6 @@ const AdminReviewSubmissionModal = ({
     });
   }
 
-  // PDF Generators Logic
   const confirmStudentPDF = () => {
     const modalEl = document.getElementById("adminConfirmStudentPDFModal");
     if (modalEl) Modal.getOrCreateInstance(modalEl).show();
@@ -63,7 +61,18 @@ const AdminReviewSubmissionModal = ({
       printWindow.document.write(res.data);
       printWindow.document.close();
     } catch (error) {
-      alert("Failed to generate PDF. Check backend configuration.");
+      let errorMsg =
+        "Failed to generate print view. Check backend configuration.";
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          errorMsg = parsed.message || errorMsg;
+        } catch (e) {}
+      } else {
+        errorMsg = error.response?.data?.message || errorMsg;
+      }
+      sileo.error({ title: "Error", description: errorMsg, ...darkToast });
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +110,6 @@ const AdminReviewSubmissionModal = ({
             <div className="modal-body p-4 bg-light custom-scrollbar">
               {form && respondent ? (
                 <>
-                  {/* STUDENT SUMMARY BADGE */}
                   <div
                     className="d-flex justify-content-between align-items-center mb-4 p-3 mx-auto"
                     style={{ maxWidth: "770px" }}
@@ -123,7 +131,8 @@ const AdminReviewSubmissionModal = ({
                           {respondent.student?.last_name}
                         </h5>
                         <span className="text-muted small font-monospace">
-                          LRN: {respondent.student?.lrn || "N/A"}
+                          <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                          {respondent.student?.lrn || "N/A"}
                         </span>
                       </div>
                     </div>
@@ -150,7 +159,6 @@ const AdminReviewSubmissionModal = ({
                   </div>
 
                   <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
-                    {/* FORM HEADER (EXACT SAME DESIGN) */}
                     <div
                       className="card bg-white shadow-sm mb-4 position-relative"
                       style={{
@@ -181,10 +189,8 @@ const AdminReviewSubmissionModal = ({
                       </div>
                     </div>
 
-                    {/* QUESTIONS RENDERER */}
                     {groupedQuestions.map((group, gIndex) => (
                       <div className="mb-5 pb-2" key={gIndex}>
-                        {/* SECTION HEADER */}
                         {group.sectionName !== "" && (
                           <div className="position-relative mt-5 mb-3">
                             <div
@@ -227,10 +233,8 @@ const AdminReviewSubmissionModal = ({
                           </div>
                         )}
 
-                        {/* QUESTIONS MAP */}
                         <div className="d-flex flex-column gap-3 mt-3">
                           {group.questions.map((q, index) => {
-                            // Find student's answer for this question
                             const answerData = respondent.answers?.find(
                               (a) => a.question_id === q.id,
                             );
@@ -248,7 +252,6 @@ const AdminReviewSubmissionModal = ({
                                 key={q.id}
                               >
                                 <div className="card-body p-4 pt-5 pb-4">
-                                  {/* Question Header & Points Indicator */}
                                   <div className="d-flex justify-content-between align-items-start gap-3 mb-4 border-bottom pb-3">
                                     <div className="d-flex gap-2 align-items-start flex-grow-1">
                                       <span className="fw-normal text-dark mt-1">
@@ -266,7 +269,7 @@ const AdminReviewSubmissionModal = ({
                                     </div>
                                     <div className="text-end flex-shrink-0 mt-1">
                                       <span
-                                        className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3`}
+                                        className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3 shadow-sm`}
                                       >
                                         {isCorrect ? (
                                           <i className="bi bi-check-circle-fill me-1"></i>
@@ -279,7 +282,6 @@ const AdminReviewSubmissionModal = ({
                                     </div>
                                   </div>
 
-                                  {/* Options / Inputs Display */}
                                   <div className="ps-4">
                                     {q.type === "multiple_choice" &&
                                       q.choices && (
@@ -295,7 +297,6 @@ const AdminReviewSubmissionModal = ({
                                               "bi-circle text-muted opacity-25";
                                             let badge = null;
 
-                                            // KUNG ITO ANG PINILI NG STUDENT AT TAMA SIYA
                                             if (isStudentChoice && isCorrect) {
                                               textColor =
                                                 "text-success fw-bold";
@@ -303,7 +304,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-check-circle-fill text-success";
                                               badge = (
                                                 <span
-                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
+                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -312,9 +313,7 @@ const AdminReviewSubmissionModal = ({
                                                   Correct Answer
                                                 </span>
                                               );
-                                            }
-                                            // KUNG ITO ANG PINILI NIYA PERO MALI
-                                            else if (
+                                            } else if (
                                               isStudentChoice &&
                                               !isCorrect
                                             ) {
@@ -323,7 +322,7 @@ const AdminReviewSubmissionModal = ({
                                                 "bi-x-circle-fill text-danger";
                                               badge = (
                                                 <span
-                                                  className="badge bg-danger fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm"
+                                                  className="badge bg-danger fw-medium ms-auto rounded-3 px-2 py-1 shadow-sm shadow-sm"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -332,16 +331,14 @@ const AdminReviewSubmissionModal = ({
                                                   Student's Answer
                                                 </span>
                                               );
-                                            }
-                                            // KUNG HINDI NIYA PINILI PERO ITO PALA YUNG TAMA
-                                            else if (isActualCorrectChoice) {
+                                            } else if (isActualCorrectChoice) {
                                               textColor =
                                                 "text-success fw-bold";
                                               icon =
                                                 "bi-check-circle-fill text-success opacity-75";
                                               badge = (
                                                 <span
-                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
+                                                  className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                   style={{
                                                     fontSize: "0.65rem",
                                                   }}
@@ -405,7 +402,6 @@ const AdminReviewSubmissionModal = ({
                                           disabled
                                         />
 
-                                        {/* INCORRECT SHORT ANSWER */}
                                         {!isCorrect && (
                                           <div className="d-flex align-items-center gap-3 p-2 mt-1 rounded-3">
                                             <i className="bi bi-check-circle-fill text-success opacity-75 fs-5"></i>

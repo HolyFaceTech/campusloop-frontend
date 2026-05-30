@@ -11,7 +11,6 @@ const StrandFormModal = ({
 }) => {
   return (
     <>
-      {/* MAIN FORM MODAL */}
       <div
         className="modal fade"
         id="strandFormModal"
@@ -109,7 +108,6 @@ const StrandFormModal = ({
         </div>
       </div>
 
-      {/* UPDATE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -163,7 +161,6 @@ const StrandFormModal = ({
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteConfirmModal"

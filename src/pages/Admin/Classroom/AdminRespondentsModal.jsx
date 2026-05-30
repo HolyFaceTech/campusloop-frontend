@@ -6,8 +6,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
-
-  // SEARCH AT PAGINATION STATES
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -22,12 +20,12 @@ const AdminRespondentsModal = ({ selectedItem }) => {
     }
   }, [selectedItem]);
 
-  // SERVER-SIDE DEBOUNCE EFFECT AT PAGINATION TRACKER
+  // DEBOUNCE EFFECT
   useEffect(() => {
     if (selectedItem && selectedItem.type !== "material") {
       const delayDebounceFn = setTimeout(() => {
         fetchRespondents();
-      }, 500); // 500ms bago mag-fetch
+      }, 500);
 
       return () => clearTimeout(delayDebounceFn);
     }
@@ -49,14 +47,25 @@ const AdminRespondentsModal = ({ selectedItem }) => {
           },
         },
       );
-
-      // Sasaluhin natin yung binato ng backend na nakapaloob sa 'data' array
       setRespondents(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
     } catch (error) {
       console.error("Failed to fetch respondents", error);
       setRespondents([]);
+      import("sileo").then(({ sileo }) => {
+        const errorMsg =
+          error.response?.data?.message || "Failed to load respondents.";
+        sileo.error({
+          title: "Error",
+          description: errorMsg,
+          fill: "#242424",
+          styles: {
+            title: "sileo-toast-title",
+            description: "sileo-toast-desc",
+          },
+        });
+      });
     } finally {
       setIsLoading(false);
     }
@@ -167,7 +176,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
     };
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -257,7 +265,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                         value={entriesPerPage}
                         onChange={(e) => {
                           setEntriesPerPage(Number(e.target.value));
-                          setCurrentPage(1); // Reset page on change
+                          setCurrentPage(1);
                         }}
                       >
                         <option value={10}>10</option>
@@ -268,7 +276,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                       entries
                     </div>
 
-                    {/* RIGHT SIDE: Search Bar */}
                     <div
                       className="input-group"
                       style={{ maxWidth: "400px", minWidth: "350px" }}
@@ -288,7 +295,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               </div>
 
-              {/* TABLE BODY */}
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
                   className="table-responsive custom-scrollbar"
@@ -414,7 +420,8 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                         maxWidth: "250px",
                                       }}
                                     >
-                                      LRN: {student.lrn || "N/A"}
+                                      <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                                      {student.lrn || "N/A"}
                                     </p>
                                   </div>
                                 </div>
@@ -429,7 +436,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                     Returned
                                   </span>
                                 ) : isDoneLate ? (
-                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1">
+                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1 shadow-sm">
                                     Done Late
                                   </span>
                                 ) : hasSubmission ? (
@@ -453,6 +460,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                     {new Date(sub.submitted_at).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -505,7 +513,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               </div>
 
-              {/* PAGINATION METADATA FOOTER (SMART UPDATE) */}
               {totalRecords > 0 && (
                 <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3 px-2">
                   <p className="text-muted small mb-0">
@@ -563,7 +570,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
         </div>
       </div>
 
-      {/* VIEW SUBMISSION MODAL */}
       <div
         className="modal fade"
         id="adminViewSubmissionModal"
@@ -611,7 +617,8 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                       {selectedStudent?.last_name || ""}
                     </h5>
                     <span className="text-muted small">
-                      LRN: {selectedStudent?.lrn || "N/A"}
+                      <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                      {selectedStudent?.lrn || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -639,10 +646,7 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               </div>
 
-              <h6 className="fw-bold small text-dark mb-3">
-                <i className="bi bi-paperclip me-2 text-muted"></i>Attached
-                Files
-              </h6>
+              <h6 className="small text-muted mb-2 d-block">Attached Files:</h6>
               {selectedStudent?.submission?.files &&
               selectedStudent.submission.files.length > 0 ? (
                 <div className="d-flex flex-column gap-2 mb-4">
@@ -701,7 +705,6 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                 </div>
               )}
 
-              {/* TEACHER FEEDBACK CARD */}
               {selectedStudent?.submission?.teacher_feedback && (
                 <div
                   className="mb-4 p-3 rounded-4 shadow-sm"

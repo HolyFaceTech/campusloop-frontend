@@ -232,7 +232,11 @@ const AdminStudentViewDrawer = ({
               </h4>
               <p className="text-muted mb-4">
                 Are you sure you want to {actionType} the{" "}
-                <b>{selectedIdsCount} selected student(s)</b>?
+                <b>
+                  {selectedIdsCount} selected student
+                  {selectedIdsCount > 1 ? "s" : ""}
+                </b>
+                ?
               </p>
               <div className="d-flex justify-content-center gap-2">
                 <button

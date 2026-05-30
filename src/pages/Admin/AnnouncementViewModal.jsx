@@ -16,7 +16,6 @@ const AnnouncementViewModal = ({
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
-
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
 
@@ -47,7 +46,7 @@ const AnnouncementViewModal = ({
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/announcements/${announcement.id}/comment`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/announcements/${announcement.id}/comments`,
         { content, parent_id: parentId },
         {
           headers: {
@@ -57,11 +56,9 @@ const AnnouncementViewModal = ({
       );
       setTimeout(() => fetchAnnouncements(false), 300);
     } catch (error) {
-      sileo.error({
-        title: "Error",
-        description: "Failed to post comment.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Failed to post comment.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
     } finally {
       setIsPosting(false);
     }
@@ -77,7 +74,7 @@ const AnnouncementViewModal = ({
     setIsPosting(true);
     try {
       await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/announcements/comments/${commentId}`,
         { content: editContent },
         {
           headers: {
@@ -89,22 +86,19 @@ const AnnouncementViewModal = ({
       setEditContent("");
       setTimeout(() => fetchAnnouncements(false), 300);
     } catch (error) {
-      sileo.error({
-        title: "Error",
-        description: "Failed to update comment.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Could not update comment.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
     } finally {
       setIsPosting(false);
     }
   };
 
   const deleteComment = async (commentId) => {
-    // TINANGGAL NA ANG window.confirm DITO!
     setIsPosting(true);
     try {
       await axios.delete(
-        `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/admin/announcements/comments/${commentId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
@@ -113,11 +107,9 @@ const AnnouncementViewModal = ({
       );
       setTimeout(() => fetchAnnouncements(false), 300);
     } catch (error) {
-      sileo.error({
-        title: "Error",
-        description: "Failed to delete comment.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Could not delete comment.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
     } finally {
       setIsPosting(false);
     }
@@ -357,7 +349,6 @@ const AnnouncementViewModal = ({
                   {announcement.content}
                 </p>
 
-                {/* ATTACHMENTS */}
                 <div className="d-flex flex-column gap-2 mb-3">
                   {announcement.link && (
                     <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
@@ -444,7 +435,6 @@ const AnnouncementViewModal = ({
                     })}
                 </div>
 
-                {/* COMMENTS THREAD */}
                 <div className="border-top pt-3 mt-4">
                   <div className="d-flex align-items-center justify-content-between mb-3">
                     <span className="fw-bold text-dark small d-flex align-items-center gap-2">
@@ -547,7 +537,7 @@ const AnnouncementViewModal = ({
                                     disabled={isPosting}
                                     style={{ height: "32px" }}
                                   >
-                                    <i className="bi bi-send-fill fs-6"></i>
+                                    <i className="bi bi-send-check-fill fs-6"></i>
                                   </button>
                                   <button
                                     className="btn btn-sm btn-light border shadow-sm rounded-circle mt-1 ms-1 text-muted"
@@ -594,7 +584,7 @@ const AnnouncementViewModal = ({
                       style={{ height: "38px" }}
                       disabled={isPosting}
                     >
-                      <i className="bi bi-send-fill fs-6 me-1"></i> Send
+                      <i className="bi bi-send-check-fill fs-6 me-2"></i> Send
                     </button>
                   </div>
                 </div>
