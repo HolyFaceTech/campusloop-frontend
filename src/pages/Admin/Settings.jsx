@@ -22,10 +22,8 @@ const getAuthHeader = () => {
 const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
   const [currentSetting, setCurrentSetting] = useState(null);
   const [formData, setFormData] = useState({ school_year: "", semester: "" });
-
   const [pstTime, setPstTime] = useState("");
 
   useEffect(() => {
@@ -272,7 +270,6 @@ const Settings = () => {
       </div>
 
       <div className="row g-4">
-        {/* SCHOOL SETTINGS CARD */}
         <div className="col-md-6 col-xl-4">
           <div
             className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
@@ -423,7 +420,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* REPORTS CARD */}
         <div className="col-md-6 col-xl-4">
           <div
             className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
@@ -531,7 +527,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* MAINTENANCE CARD */}
         <div className="col-md-6 col-xl-4">
           <div
             className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"

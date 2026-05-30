@@ -1,6 +1,5 @@
 import React from "react";
 
-// BULK DELETE NG FORMS
 export const DeleteFormsModal = ({ selectedIdsCount, executeBulkDelete }) => {
   return (
     <div
@@ -22,7 +21,11 @@ export const DeleteFormsModal = ({ selectedIdsCount, executeBulkDelete }) => {
             <h4 className="fw-bold text-dark mt-2">Delete Forms</h4>
             <p className="text-muted mb-4">
               Are you sure you want to move the{" "}
-              <b>{selectedIdsCount} selected form(s)</b> to the recycle bin?
+              <b>
+                {selectedIdsCount} selected file
+                {selectedIdsCount > 1 ? "s" : ""}
+              </b>{" "}
+              to the recycle bin?
             </p>
             <div className="d-flex justify-content-center gap-2">
               <button
@@ -48,7 +51,6 @@ export const DeleteFormsModal = ({ selectedIdsCount, executeBulkDelete }) => {
   );
 };
 
-// TEACHER
 export const ConfirmTeacherPDFModal = ({ form, executeGenerateTeacherPDF }) => {
   return (
     <div
@@ -102,7 +104,6 @@ export const ConfirmTeacherPDFModal = ({ form, executeGenerateTeacherPDF }) => {
   );
 };
 
-// Student
 export const ConfirmStudentPDFModal = ({
   respondent,
   executeGenerateStudentPDF,
@@ -159,7 +160,6 @@ export const ConfirmStudentPDFModal = ({
   );
 };
 
-// UNSUBMIT
 export const UnsubmitFormModal = ({ respondent, executeUnsubmit }) => {
   return (
     <div

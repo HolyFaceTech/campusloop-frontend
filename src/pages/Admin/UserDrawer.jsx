@@ -15,7 +15,6 @@ const UserDrawer = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // Eye Icon Renderer
   const renderEyeIcon = (isVisible) =>
     isVisible ? (
       <svg
@@ -83,7 +82,6 @@ const UserDrawer = ({
         <div className="offcanvas-body custom-scrollbar p-4 bg-white">
           <form onSubmit={handleSubmit}>
             <div className="row g-4">
-              {/* Personal Information Section */}
               <div className="col-12">
                 <h6
                   className="fw-bold text-muted mb-0 border-bottom pb-2"
@@ -175,7 +173,6 @@ const UserDrawer = ({
                 </div>
               </div>
 
-              {/* Account Settings Section */}
               <div className="col-12 mt-4">
                 <h6
                   className="fw-bold text-muted mb-0 border-bottom pb-2"
@@ -272,7 +269,6 @@ const UserDrawer = ({
                 </div>
               )}
 
-              {/* Academic Details (Student Only) */}
               {formData.role === "student" && (
                 <>
                   <div className="col-12 mt-4">
@@ -369,7 +365,6 @@ const UserDrawer = ({
         </div>
       </div>
 
-      {/* Confirmation Update */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -425,7 +420,6 @@ const UserDrawer = ({
         </div>
       </div>
 
-      {/* Confirmation Deletion */}
       <div
         className="modal fade"
         id="deleteConfirmModal"
@@ -455,7 +449,10 @@ const UserDrawer = ({
                     "{userToDelete.first_name} {userToDelete.last_name}"
                   </b>
                 ) : (
-                  <b>{selectedIdsCount} selected user(s)</b>
+                  <b>
+                    {selectedIdsCount} selected user
+                    {selectedIdsCount > 1 ? "s" : ""}
+                  </b>
                 )}{" "}
                 to the Recycle Bin?
               </p>

@@ -14,19 +14,14 @@ const AdminELibrary = () => {
   const [libraries, setLibraries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading E-Library...");
-
-  // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // Pagination States (Default 12 para sakto sa grid 3-columns or 2-columns)
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [viewItem, setViewItem] = useState(null);
   const [declineFeedback, setDeclineFeedback] = useState("");
 
@@ -65,7 +60,7 @@ const AdminELibrary = () => {
       setLibraries(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
-      setSelectedIds([]); // Clear selection pagka-lipat ng page
+      setSelectedIds([]);
     } catch (error) {
       sileo.error({
         title: "Fetch Error",
@@ -80,9 +75,9 @@ const AdminELibrary = () => {
 
   const toggleSelectAll = () => {
     if (selectedIds.length === libraries.length && libraries.length > 0) {
-      setSelectedIds([]); // Unselect all
+      setSelectedIds([]);
     } else {
-      setSelectedIds(libraries.map((lib) => lib.id)); // Select all current page
+      setSelectedIds(libraries.map((lib) => lib.id));
     }
   };
 
@@ -214,7 +209,6 @@ const AdminELibrary = () => {
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -278,11 +272,9 @@ const AdminELibrary = () => {
         </div>
       </div>
 
-      {/* CONTROLS & BULK ACTIONS TRAY */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SELECT ALL & COUNT */}
             <div className="col-auto pe-xl-2 ps-1">
               <div className="d-flex align-items-center">
                 <input
@@ -308,10 +300,9 @@ const AdminELibrary = () => {
               </div>
             </div>
 
-            {/* SEARCH BAR */}
             <div
-              className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              className="input-group flex-shrink-0"
+              style={{ maxWidth: "325px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -325,10 +316,9 @@ const AdminELibrary = () => {
               />
             </div>
 
-            {/* FILTER DROPDOWNS */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "300px" }}
+              style={{ width: "325px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
@@ -347,7 +337,7 @@ const AdminELibrary = () => {
 
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "325px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -362,7 +352,6 @@ const AdminELibrary = () => {
               </select>
             </div>
 
-            {/* BUTTON COLORS */}
             <div className="col-12 col-xl-auto ms-xl-auto d-flex flex-wrap gap-2">
               <button
                 className="btn btn-success fw-medium rounded-3 shadow-sm d-flex align-items-center"
@@ -393,7 +382,6 @@ const AdminELibrary = () => {
         </div>
       </div>
 
-      {/* GRID CARDS */}
       <div className="row g-4 mb-4">
         {libraries.length > 0 ? (
           libraries.map((item) => (
@@ -401,7 +389,6 @@ const AdminELibrary = () => {
               <div
                 className={`card h-100 border-0 shadow-sm rounded-4 hover-shadow transition-all bg-white premium-hover-card ${selectedIds.includes(item.id) ? "border border-success border-opacity-50" : ""}`}
               >
-                {/* Header Background */}
                 <div
                   className="p-4 position-relative d-flex flex-column justify-content-center"
                   style={{
@@ -411,18 +398,53 @@ const AdminELibrary = () => {
                     borderTopRightRadius: "1rem",
                   }}
                 >
-                  <div className="position-absolute top-50 translate-middle-y end-0 me-4 z-3">
-                    <input
-                      type="checkbox"
-                      className="form-check-input shadow-sm border-white"
+                  <div
+                    className="position-absolute rounded-circle"
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      backgroundColor: "rgba(255,255,255,0.1)",
+                      top: "-20px",
+                      right: "-20px",
+                      pointerEvents: "none",
+                    }}
+                  ></div>
+                  <div
+                    className="position-absolute rounded-circle"
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      bottom: "-10px",
+                      left: "20%",
+                      pointerEvents: "none",
+                    }}
+                  ></div>
+
+                  <div
+                    className="dropdown position-absolute top-0 end-0 mt-3 me-3 z-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className="d-flex justify-content-center align-items-center rounded-circle"
                       style={{
-                        width: "22px",
-                        height: "22px",
-                        cursor: "pointer",
+                        backgroundColor: "rgba(0,0,0,0.2)",
+                        width: "35px",
+                        height: "35px",
                       }}
-                      checked={selectedIds.includes(item.id)}
-                      onChange={() => toggleSelection(item.id)}
-                    />
+                    >
+                      <input
+                        type="checkbox"
+                        className="form-check-input m-0 shadow-none border-0"
+                        checked={selectedIds.includes(item.id)}
+                        onChange={() => toggleSelection(item.id)}
+                        style={{
+                          cursor: "pointer",
+                          width: "1.1rem",
+                          height: "1.1rem",
+                        }}
+                      />
+                    </div>
                   </div>
 
                   <div
@@ -442,7 +464,6 @@ const AdminELibrary = () => {
                 </div>
 
                 <div className="card-body p-4 d-flex flex-column position-relative">
-                  {/* OVERLAPPING ICON */}
                   <div
                     className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white"
                     style={{
@@ -458,7 +479,6 @@ const AdminELibrary = () => {
                     <i className="bi bi-journal-text"></i>
                   </div>
 
-                  {/* DESCRIPTION AREA */}
                   <div className="mb-3 mt-1 flex-grow-1">
                     <span
                       className="d-block text-muted mb-1 text-uppercase"
@@ -472,13 +492,12 @@ const AdminELibrary = () => {
                     </span>
                     <p
                       className="text-dark small fw-medium mb-0 text-clamp-3"
-                      style={{ lineHeight: "1.6" }}
+                      style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                     >
                       {item.description}
                     </p>
                   </div>
 
-                  {/* UPLOADER & STATUS BADGE */}
                   <div className="bg-light rounded-4 p-3 mb-3 border border-light-subtle d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center overflow-hidden pe-2">
                       <div
@@ -512,7 +531,7 @@ const AdminELibrary = () => {
                     <div className="text-end flex-shrink-0">
                       {item.status === "pending" && (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Pending
@@ -520,7 +539,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "approved" && (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Approved
@@ -528,7 +547,7 @@ const AdminELibrary = () => {
                       )}
                       {item.status === "declined" && (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Declined
@@ -567,7 +586,6 @@ const AdminELibrary = () => {
         )}
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">

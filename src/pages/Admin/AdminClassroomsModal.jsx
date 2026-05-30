@@ -24,8 +24,11 @@ const AdminClassroomsModal = ({ selectedIdsCount, executeDelete }) => {
             <h4 className="fw-bold text-dark mt-2">Delete Classrooms</h4>
             <p className="text-muted mb-4">
               Are you sure you want to move the{" "}
-              <b>{selectedIdsCount} selected classroom(s)</b> to the recycle
-              bin?
+              <b>
+                {selectedIdsCount} selected classroom
+                {selectedIdsCount > 1 ? "s" : ""}
+              </b>{" "}
+              to the recycle bin?
             </p>
             <div className="d-flex justify-content-center gap-2">
               <button

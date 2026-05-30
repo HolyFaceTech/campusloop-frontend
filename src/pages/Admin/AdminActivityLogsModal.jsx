@@ -55,14 +55,13 @@ const AdminActivityLogsModal = () => {
     }
   };
 
-  // Event Listeners para malaman kung bukas ang modal
   useEffect(() => {
     const modalElement = document.getElementById("activityLogsModal");
 
     const handleModalShow = () => {
       setIsModalOpen(true);
-      setCurrentPage(1); // Reset page pagkabukas
-      setSearchQuery(""); // Linisin ang lumang search
+      setCurrentPage(1);
+      setSearchQuery("");
     };
 
     const handleModalHide = () => setIsModalOpen(false);
@@ -107,7 +106,6 @@ const AdminActivityLogsModal = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  // SMART PAGINATION LOGIC
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -311,7 +309,7 @@ const AdminActivityLogsModal = () => {
                           </td>
                           <td>
                             <span
-                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 shadow-sm"
                               style={{ backgroundColor: "var(--accent-color)" }}
                             >
                               {log.action}
@@ -334,7 +332,6 @@ const AdminActivityLogsModal = () => {
               </div>
             </div>
 
-            {/* PAGINATION METADATA FOOTER */}
             {!isLoading && totalRecords > 0 && (
               <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3 px-2">
                 <p className="text-muted small mb-0">
@@ -379,7 +376,6 @@ const AdminActivityLogsModal = () => {
             )}
           </div>
 
-          {/* MODAL FOOTER */}
           <div className="modal-footer border-top bg-white p-3 d-flex justify-content-end">
             <button
               type="button"

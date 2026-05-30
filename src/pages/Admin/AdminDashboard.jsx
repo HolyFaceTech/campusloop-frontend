@@ -43,7 +43,6 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
   const [strandYear, setStrandYear] = useState("");
   const [statusYear, setStatusYear] = useState("");
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -130,7 +129,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="container-fluid px-0">
-      {/* WELCOME & ANNOUNCEMENTS */}
       <div className="row g-4 mb-4 align-items-stretch">
         <div className="col-12 col-xl-8 d-flex flex-column">
           <div
@@ -206,7 +204,7 @@ const AdminDashboard = () => {
               title="Go to Announcements"
             >
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center hover-primary transition-all">
-                <i className="bi bi-megaphone fs-5 me-2"></i>
+                <i className="bi bi-megaphone text-primary fs-5 me-2"></i>
                 Announcements
               </h6>
               <span className="badge bg-primary fw-medium rounded-3 shadow-sm">
@@ -310,7 +308,7 @@ const AdminDashboard = () => {
               >
                 Total Students
               </span>
-              <h2 className="fw-bolder text-dark mb-0 display-6">
+              <h2 className="fw-bolder text-success mb-0 display-6">
                 {data.stats.total_students}
               </h2>
             </div>
@@ -335,7 +333,7 @@ const AdminDashboard = () => {
               >
                 Total Teachers
               </span>
-              <h2 className="fw-bolder text-dark mb-0 display-6">
+              <h2 className="fw-bolder text-primary mb-0 display-6">
                 {data.stats.total_teachers}
               </h2>
             </div>
@@ -360,7 +358,7 @@ const AdminDashboard = () => {
               >
                 Active Classes
               </span>
-              <h2 className="fw-bolder text-dark mb-0 display-6">
+              <h2 className="fw-bolder text-danger mb-0 display-6">
                 {data.stats.active_classrooms}
               </h2>
             </div>
@@ -385,7 +383,7 @@ const AdminDashboard = () => {
               >
                 Files Uploaded
               </span>
-              <h2 className="fw-bolder text-dark mb-0 display-6">
+              <h2 className="fw-bolder text-warning mb-0 display-6">
                 {data.stats.files_uploaded}
               </h2>
             </div>
@@ -403,7 +401,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* CHARTS & TOP TEACHERS */}
       <div className="row g-4 mb-4">
         {/* BAR CHART: Students Per Strand */}
         <div
@@ -416,10 +413,10 @@ const AdminDashboard = () => {
           <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 premium-hover-card">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h6 className="fw-bold text-dark mb-0">
-                <i className="bi bi-bar-chart fs-5 me-2"></i> Students Per
-                Strand{" "}
+                <i className="bi bi-bar-chart text-success fs-5 me-2"></i>{" "}
+                Students Per Strand{" "}
                 {strandYear && (
-                  <span className="badge bg-primary text-light ms-1">
+                  <span className="badge bg-success text-light fw-medium ms-1 shadow-sm">
                     {strandYear}
                   </span>
                 )}
@@ -427,7 +424,7 @@ const AdminDashboard = () => {
 
               <div className="dropdown custom-chart-dropdown position-relative">
                 <button
-                  className="btn btn-light btn-sm rounded-circle shadow-sm"
+                  className="btn btn-success btn-sm rounded-circle shadow-sm"
                   onClick={() =>
                     setOpenDropdown(openDropdown === "strand" ? null : "strand")
                   }
@@ -444,7 +441,7 @@ const AdminDashboard = () => {
                 >
                   <li>
                     <button
-                      className="dropdown-item fw-bold text-center"
+                      className="dropdown-item fw-medium text-center"
                       onClick={() => handleStrandYearChange("")}
                     >
                       All Time
@@ -505,10 +502,10 @@ const AdminDashboard = () => {
           <div className="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 premium-hover-card">
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h6 className="fw-bold text-dark mb-0">
-                <i className="bi bi-person-check fs-5 me-2"></i> Active vs
-                Inactive Users{" "}
+                <i className="bi bi-person-check text-success fs-5 me-2"></i>{" "}
+                Active vs Inactive Users{" "}
                 {statusYear && (
-                  <span className="badge bg-primary text-light ms-1">
+                  <span className="badge bg-success fw-medium ms-1 shadow-sm">
                     {statusYear}
                   </span>
                 )}
@@ -516,7 +513,7 @@ const AdminDashboard = () => {
 
               <div className="dropdown custom-chart-dropdown position-relative">
                 <button
-                  className="btn btn-light btn-sm rounded-circle shadow-sm"
+                  className="btn btn-success btn-sm rounded-circle shadow-sm"
                   onClick={() =>
                     setOpenDropdown(openDropdown === "status" ? null : "status")
                   }
@@ -533,7 +530,7 @@ const AdminDashboard = () => {
                 >
                   <li>
                     <button
-                      className="dropdown-item fw-bold text-center"
+                      className="dropdown-item fw-medium text-center"
                       onClick={() => handleStatusYearChange("")}
                     >
                       All Time
@@ -618,7 +615,8 @@ const AdminDashboard = () => {
           <div className="card border-0 shadow-sm rounded-4 bg-white p-0 overflow-hidden d-flex flex-column w-100 premium-hover-card">
             <div className="card-header bg-light border-bottom p-3 flex-shrink-0">
               <h6 className="fw-bold text-dark mb-0 py-1">
-                <i className="bi bi-trophy fs-5 me-2"></i> Top Teachers Activity
+                <i className="bi bi-trophy text-warning fs-5 me-2"></i> Top
+                Teachers Activity
               </h6>
             </div>
             <div
@@ -715,8 +713,8 @@ const AdminDashboard = () => {
         <div className="col-12">
           <div className="card border-0 shadow-sm rounded-4 bg-white p-4 premium-hover-card">
             <h6 className="fw-bold text-dark mb-4">
-              <i className="bi bi-activity fs-5 me-2"></i> System Logins (Last 7
-              Days)
+              <i className="bi bi-activity text-primary fs-5 me-2"></i> System
+              Logins (Last 7 Days)
             </h6>
             <div style={{ width: "100%", height: 350 }}>
               <ResponsiveContainer>

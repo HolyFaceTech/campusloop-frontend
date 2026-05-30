@@ -178,8 +178,11 @@ const AdminELibraryModals = ({
               <h4 className="fw-bold text-dark mt-2">Approve Materials</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to approve{" "}
-                <b>{selectedCount} selected material(s)</b>? They will become
-                visible to all students.
+                <b>
+                  {selectedCount} selected material
+                  {selectedCount > 1 ? "s" : ""}
+                </b>
+                ? They will become visible to all students.
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -227,7 +230,11 @@ const AdminELibraryModals = ({
               <h4 className="fw-bold text-dark mt-2">Decline Materials</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to decline{" "}
-                <b>{selectedCount} selected material(s)</b>?
+                <b>
+                  {selectedCount} selected material
+                  {selectedCount > 1 ? "s" : ""}
+                </b>
+                ?
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -340,7 +347,10 @@ const AdminELibraryModals = ({
               <h4 className="fw-bold text-dark mt-2">Delete Materials</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to move{" "}
-                <b>{selectedCount} selected material(s)</b>
+                <b>
+                  {selectedCount} selected material
+                  {selectedCount > 1 ? "s" : ""}
+                </b>{" "}
                 to the Recycle Bin?
               </p>
             </div>

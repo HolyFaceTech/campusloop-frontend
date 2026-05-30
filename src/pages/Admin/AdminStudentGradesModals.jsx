@@ -13,19 +13,12 @@ const AdminStudentGradesModals = ({
   declineFeedback,
   setDeclineFeedback,
 }) => {
-  // Filters & Search
   const [syFilter, setSyFilter] = useState("all");
   const [semFilter, setSemFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Para sa Frontend Debounce
   const [debouncedSearch, setDebouncedSearch] = useState("");
-
-  // Pagination
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Get unique school years for the filter dropdown
   const uniqueSYs = [...new Set(studentGrades.map((g) => g.school_year))];
 
   // DEBOUNCE EFFECT (500ms Delay)
@@ -41,7 +34,6 @@ const AdminStudentGradesModals = ({
     setCurrentPage(1);
   }, [syFilter, semFilter, debouncedSearch, entriesPerPage]);
 
-  // Filtering Logic
   const filteredGrades = studentGrades.filter((grade) => {
     const matchSy = syFilter === "all" || grade.school_year === syFilter;
     const matchSem = semFilter === "all" || grade.semester === semFilter;
@@ -52,9 +44,9 @@ const AdminStudentGradesModals = ({
     return matchSy && matchSem && matchSearch;
   });
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredGrades.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
+
   const currentGrades = filteredGrades.slice(
     startIndex,
     startIndex + entriesPerPage,
@@ -74,7 +66,6 @@ const AdminStudentGradesModals = ({
     }, 400);
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -152,7 +143,6 @@ const AdminStudentGradesModals = ({
             </div>
 
             <div className="modal-body p-4 bg-light">
-              {/* UNIFIED TOOLKIT BAR */}
               <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
                 <div className="card-body p-0">
                   <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
@@ -174,10 +164,9 @@ const AdminStudentGradesModals = ({
                       entries
                     </div>
 
-                    {/* SEARCH INPUT */}
                     <div
                       className="input-group flex-grow-1"
-                      style={{ minWidth: "400px" }}
+                      style={{ minWidth: "200px" }}
                     >
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-search"></i>
@@ -191,7 +180,6 @@ const AdminStudentGradesModals = ({
                       />
                     </div>
 
-                    {/* SY FILTER */}
                     <div className="input-group" style={{ minWidth: "200px" }}>
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-calendar-event"></i>
@@ -210,7 +198,6 @@ const AdminStudentGradesModals = ({
                       </select>
                     </div>
 
-                    {/* SEM FILTER */}
                     <div className="input-group" style={{ minWidth: "200px" }}>
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-calendar-range"></i>
@@ -229,7 +216,6 @@ const AdminStudentGradesModals = ({
                 </div>
               </div>
 
-              {/* GRADES DATATABLE */}
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
                   className="table-responsive custom-scrollbar"
@@ -348,22 +334,24 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                             </td>
-                            <td className="text-center pe-4 py-2">
+                            <td className="text-center pe-4 text-nowrap">
                               {record.status === "pending" ? (
                                 <div className="d-flex justify-content-center gap-2">
                                   <button
-                                    className="btn btn-sm btn-success fw-medium px-3 rounded-3 shadow-sm"
+                                    className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                                    style={{ width: "35px", height: "35px" }}
+                                    title="Approved Grade"
                                     onClick={() => triggerApprove(record.id)}
                                   >
-                                    <i className="bi bi-check-circle-fill"></i>{" "}
-                                    Approve
+                                    <i className="bi bi-check-circle-fill text-success"></i>
                                   </button>
                                   <button
-                                    className="btn btn-sm btn-warning text-dark fw-medium px-3 rounded-3 shadow-sm"
+                                    className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                                    style={{ width: "35px", height: "35px" }}
+                                    title="Decline Grade"
                                     onClick={() => triggerDecline(record.id)}
                                   >
-                                    <i className="bi bi-x-circle-fill"></i>{" "}
-                                    Decline
+                                    <i className="bi bi-x-circle-fill text-warning"></i>
                                   </button>
                                 </div>
                               ) : (
@@ -404,7 +392,6 @@ const AdminStudentGradesModals = ({
                 </div>
               </div>
 
-              {/* PAGINATION METADATA FOOTER */}
               {filteredGrades.length > 0 && !isLoadingGrades && (
                 <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 px-2 gap-3">
                   <p className="text-muted small mb-0">
@@ -466,7 +453,6 @@ const AdminStudentGradesModals = ({
         </div>
       </div>
 
-      {/* APPROVE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="confirmApproveGradeModal"
@@ -517,7 +503,6 @@ const AdminStudentGradesModals = ({
         </div>
       </div>
 
-      {/* DECLINE INTENT MODAL */}
       <div
         className="modal fade"
         id="confirmDeclineGradeModal"
@@ -566,7 +551,6 @@ const AdminStudentGradesModals = ({
         </div>
       </div>
 
-      {/* DECLINE FEEDBACK MODAL */}
       <div
         className="modal fade"
         id="feedbackDeclineGradeModal"

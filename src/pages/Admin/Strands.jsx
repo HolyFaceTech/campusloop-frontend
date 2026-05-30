@@ -14,17 +14,13 @@ const Strands = () => {
   const [strands, setStrands] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState(""); // Local Debounce State
-
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [modalMode, setModalMode] = useState("");
   const [selectedStrand, setSelectedStrand] = useState(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
-
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
-  // Helper function para laging updated ang token na kukunin
   const getAuthToken = () => {
     return (
       localStorage.getItem("campusloop_token") ||
@@ -69,9 +65,11 @@ const Strands = () => {
       );
       setStrands(response.data);
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Failed to fetch strands.";
       sileo.error({
         title: "Error",
-        description: "Failed to fetch strands.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -173,10 +171,11 @@ const Strands = () => {
       }
       fetchStrands();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Please check your inputs.";
       sileo.error({
         title: "Failed",
-        description:
-          error.response?.data?.message || "Please check your inputs.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
@@ -216,9 +215,11 @@ const Strands = () => {
         });
         fetchStrands();
       } catch (error) {
+        const errorMsg =
+          error.response?.data?.message || "Could not delete strand.";
         sileo.error({
           title: "Failed",
-          description: "Could not delete strand.",
+          description: errorMsg,
           ...darkToast,
         });
       } finally {
@@ -237,7 +238,6 @@ const Strands = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER WITH BUTTON */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-3 gap-3">
         <div className="flex-grow-1">
           <h3
@@ -261,7 +261,6 @@ const Strands = () => {
         </div>
       </div>
 
-      {/* SEARCH BAR SECTION */}
       <div className="row mb-4">
         <div className="col-12 col-md-6 col-xl-4">
           <div className="input-group shadow-sm rounded-3 overflow-hidden">
@@ -279,7 +278,6 @@ const Strands = () => {
         </div>
       </div>
 
-      {/* GRID CARDS */}
       <div className="row g-4">
         {filteredStrands.map((strand) => (
           <div className="col-md-6 col-xl-4" key={strand.id}>
@@ -287,7 +285,6 @@ const Strands = () => {
               className="card border-0 shadow-sm rounded-4 h-100 premium-hover-card bg-white"
               style={{ borderRadius: "1rem" }}
             >
-              {/* CARD HEADER */}
               <div
                 className="p-4 position-relative d-flex flex-column justify-content-end"
                 style={{
@@ -297,7 +294,6 @@ const Strands = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
-                {/* Decorative Circles */}
                 <div
                   className="position-absolute rounded-circle"
                   style={{
@@ -389,7 +385,6 @@ const Strands = () => {
                 </div>
               </div>
 
-              {/* CARD BODY */}
               <div className="card-body p-4 d-flex flex-column position-relative">
                 <div
                   className="position-absolute shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white"
@@ -422,14 +417,13 @@ const Strands = () => {
                   </p>
                 </div>
 
-                {/* Main Details Box */}
                 <div className="bg-light rounded-4 p-3 mt-auto border border-light-subtle d-flex align-items-center justify-content-between">
                   <div className="d-flex align-items-center">
                     <div
-                      className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-2 flex-shrink-0"
+                      className="rounded-circle bg-success shadow-sm d-flex justify-content-center align-items-center me-2 flex-shrink-0"
                       style={{ width: "35px", height: "35px" }}
                     >
-                      <i className="bi bi-people text-success"></i>
+                      <i className="bi bi-people text-light"></i>
                     </div>
                     <span
                       className="text-muted fw-bold mb-0"
@@ -438,7 +432,7 @@ const Strands = () => {
                       Enrolled Students
                     </span>
                   </div>
-                  <span className="text-dark fw-bold fs-5 mb-0">
+                  <span className="text-success fw-bold fs-5 mb-0">
                     {strand.users_count || 0}
                   </span>
                 </div>

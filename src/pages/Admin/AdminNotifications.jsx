@@ -14,10 +14,7 @@ const AdminNotifications = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading notifications...");
-
   const navigate = useNavigate();
-
-  // STATES PARA SA DEBOUNCE AT PAGINATION
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,7 +29,6 @@ const AdminNotifications = () => {
     return () => clearInterval(intervalId);
   }, [searchQuery, currentPage, entriesPerPage]);
 
-  // RESET PAGE PAG NAG-TYPE SA SEARCH
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
@@ -114,7 +110,7 @@ const AdminNotifications = () => {
         description: "All notifications marked as read.",
         ...darkToast,
       });
-      fetchNotifications(false); // Update table behind the scenes
+      fetchNotifications(false);
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -137,7 +133,6 @@ const AdminNotifications = () => {
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -209,7 +204,7 @@ const AdminNotifications = () => {
         </button>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -247,7 +242,7 @@ const AdminNotifications = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-hover align-middle mb-0"
@@ -319,7 +314,7 @@ const AdminNotifications = () => {
                       style={{ width: "120px" }}
                     >
                       {!notif.is_read && (
-                        <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle rounded-3">
+                        <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle rounded-3 shadow-sm">
                           New
                         </span>
                       )}
@@ -332,7 +327,6 @@ const AdminNotifications = () => {
         </div>
       </div>
 
-      {/* SMART PAGINATION */}
       {!isLoading && totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 mb-4 px-2 gap-3">
           <p className="text-muted small mb-0">

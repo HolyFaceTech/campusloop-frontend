@@ -15,22 +15,16 @@ const AdminClassrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading Classrooms...");
-
-  // Selection, Search, and Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [filterGradeLevel, setFilterGradeLevel] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
-
-  // PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const navigate = useNavigate();
 
-  // Reset to page 1 kapag nagbago ang mga filters
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, sortOrder, filterGradeLevel, entriesPerPage]);
@@ -62,18 +56,20 @@ const AdminClassrooms = () => {
           },
         },
       );
-      // Galing na sa server ang naka-paginate na data
       setClassrooms(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
-      setSelectedIds([]); // Clear selection when data changes
+      setSelectedIds([]);
     } catch (error) {
       console.error("Error fetching classrooms", error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to load classrooms.";
       sileo.error({
         title: "Error",
-        description: "Failed to fetch classrooms.",
+        description: errorMsg,
         ...darkToast,
       });
+      setClassrooms([]);
     } finally {
       setIsLoading(false);
     }
@@ -118,9 +114,11 @@ const AdminClassrooms = () => {
       setCurrentPage(1);
       fetchClassrooms();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Could not delete classrooms.";
       sileo.error({
         title: "Failed",
-        description: "Could not delete classrooms.",
+        description: errorMsg,
         ...darkToast,
       });
       setIsLoading(false);
@@ -163,7 +161,6 @@ const AdminClassrooms = () => {
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -213,7 +210,6 @@ const AdminClassrooms = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER TITLE */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
           <h3
@@ -229,11 +225,9 @@ const AdminClassrooms = () => {
         </div>
       </div>
 
-      {/* UNIFIED TOP CONTROL BAR */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SELECT ALL CHECKBOX WITH PRIMARY PILL COUNTER */}
             <div className="d-flex align-items-center flex-shrink-0 pe-2">
               <div className="form-check m-0 d-flex align-items-center">
                 <input
@@ -264,7 +258,6 @@ const AdminClassrooms = () => {
               </div>
             </div>
 
-            {/* EXPANDED SEARCH INPUT */}
             <div
               className="input-group flex-grow-1"
               style={{ minWidth: "400px" }}
@@ -281,10 +274,9 @@ const AdminClassrooms = () => {
               />
             </div>
 
-            {/* GRADE LEVEL FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-bar-chart-steps"></i>
@@ -300,10 +292,9 @@ const AdminClassrooms = () => {
               </select>
             </div>
 
-            {/* SORT FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
@@ -318,7 +309,6 @@ const AdminClassrooms = () => {
               </select>
             </div>
 
-            {/* SIMPLIFIED BULK DELETE BUTTON */}
             <div className="d-flex gap-2 flex-shrink-0 ms-auto ps-2">
               <button
                 onClick={confirmDelete}
@@ -332,7 +322,6 @@ const AdminClassrooms = () => {
         </div>
       </div>
 
-      {/* GRID CARDS */}
       <div className="row g-4">
         {classrooms.map((item) => (
           <div className="col-12 col-md-6 col-xl-4" key={item.id}>
@@ -349,7 +338,6 @@ const AdminClassrooms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
-                {/* Decorative Circles */}
                 <div
                   className="position-absolute rounded-circle"
                   style={{
@@ -372,8 +360,6 @@ const AdminClassrooms = () => {
                     pointerEvents: "none",
                   }}
                 ></div>
-
-                {/* YUNG DATING DROPDOWN MENU PINALITAN NATIN NG CHECKBOX */}
                 <div
                   className="dropdown position-absolute top-0 end-0 mt-3 me-3 z-3"
                   onClick={(e) => e.stopPropagation()}
@@ -455,10 +441,10 @@ const AdminClassrooms = () => {
                 <div className="bg-light rounded-4 p-3 mb-4 border border-light-subtle flex-grow-1">
                   <div className="d-flex align-items-start mb-3">
                     <div
-                      className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                      className="rounded-circle bg-primary shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                       style={{ width: "35px", height: "35px" }}
                     >
-                      <i className="bi bi-calendar3 text-primary"></i>
+                      <i className="bi bi-calendar3 text-light"></i>
                     </div>
                     <div className="overflow-hidden">
                       <span
@@ -474,10 +460,10 @@ const AdminClassrooms = () => {
                   </div>
                   <div className="d-flex align-items-start">
                     <div
-                      className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                      className="rounded-circle bg-success shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                       style={{ width: "35px", height: "35px" }}
                     >
-                      <i className="bi bi-people text-success"></i>
+                      <i className="bi bi-people text-light"></i>
                     </div>
                     <div>
                       <span
@@ -511,7 +497,7 @@ const AdminClassrooms = () => {
                       Class Code
                     </span>
                     <span
-                      className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold"
+                      className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold shadow-sm"
                       style={{ letterSpacing: "1px", fontSize: "0.85rem" }}
                     >
                       {item.code}
@@ -530,7 +516,6 @@ const AdminClassrooms = () => {
           </div>
         ))}
 
-        {/* EMPTY STATE */}
         {classrooms.length === 0 && !isLoading && (
           <div className="col-12">
             <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
@@ -549,7 +534,6 @@ const AdminClassrooms = () => {
         )}
       </div>
 
-      {/* PAGINATION CONTROLS */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-4 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">
@@ -591,7 +575,6 @@ const AdminClassrooms = () => {
         </div>
       )}
 
-      {/* ADMIN CLASSROOM MODAL */}
       <AdminClassroomsModal
         selectedIdsCount={selectedIds.length}
         executeDelete={executeDelete}

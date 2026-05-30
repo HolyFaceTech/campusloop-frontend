@@ -38,6 +38,20 @@ const AdminClassroomView = () => {
       );
       setClassroom(res.data);
     } catch (error) {
+      import("sileo").then(({ sileo }) => {
+        const errorMsg =
+          error.response?.data?.message ||
+          "Classroom not found or an error occurred.";
+        sileo.error({
+          title: "Error",
+          description: errorMsg,
+          fill: "#242424",
+          styles: {
+            title: "sileo-toast-title",
+            description: "sileo-toast-desc",
+          },
+        });
+      });
       navigate("/admin/classrooms");
     } finally {
       setIsLoading(false);
@@ -68,15 +82,13 @@ const AdminClassroomView = () => {
 
   return (
     <div className="classroom-view-container custom-scrollbar">
-      {/* PREMIUM HEADER BANNER */}
       <div
-        className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative"
+        className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative premium-hover-card"
         style={{
           minHeight: "280px",
           backgroundColor: classroom.color_bg || "var(--primary-color)",
         }}
       >
-        {/* SVG Background Illustration */}
         <div
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{
@@ -88,7 +100,6 @@ const AdminClassroomView = () => {
           }}
         ></div>
 
-        {/* Dark Gradient Overlay */}
         <div
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{
@@ -97,7 +108,6 @@ const AdminClassroomView = () => {
           }}
         ></div>
 
-        {/* HEADER CONTENT */}
         <div className="card-body p-4 p-md-5 d-flex flex-column justify-content-between position-relative z-1 h-100">
           <div className="d-flex justify-content-between align-items-start gap-4">
             <div>
@@ -120,7 +130,6 @@ const AdminClassroomView = () => {
               </div>
             </div>
 
-            {/* CREATOR AVATAR */}
             <div className="text-center d-none d-sm-block mt-3">
               <div
                 className="shadow-sm rounded-circle d-flex justify-content-center align-items-center fw-bold text-white mx-auto"
@@ -146,7 +155,6 @@ const AdminClassroomView = () => {
             </div>
           </div>
 
-          {/* BOTTOM SECTION */}
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mt-5 pt-4 border-top border-white border-opacity-10 gap-3">
             <div className="d-flex align-items-center text-white opacity-75 fw-medium">
               <div
@@ -198,7 +206,6 @@ const AdminClassroomView = () => {
         </div>
       </div>
 
-      {/* TABS */}
       <div className="bg-white rounded-4 shadow-sm mb-4 overflow-hidden">
         <ul className="nav nav-justified custom-premium-tabs m-0">
           <li className="nav-item">
@@ -229,7 +236,6 @@ const AdminClassroomView = () => {
         </ul>
       </div>
 
-      {/* TAB CONTENT AREA */}
       <div className="tab-content-wrapper pb-5">
         <Outlet context={{ classroom }} />
       </div>

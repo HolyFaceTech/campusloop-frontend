@@ -15,19 +15,15 @@ const Announcements = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDate, setSortDate] = useState("newest");
   const [filterAttachment, setFilterAttachment] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-
   const [selectedIds, setSelectedIds] = useState([]);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [modalMode, setModalMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -56,7 +52,7 @@ const Announcements = () => {
     setCurrentPage(1);
   }, [searchQuery, sortDate, filterAttachment, filterStatus, entriesPerPage]);
 
-  // DEBOUNCE EFFECT Mag-fe-fetch sa server kapag nag-stop na mag-type
+  // DEBOUNCE EFFECT
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchAnnouncements(true);
@@ -94,16 +90,17 @@ const Announcements = () => {
           },
         },
       );
-      // Galing na sa server ang naka-paginate na data
       setAnnouncements(response.data.data || []);
       setTotalPages(response.data.last_page || 1);
       setTotalRecords(response.data.total || 0);
     } catch (error) {
-      sileo.error({
-        title: "Error",
-        description: "Failed to load records.",
-        ...darkToast,
+      console.error(error);
+      const errorMsg =
+        error.response?.data?.message || "Failed to load announcements.";
+      import("sileo").then(({ sileo }) => {
+        sileo.error({ title: "Error", description: errorMsg, ...darkToast });
       });
+      setAnnouncements([]);
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +135,6 @@ const Announcements = () => {
   const openViewModal = (item) => {
     setSelectedItem(item);
 
-    // Maliit na delay para iwas Bootstrap Backdrop error
     setTimeout(() => {
       const modalElement = document.getElementById("announcementViewModal");
       if (modalElement) {
@@ -217,13 +213,11 @@ const Announcements = () => {
       return;
     }
 
-    // I-deretso na natin sa pag-submit
     if (modalMode === "update") {
       executeSubmit();
       return;
     }
 
-    // Ipakita pa rin ang confirmation modal
     const formModal = Modal.getInstance(
       document.getElementById("announcementFormModal"),
     );
@@ -240,7 +234,6 @@ const Announcements = () => {
   };
 
   const executeSubmit = async () => {
-    // Siguraduhing isasara ang form modal kung direct save on update
     const formModal = Modal.getInstance(
       document.getElementById("announcementFormModal"),
     );
@@ -308,11 +301,9 @@ const Announcements = () => {
       fetchAnnouncements();
       setSelectedIds([]);
     } catch (error) {
-      sileo.error({
-        title: "Failed",
-        description: error.response?.data?.message || "Check inputs.",
-        ...darkToast,
-      });
+      const errorMsg =
+        error.response?.data?.message || "Could not save announcement.";
+      sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
     } finally {
       setIsLoading(false);
     }
@@ -358,14 +349,12 @@ const Announcements = () => {
           description: "Moved to recycle bin.",
           ...darkToast,
         });
-        setCurrentPage(1); // Balik page 1 kapag nakadelete
+        setCurrentPage(1);
         fetchAnnouncements();
       } catch (error) {
-        sileo.error({
-          title: "Failed",
-          description: "Could not delete.",
-          ...darkToast,
-        });
+        const errorMsg =
+          error.response?.data?.message || "Could not delete announcements.";
+        sileo.error({ title: "Failed", description: errorMsg, ...darkToast });
       } finally {
         setIsLoading(false);
       }
@@ -399,7 +388,6 @@ const Announcements = () => {
     ? announcements.find((a) => a.id === selectedItem.id) || selectedItem
     : null;
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -470,7 +458,7 @@ const Announcements = () => {
         </button>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -491,7 +479,7 @@ const Announcements = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              style={{ minWidth: "200px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -563,7 +551,7 @@ const Announcements = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -628,7 +616,7 @@ const Announcements = () => {
                         style={{ fontSize: "0.85rem" }}
                       >
                         <div
-                          className="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center me-2"
+                          className="rounded-circle shadow-sm bg-success bg-opacity-10 d-flex justify-content-center align-items-center me-2"
                           style={{ width: "24px", height: "24px" }}
                         >
                           <i
@@ -645,7 +633,7 @@ const Announcements = () => {
                         style={{ fontSize: "0.80rem" }}
                       >
                         <div
-                          className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center me-2"
+                          className="rounded-circle bg-danger shadow-sm bg-opacity-10 d-flex justify-content-center align-items-center me-2"
                           style={{ width: "24px", height: "24px" }}
                         >
                           <i
@@ -660,12 +648,12 @@ const Announcements = () => {
                   <td className="py-3 text-nowrap">
                     <div className="d-flex gap-2">
                       {item.link && (
-                        <span className="badge bg-primary text-light fw-medium rounded-3 px-3 py-2">
+                        <span className="badge bg-primary text-light fw-medium rounded-3 px-2 py-1 shadow-sm">
                           Link
                         </span>
                       )}
                       {item.files && item.files.length > 0 && (
-                        <span className="badge bg-secondary text-light fw-medium rounded-3 px-3 py-2">
+                        <span className="badge bg-secondary text-light fw-medium rounded-3 px-2 py-1 shadow-sm">
                           {item.files.length} Files
                         </span>
                       )}
@@ -677,17 +665,17 @@ const Announcements = () => {
                   </td>
                   <td className="py-3 text-nowrap">
                     {item.status === "Pending" && (
-                      <span className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-2 py-1 border border-warning-subtle">
+                      <span className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-2 py-1 border border-warning-subtle shadow-sm">
                         Pending
                       </span>
                     )}
                     {item.status === "Published" && (
-                      <span className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle">
+                      <span className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-2 py-1 border border-success-subtle shadow-sm">
                         Published
                       </span>
                     )}
                     {item.status === "Done" && (
-                      <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium rounded-3 px-2 py-1 border border-secondary-subtle">
+                      <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium rounded-3 px-2 py-1 border border-secondary-subtle shadow-sm">
                         Done
                       </span>
                     )}
@@ -752,7 +740,6 @@ const Announcements = () => {
         </div>
       </div>
 
-      {/* PAGINATION METADATA FOOTER */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <p className="text-muted small mb-0">

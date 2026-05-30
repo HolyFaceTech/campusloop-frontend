@@ -14,27 +14,18 @@ const AdminStudentGrades = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Student Records...");
-
-  // Filters, Sorting, & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [strandFilter, setStrandFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("az");
-
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
-  // State para ma-populate yung dropdown ng Strands dynamically
   const [strands, setStrands] = useState([]);
-
-  // States for Modals
   const [activeStudent, setActiveStudent] = useState(null);
   const [studentGrades, setStudentGrades] = useState([]);
   const [isLoadingGrades, setIsLoadingGrades] = useState(false);
-
-  // States for Approve/Decline actions
   const [selectedGradeId, setSelectedGradeId] = useState(null);
   const [declineFeedback, setDeclineFeedback] = useState("");
 
@@ -115,7 +106,7 @@ const AdminStudentGrades = () => {
     const modalEl = document.getElementById("studentGradesModal");
     if (modalEl) Modal.getOrCreateInstance(modalEl).show();
 
-    setIsLoadingGrades(true); // loading sa loob ng table
+    setIsLoadingGrades(true);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${student.id}`,
@@ -256,7 +247,6 @@ const AdminStudentGrades = () => {
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -320,11 +310,9 @@ const AdminStudentGrades = () => {
         </div>
       </div>
 
-      {/* UNIFIED CONTROLS TRAY */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
-            {/* SHOW ENTRIES */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -341,10 +329,9 @@ const AdminStudentGrades = () => {
               entries
             </div>
 
-            {/* SEARCH BAR */}
             <div
-              className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              className="input-group flex-shrink-0"
+              style={{ maxWidth: "327px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -358,10 +345,9 @@ const AdminStudentGrades = () => {
               />
             </div>
 
-            {/* STRAND FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "327px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-diagram-3"></i>
@@ -380,10 +366,9 @@ const AdminStudentGrades = () => {
               </select>
             </div>
 
-            {/* GENDER FILTER */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "327px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
@@ -399,10 +384,9 @@ const AdminStudentGrades = () => {
               </select>
             </div>
 
-            {/* SORTING A-Z */}
             <div
               className="input-group flex-shrink-0"
-              style={{ width: "200px" }}
+              style={{ width: "327px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-alpha-down"></i>
@@ -420,8 +404,7 @@ const AdminStudentGrades = () => {
         </div>
       </div>
 
-      {/* DATATABLE LAYOUT */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -495,13 +478,14 @@ const AdminStudentGrades = () => {
                         className="d-block fw-bold font-monospace text-dark tracking-wide"
                         style={{ fontSize: "0.90rem" }}
                       >
+                        <i className="bi bi-123 me-1 text-muted"></i>{" "}
                         {student.lrn || "N/A"}
                       </span>
                     </td>
 
                     <td className="py-2">
                       <span
-                        className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                        className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 shadow-sm"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {student.strand?.name || "N/A"}
@@ -517,14 +501,14 @@ const AdminStudentGrades = () => {
                     <td className="text-center py-2">
                       {student.has_pending_grades ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Action Needed
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success rounded-3 px-2 py-1"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success rounded-3 px-2 py-1 shadow-sm"
                           style={{ fontSize: "0.65rem" }}
                         >
                           Cleared
@@ -541,7 +525,7 @@ const AdminStudentGrades = () => {
                           className="text-muted fw-bold d-block text-uppercase"
                           style={{ fontSize: "0.6rem", letterSpacing: "1px" }}
                         >
-                          Records
+                          Record{student.grades_count > 1 ? "s" : ""}
                         </span>
                       </div>
                     </td>
@@ -586,7 +570,6 @@ const AdminStudentGrades = () => {
         </div>
       </div>
 
-      {/* PAGINATION */}
       {totalRecords > 0 && (
         <div className="d-flex flex-wrap justify-content-between align-items-center mt-2 mb-4 gap-3 px-2">
           <span className="text-muted small">
@@ -628,7 +611,6 @@ const AdminStudentGrades = () => {
         </div>
       )}
 
-      {/* MODALS COMPONENT */}
       <AdminStudentGradesModals
         activeStudent={activeStudent}
         studentGrades={studentGrades}
