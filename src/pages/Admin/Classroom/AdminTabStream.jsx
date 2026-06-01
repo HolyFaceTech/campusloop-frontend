@@ -343,7 +343,7 @@ const AdminTabStream = () => {
                 >
                   Select All
                   <span
-                    className="badge bg-primary fw-medium rounded-3 ms-2"
+                    className="badge bg-primary fw-medium rounded-3 ms-2 shadow-sm"
                     style={{ fontSize: "0.75rem" }}
                   >
                     {selectedIds.length}

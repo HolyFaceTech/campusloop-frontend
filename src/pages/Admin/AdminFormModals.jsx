@@ -135,7 +135,12 @@ export const ConfirmStudentPDFModal = ({
             </div>
             <h4 className="fw-bold text-dark mt-2">Print Form</h4>
             <p className="text-muted mb-4">
-              Print <b>{respondent?.student?.first_name}'s</b> submission?
+              Print{" "}
+              <b>
+                {respondent?.student?.first_name}{" "}
+                {respondent?.student?.last_name}
+              </b>{" "}
+              submission?
             </p>
             <div className="d-flex justify-content-center gap-2">
               <button

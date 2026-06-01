@@ -428,7 +428,7 @@ const AdminLayout = () => {
               ref={avatarRef}
             >
               <button
-                className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center"
+                className="btn p-0 border-0 shadow-none d-flex align-items-center justify-content-center shadow-sm"
                 type="button"
                 onClick={() => setShowAvatar(!showAvatar)}
               >
@@ -502,7 +502,7 @@ const AdminLayout = () => {
             </div>
             <button
               onClick={handleLogout}
-              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3 shadow-sm"
               style={{ transition: "all 0.3s ease" }}
             >
               <i className="bi bi-box-arrow-right me-1"></i> Sign Out

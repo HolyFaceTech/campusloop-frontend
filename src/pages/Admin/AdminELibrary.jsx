@@ -279,7 +279,7 @@ const AdminELibrary = () => {
               <div className="d-flex align-items-center">
                 <input
                   type="checkbox"
-                  className="form-check-input shadow-sm border-secondary m-0"
+                  className="form-check-input shadow-sm m-0"
                   style={{ width: "20px", height: "20px", cursor: "pointer" }}
                   onChange={toggleSelectAll}
                   checked={
@@ -293,7 +293,7 @@ const AdminELibrary = () => {
                   onClick={toggleSelectAll}
                 >
                   Select All
-                  <span className="badge bg-primary fw-medium rounded-3 ms-2">
+                  <span className="badge bg-primary fw-medium rounded-3 ms-2 shadow-sm">
                     {selectedIds.length}
                   </span>
                 </label>

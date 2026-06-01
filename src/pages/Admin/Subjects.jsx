@@ -392,7 +392,7 @@ const Subjects = () => {
               <input
                 type="text"
                 className="form-control border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                placeholder="Search Subject Code or Description..."
+                placeholder="Search Subject..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />

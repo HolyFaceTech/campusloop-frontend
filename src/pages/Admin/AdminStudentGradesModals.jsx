@@ -334,9 +334,9 @@ const AdminStudentGradesModals = ({
                                 </span>
                               )}
                             </td>
-                            <td className="text-center pe-4 text-nowrap">
+                            <td className="text-center pe-4">
                               {record.status === "pending" ? (
-                                <div className="d-flex justify-content-center gap-2">
+                                <div className="d-flex justify-content-center">
                                   <button
                                     className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
                                     style={{ width: "35px", height: "35px" }}

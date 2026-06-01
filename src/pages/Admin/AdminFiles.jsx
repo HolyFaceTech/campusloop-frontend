@@ -644,7 +644,7 @@ const AdminFiles = () => {
                   <div className="form-check m-0 d-flex align-items-center">
                     <input
                       type="checkbox"
-                      className="form-check-input mt-0 shadow-sm border-secondary"
+                      className="form-check-input mt-0 shadow-sm"
                       id="selectAllFiles"
                       checked={
                         selectedIds.length === files.length && files.length > 0
