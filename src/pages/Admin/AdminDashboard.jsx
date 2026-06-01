@@ -313,7 +313,7 @@ const AdminDashboard = () => {
               </h2>
             </div>
             <div
-              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-success-subtle"
+              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-success-subtle shadow-sm"
               style={{
                 width: "55px",
                 height: "55px",
@@ -338,7 +338,7 @@ const AdminDashboard = () => {
               </h2>
             </div>
             <div
-              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-primary-subtle"
+              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-primary-subtle shadow-sm"
               style={{
                 width: "55px",
                 height: "55px",
@@ -363,7 +363,7 @@ const AdminDashboard = () => {
               </h2>
             </div>
             <div
-              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-danger-subtle"
+              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-danger-subtle shadow-sm"
               style={{
                 width: "55px",
                 height: "55px",
@@ -388,7 +388,7 @@ const AdminDashboard = () => {
               </h2>
             </div>
             <div
-              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-warning-subtle"
+              className="rounded-4 d-flex justify-content-center align-items-center flex-shrink-0 border border-warning-subtle shadow-sm"
               style={{
                 width: "55px",
                 height: "55px",

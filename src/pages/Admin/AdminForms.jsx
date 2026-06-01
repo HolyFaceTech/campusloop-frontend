@@ -193,7 +193,7 @@ const AdminForms = () => {
               <div className="form-check m-0 d-flex align-items-center">
                 <input
                   type="checkbox"
-                  className="form-check-input mt-0 shadow-sm border-secondary"
+                  className="form-check-input mt-0 shadow-sm"
                   id="selectAll"
                   checked={
                     selectedIds.length === forms.length && forms.length > 0
@@ -211,7 +211,7 @@ const AdminForms = () => {
                   style={{ cursor: "pointer" }}
                 >
                   Select All
-                  <span className="badge bg-primary fw-medium rounded-3 ms-2">
+                  <span className="badge bg-primary fw-medium rounded-3 ms-2 shadow-sm">
                     {selectedIds.length}
                   </span>
                 </label>
