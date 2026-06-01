@@ -24,13 +24,9 @@ const TeacherForms = () => {
   const [forms, setForms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading forms...");
-
   const [modalMode, setModalMode] = useState("");
   const [selectedForm, setSelectedForm] = useState(null);
-
   const navigate = useNavigate();
-
-  // SERVER-SIDE PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
@@ -81,7 +77,6 @@ const TeacherForms = () => {
           },
         },
       );
-      // Laravel Pagination Structure
       setForms(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
@@ -260,7 +255,6 @@ const TeacherForms = () => {
     }
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -331,7 +325,7 @@ const TeacherForms = () => {
         </button>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -352,7 +346,7 @@ const TeacherForms = () => {
 
             <div
               className="input-group flex-shrink-0"
-              style={{ maxWidth: "350px", minWidth: "280px" }}
+              style={{ maxWidth: "400px", minWidth: "350px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -385,7 +379,6 @@ const TeacherForms = () => {
                   borderTopRightRadius: "1rem",
                 }}
               >
-                {/* Decorative Circles */}
                 <div
                   className="position-absolute rounded-circle"
                   style={{
@@ -535,17 +528,17 @@ const TeacherForms = () => {
                       </span>
                       {item.timer > 0 ? (
                         <span
-                          className="badge bg-warning bg-opacity-10 text-dark fw-medium border border-warning-subtle bg-opacity-10"
+                          className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
                           }}
                         >
-                          {item.timer} Mins
+                          {item.timer} Min{item.timer > 1 ? "s" : ""}
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -569,7 +562,7 @@ const TeacherForms = () => {
                       </span>
                       {item.is_focus_mode ? (
                         <span
-                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle bg-opacity-10"
+                          className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -579,7 +572,7 @@ const TeacherForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle bg-opacity-10"
+                          className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -603,7 +596,7 @@ const TeacherForms = () => {
                       </span>
                       {item.is_shuffle_questions ? (
                         <span
-                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary-subtle bg-opacity-10"
+                          className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",
@@ -613,7 +606,7 @@ const TeacherForms = () => {
                         </span>
                       ) : (
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10"
+                          className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary-subtle bg-opacity-10 shadow-sm"
                           style={{
                             fontSize: "0.65rem",
                             padding: "0.25rem 0.4rem",

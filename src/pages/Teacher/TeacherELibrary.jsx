@@ -54,7 +54,7 @@ const TeacherELibrary = () => {
     setCurrentPage(1);
   }, [searchQuery, entriesPerPage]);
 
-  // 🚨 DEBOUNCE EFFECT (500ms)
+  // DEBOUNCE EFFECT (500ms)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchLibraries();
@@ -411,7 +411,7 @@ const TeacherELibrary = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -448,7 +448,6 @@ const TeacherELibrary = () => {
         </div>
       </div>
 
-      {/* GRID ITEMS */}
       <div className="row g-4 mb-4">
         {libraries.length > 0 ? (
           libraries.map((item) => (
@@ -587,7 +586,7 @@ const TeacherELibrary = () => {
                     </span>
                     <p
                       className="text-dark small fw-medium mb-0 text-clamp-3"
-                      style={{ lineHeight: "1.6" }}
+                      style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                     >
                       {item.description}
                     </p>
@@ -630,7 +629,7 @@ const TeacherELibrary = () => {
                         <>
                           {item.status === "pending" && (
                             <span
-                              className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1"
+                              className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning px-2 py-1 shadow-sm"
                               style={{ fontSize: "0.65rem" }}
                             >
                               Pending
@@ -638,7 +637,7 @@ const TeacherELibrary = () => {
                           )}
                           {item.status === "approved" && (
                             <span
-                              className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1"
+                              className="badge bg-success bg-opacity-10 text-success fw-medium border border-success px-2 py-1 shadow-sm"
                               style={{ fontSize: "0.65rem" }}
                             >
                               Approved
@@ -646,7 +645,7 @@ const TeacherELibrary = () => {
                           )}
                           {item.status === "declined" && (
                             <span
-                              className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1"
+                              className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger px-2 py-1 shadow-sm"
                               style={{ fontSize: "0.65rem" }}
                             >
                               Declined
@@ -699,7 +698,7 @@ const TeacherELibrary = () => {
           <span className="text-muted small">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} resources
+            {totalRecords} materials
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">

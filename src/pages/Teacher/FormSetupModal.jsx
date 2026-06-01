@@ -13,7 +13,6 @@ const FormSetupModal = ({
 }) => {
   return (
     <>
-      {/* MAIN FORM SETUP MODAL */}
       <div
         className="modal fade"
         id="formSetupModal"
@@ -187,7 +186,6 @@ const FormSetupModal = ({
         </div>
       </div>
 
-      {/* UPDATE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -246,7 +244,6 @@ const FormSetupModal = ({
         </div>
       </div>
 
-      {/* DUPLICATE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="duplicateConfirmModal"
@@ -295,7 +292,6 @@ const FormSetupModal = ({
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteConfirmModal"

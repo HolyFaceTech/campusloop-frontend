@@ -25,24 +25,17 @@ const TabPeople = () => {
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // FILTERS & SEARCH
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGender, setFilterGender] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-
-  // SERVER-SIDE PAGINATION STATES
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
-
   const [actionType, setActionType] = useState(""); // 'approve', 'decline', 'remove'
 
-  // RESET PAGE TO 1 PAG MAY GINAGALAW NA FILTER O ENTRIES PER PAGE
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filterGender, filterStatus, entriesPerPage]);
@@ -85,7 +78,7 @@ const TabPeople = () => {
       setStudents(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
-      setSelectedIds([]); // I-reset ang selection para iwas stale IDs
+      setSelectedIds([]);
     } catch (error) {
       console.error("Error fetching students", error);
     } finally {
@@ -151,7 +144,6 @@ const TabPeople = () => {
     else setSelectedIds([]);
   };
 
-  // CHECKERS PARA SA BUTTONS
   const hasPendingSelected = selectedIds.some(
     (id) => students.find((s) => s.id === id)?.pivot?.status === "pending",
   );
@@ -229,7 +221,7 @@ const TabPeople = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "400px" }}
+              style={{ minWidth: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -243,7 +235,7 @@ const TabPeople = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-gender-ambiguous"></i>
               </span>
@@ -258,7 +250,7 @@ const TabPeople = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "200px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -390,13 +382,14 @@ const TabPeople = () => {
                       className="fw-bold font-monospace tracking-wide text-dark"
                       style={{ fontSize: "0.90rem" }}
                     >
+                      <i className="bi bi-123 me-1 text-muted"></i>{" "}
                       {student.lrn || "N/A"}
                     </span>
                   </td>
 
                   <td>
                     <span
-                      className="badge bg-opacity-10 border border-dark-subtle fw-medium text-dark rounded-3 px-2 py-1"
+                      className="badge bg-opacity-10 border border-dark-subtle fw-medium text-dark rounded-3 px-2 py-1 shadow-sm"
                       style={{
                         maxWidth: "150px",
                         backgroundColor: "var(--accent-color)",
@@ -415,14 +408,14 @@ const TabPeople = () => {
                   <td>
                     {student.pivot.status === "approved" ? (
                       <span
-                        className="badge bg-success bg-opacity-10 border border-success-subtle fw-medium text-success rounded-3 px-2 py-1"
+                        className="badge bg-success bg-opacity-10 border border-success-subtle fw-medium text-success rounded-3 px-2 py-1 shadow-sm"
                         style={{ fontSize: "0.65rem" }}
                       >
                         Enrolled
                       </span>
                     ) : (
                       <span
-                        className="badge bg-warning bg-opacity-10 border border-success-subtle fw-medium text-warning rounded-pill px-2 py-1"
+                        className="badge bg-warning bg-opacity-10 border border-warning-subtle fw-medium text-warning rounded-pill px-2 py-1 shadow-sm"
                         style={{ fontSize: "0.65rem" }}
                       >
                         Pending
@@ -449,7 +442,6 @@ const TabPeople = () => {
                 </tr>
               ))}
 
-              {/* EMPTY STATE */}
               {students.length === 0 && !isLoading && (
                 <tr>
                   <td colSpan="8" className="p-4 bg-light border-bottom-0">
@@ -480,7 +472,7 @@ const TabPeople = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} students
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0">
@@ -516,7 +508,6 @@ const TabPeople = () => {
         </div>
       )}
 
-      {/* MODALS AND DRAWERS */}
       <StudentViewDrawer
         student={selectedStudent}
         actionType={actionType}

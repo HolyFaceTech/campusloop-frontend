@@ -13,7 +13,6 @@ const AdvisoryFormModal = ({
 }) => {
   return (
     <>
-      {/* MAIN ADVISORY FORM MODAL */}
       <div
         className="modal fade"
         id="advisoryModal"
@@ -135,7 +134,6 @@ const AdvisoryFormModal = ({
         </div>
       </div>
 
-      {/* UPDATE INTENT CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="updateIntentConfirmModal"
@@ -188,7 +186,6 @@ const AdvisoryFormModal = ({
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteConfirmModal"

@@ -23,11 +23,9 @@ const getAuthHeader = () => {
 const FormBuilder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [form, setForm] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Builder...");
-
   const [modalMode, setModalMode] = useState("create");
   const [selectedQuestion, setSelectedQuestion] = useState(null);
 
@@ -40,6 +38,7 @@ const FormBuilder = () => {
     correct_answer: "",
     points: 1,
   });
+
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(null);
 
   useEffect(() => {
@@ -402,7 +401,7 @@ const FormBuilder = () => {
                   className="text-muted fw-medium small d-block text-uppercase"
                   style={{ letterSpacing: "1px", fontSize: "0.65rem" }}
                 >
-                  Total Points
+                  Total Point{totalPoints > 1 ? "s" : ""}
                 </span>
                 <span
                   className="fw-bold text-dark"

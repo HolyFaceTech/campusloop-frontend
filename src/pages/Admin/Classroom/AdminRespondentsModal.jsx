@@ -472,9 +472,9 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                   "-"
                                 )}
                               </td>
-                              <td className="text-center fw-bolder fs-6">
+                              <td className="text-center fs-6">
                                 {isGraded ? (
-                                  <span className="text-success">
+                                  <span className="text-success fw-bolder">
                                     {sub.grade}
                                   </span>
                                 ) : (
@@ -495,13 +495,9 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                                     ></i>
                                   </button>
                                 ) : (
-                                  <button
-                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle opacity-50"
-                                    style={{ width: "35px", height: "35px" }}
-                                    disabled
-                                  >
-                                    <i className="bi bi-lock-fill text-muted"></i>
-                                  </button>
+                                  <span className="text-secondary rounded-3">
+                                    <i className="bi bi-lock-fill me-1"></i>
+                                  </span>
                                 )}
                               </td>
                             </tr>
@@ -717,12 +713,17 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                     <i className="bi bi-exclamation-triangle me-2"></i>{" "}
                     Teacher's Feedback
                   </h6>
-                  <p
-                    className="text-dark mb-0 small lh-base"
-                    style={{ whiteSpace: "pre-wrap" }}
+                  <div
+                    className="bg-white p-3 rounded-3 border border-danger border-opacity-25 text-dark mb-0 custom-scrollbar shadow-sm"
+                    style={{
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      maxHeight: "150px",
+                      overflowY: "auto",
+                    }}
                   >
                     {selectedStudent.submission.teacher_feedback}
-                  </p>
+                  </div>
                 </div>
               )}
 

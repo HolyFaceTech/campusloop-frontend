@@ -12,7 +12,6 @@ const TeacherHelpModal = () => {
       <div className="modal-dialog modal-xl modal-dialog-centered">
         <div className="modal-content border-0 rounded-4 overflow-hidden shadow-lg">
           <div className="row g-0">
-            {/* Illustration Side */}
             <div
               className="col-lg-5 d-none d-lg-flex align-items-center justify-content-center p-4 position-relative"
               style={{ backgroundColor: "var(--accent-color)" }}
@@ -45,7 +44,6 @@ const TeacherHelpModal = () => {
               />
             </div>
 
-            {/* Instructions Accordion Side */}
             <div className="col-md-7 position-relative">
               <button
                 type="button"

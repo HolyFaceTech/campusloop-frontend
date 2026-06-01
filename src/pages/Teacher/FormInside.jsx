@@ -24,19 +24,16 @@ const getAuthHeader = () => {
 const FormInside = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [form, setForm] = useState(null);
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Form Details...");
   const [activeTab, setActiveTab] = useState("questionnaire");
-
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [selectedRespondent, setSelectedRespondent] = useState(null);
 
   useEffect(() => {
@@ -185,10 +182,10 @@ const FormInside = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
+      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative premium-hover-card">
         <div className="card-body p-4 p-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
-            <div className="flex-grow-1" style={{ maxWidth: "800px" }}>
+            <div className="flex-grow-1">
               <div className="d-flex align-items-center gap-3 mb-2">
                 <div
                   className="rounded-circle text-white d-flex justify-content-center align-items-center shadow-sm flex-shrink-0"
@@ -249,7 +246,9 @@ const FormInside = () => {
                   Time Limit
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {form?.timer > 0 ? `${form.timer} Minutes` : "No Timer"}
+                  {form?.timer > 0
+                    ? `${form.timer} Minute${form.timer > 1 ? "s" : ""}`
+                    : "No Timer"}
                 </span>
               </div>
             </div>
@@ -275,11 +274,11 @@ const FormInside = () => {
                   Security Mode
                 </span>
                 {form?.is_focus_mode ? (
-                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Focus Mode ON
                   </span>
                 ) : (
-                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Normal
                   </span>
                 )}
@@ -307,11 +306,11 @@ const FormInside = () => {
                   Question Order
                 </span>
                 {form?.is_shuffle_questions ? (
-                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-primary bg-opacity-10 text-primary fw-medium border border-primary border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Shuffled
                   </span>
                 ) : (
-                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1">
+                  <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium border border-secondary border-opacity-25 mt-1 px-2 py-1 shadow-sm">
                     Default Order
                   </span>
                 )}
@@ -337,7 +336,7 @@ const FormInside = () => {
                   Total Points
                 </span>
                 <span className="d-block text-dark small fw-bolder">
-                  {totalPoints} Pts
+                  {totalPoints} Point{totalPoints > 1 ? "s" : ""}
                 </span>
               </div>
             </div>
@@ -412,7 +411,7 @@ const FormInside = () => {
                       Section {gIndex + 1} of {groupedQuestions.length}
                     </div>
                     <div
-                      className="card bg-white shadow-sm position-relative"
+                      className="card bg-white shadow-sm position-relative premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderTopLeftRadius: "0",
@@ -443,7 +442,7 @@ const FormInside = () => {
                 <div className="d-flex flex-column gap-3 mt-3">
                   {group.questions.map((q, index) => (
                     <div
-                      className="card bg-white shadow-sm position-relative transition-all"
+                      className="card bg-white shadow-sm position-relative transition-all premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderLeft: "6px solid var(--primary-color)",
@@ -517,7 +516,7 @@ const FormInside = () => {
           ) : (
             <div className="col-12 mt-4">
               <div
-                className="card bg-white border border-light-subtle shadow-sm text-center py-5"
+                className="card bg-white border border-light-subtle shadow-sm text-center py-5 premium-hover-card"
                 style={{ borderRadius: "8px" }}
               >
                 <div className="card-body py-5">
@@ -558,7 +557,7 @@ const FormInside = () => {
 
       {activeTab === "respondents" && (
         <>
-          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+          <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden premium-hover-card">
             <div className="card-body p-0">
               <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
                 <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -596,7 +595,7 @@ const FormInside = () => {
             </div>
           </div>
 
-          <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+          <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
             <div className="table-responsive custom-scrollbar">
               <table
                 className="table table-summer align-middle mb-0"
@@ -665,12 +664,13 @@ const FormInside = () => {
                             className="d-block fw-bold font-monospace text-dark tracking-wide"
                             style={{ fontSize: "0.90rem" }}
                           >
+                            <i className="bi bi-123 me-1 text-muted"></i>{" "}
                             {sub.student?.lrn || "N/A"}
                           </span>
                         </td>
                         <td className="py-2">
                           <span
-                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
+                            className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle shadow-sm"
                             style={{
                               maxWidth: "150px",
                               backgroundColor: "var(--accent-color)",
@@ -693,7 +693,7 @@ const FormInside = () => {
                                 letterSpacing: "1px",
                               }}
                             >
-                              Points
+                              Point{sub.score > 1 ? "s" : ""}
                             </span>
                           </div>
                         </td>

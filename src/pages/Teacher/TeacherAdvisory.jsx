@@ -27,13 +27,11 @@ const TeacherAdvisory = () => {
   const [advisories, setAdvisories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Advisory Classes...");
-
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [modalMode, setModalMode] = useState("create");
   const [selectedItem, setSelectedItem] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
@@ -45,7 +43,6 @@ const TeacherAdvisory = () => {
     capacity: "",
   });
 
-  // CLOSE DROPDOWN LISTENER
   useEffect(() => {
     const closeDropdown = () => setOpenDropdownId(null);
     document.addEventListener("click", closeDropdown);
@@ -77,7 +74,6 @@ const TeacherAdvisory = () => {
           },
         },
       );
-      // SET PAGINATED DATA
       setAdvisories(res.data.data || []);
       setTotalPages(res.data.last_page || 1);
       setTotalRecords(res.data.total || 0);
@@ -459,14 +455,13 @@ const TeacherAdvisory = () => {
                   <div className="bg-light rounded-4 p-3 mb-4 mt-3 border border-light-subtle d-flex align-items-center justify-content-between flex-grow-1">
                     <div className="d-flex align-items-center">
                       <div
-                        className="rounded-circle text-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0 fw-bold"
+                        className="rounded-circle text-white bg-success shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0 fw-bold"
                         style={{
                           width: "35px",
                           height: "35px",
-                          backgroundColor: "var(--primary-color)",
                         }}
                       >
-                        <i className="bi bi-people-fill"></i>
+                        <i className="bi bi-people"></i>
                       </div>
                       <span
                         className="text-muted fw-bold mb-0 text-uppercase"
@@ -475,10 +470,10 @@ const TeacherAdvisory = () => {
                           letterSpacing: "0.5px",
                         }}
                       >
-                        Students
+                        Total Students
                       </span>
                     </div>
-                    <span className="text-dark fw-bolder fs-6">
+                    <span className="text-success fw-bolder fs-6">
                       {item.students_count || 0}{" "}
                       <span className="text-muted small fw-medium">
                         / {item.capacity}

@@ -212,7 +212,6 @@ const TeacherRecycleBin = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER SECTION */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3
@@ -227,8 +226,7 @@ const TeacherRecycleBin = () => {
         </div>
       </div>
 
-      {/* TOOLBAR SECTION */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-3">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -249,7 +247,7 @@ const TeacherRecycleBin = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "400px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -263,7 +261,7 @@ const TeacherRecycleBin = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "180px" }}>
+            <div className="input-group" style={{ minWidth: "400px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -293,8 +291,7 @@ const TeacherRecycleBin = () => {
         </div>
       </div>
 
-      {/* TABLE SECTION */}
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -345,7 +342,7 @@ const TeacherRecycleBin = () => {
                   </td>
                   <td>
                     <span
-                      className="badge border border-dark-subtle text-dark bg-opacity-10 fw-medium rounded-3 px-2 py-1"
+                      className="badge border border-dark-subtle text-dark bg-opacity-10 fw-medium rounded-3 px-2 py-1 shadow-sm"
                       style={{ backgroundColor: "var(--accent-color)" }}
                     >
                       {item.type}
@@ -438,7 +435,6 @@ const TeacherRecycleBin = () => {
         </div>
       )}
 
-      {/* ACTION MODAL COMPONENT */}
       <TeacherRecycleBinModals
         selectedCount={selectedItems.length}
         executeAction={executeAction}

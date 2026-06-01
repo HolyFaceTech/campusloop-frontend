@@ -45,12 +45,10 @@ const AdvisoryDetailsModals = ({
   availableTotalPages,
   availableTotalRecords,
 }) => {
-  // CUSTOM SELECT SEARCH STATES
   const subjectDropdownRef = useRef(null);
   const [subjectSearchQuery, setSubjectSearchQuery] = useState("");
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
 
-  // Close custom dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -88,7 +86,6 @@ const AdvisoryDetailsModals = ({
 
   const safeSubjects = Array.isArray(subjects) ? subjects : [];
 
-  // Siguraduhing lahat ng Encoded IDs ay String para saktong mag-match sa Subject ID
   const safeEncodedIds = Array.isArray(encodedSubjectIds)
     ? encodedSubjectIds.map((id) => String(id))
     : [];
@@ -101,7 +98,6 @@ const AdvisoryDetailsModals = ({
     return !isAlreadyGraded;
   });
 
-  // LOGIC PARA SA CUSTOM SELECT SEARCH
   const filteredAvailableSubjects = availableSubjectsForEncoding.filter(
     (subj) =>
       `${subj.code} ${subj.description}`
@@ -113,7 +109,6 @@ const AdvisoryDetailsModals = ({
     (s) => String(s.id) === String(gradeForm?.subject_id),
   );
 
-  // Kung bukas ang dropdown, ipakita ang tina-type; kung hindi, ipakita ang selected subject
   const subjectDisplayValue = showSubjectDropdown
     ? subjectSearchQuery
     : selectedSubjectObj
@@ -210,7 +205,6 @@ const AdvisoryDetailsModals = ({
 
   return (
     <>
-      {/* ADD STUDENTS MODAL */}
       <div
         className="modal fade"
         id="addStudentsModal"
@@ -239,7 +233,6 @@ const AdvisoryDetailsModals = ({
             </div>
 
             <div className="modal-body p-4 bg-light">
-              {/* AVAILABLE STUDENTS TOOLKIT BAR */}
               <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
                 <div className="card-body p-0">
                   <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
@@ -280,7 +273,6 @@ const AdvisoryDetailsModals = ({
                 </div>
               </div>
 
-              {/* AVAILABLE STUDENTS DATATABLES */}
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-2">
                 <div
                   className="table-responsive custom-scrollbar"
@@ -373,14 +365,15 @@ const AdvisoryDetailsModals = ({
                                       maxWidth: "250px",
                                     }}
                                   >
-                                    LRN: {student.lrn || "N/A"}
+                                    <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                                    {student.lrn || "N/A"}
                                   </span>
                                 </div>
                               </div>
                             </td>
                             <td className="text-end px-4 py-2">
                               <span
-                                className="badge bg-opacity-10 rounded-3 text-dark fw-medium px-2 py-1 border border-dark-subtle"
+                                className="badge bg-opacity-10 rounded-3 text-dark fw-medium px-2 py-1 border border-dark-subtle shadow-sm"
                                 style={{
                                   backgroundColor: "var(--accent-color)",
                                 }}
@@ -468,7 +461,7 @@ const AdvisoryDetailsModals = ({
             <div className="modal-footer border-top bg-white p-3 d-flex gap-2 justify-content-between">
               <label className="text-dark fw-bold mb-0 ms-2 pe-2">
                 Selected{" "}
-                <span className="badge bg-primary rounded-3 me-1 px-2 fw-medium">
+                <span className="badge bg-primary rounded-3 me-1 px-2 fw-medium shadow-sm">
                   {selectedStudentIds.length}
                 </span>
               </label>
@@ -534,7 +527,7 @@ const AdvisoryDetailsModals = ({
                       <div className="d-flex align-items-center">
                         <h6 className="fw-bold text-danger mb-2">
                           <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
-                          Admin Feedback Note
+                          Admin's Feedback
                         </h6>
                       </div>
                       <button
@@ -823,7 +816,6 @@ const AdvisoryDetailsModals = ({
                 )}
               </div>
 
-              {/* GRADES TOOLKIT BAR (UserRecords Style) */}
               <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
                 <div className="card-body p-0">
                   <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
@@ -847,7 +839,7 @@ const AdvisoryDetailsModals = ({
 
                     <div
                       className="input-group flex-grow-1"
-                      style={{ minWidth: "400px" }}
+                      style={{ minWidth: "200px" }}
                     >
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-search"></i>
@@ -869,7 +861,7 @@ const AdvisoryDetailsModals = ({
                         value={gradesSyFilter}
                         onChange={(e) => setGradesSyFilter(e.target.value)}
                       >
-                        <option value="all">All SY</option>
+                        <option value="all">All School Year</option>
                         {gradesUniqueSYs.map((sy) => (
                           <option key={sy} value={sy}>
                             {sy}
@@ -886,7 +878,7 @@ const AdvisoryDetailsModals = ({
                         value={gradesSemFilter}
                         onChange={(e) => setGradesSemFilter(e.target.value)}
                       >
-                        <option value="all">All Sem</option>
+                        <option value="all">All Semester</option>
                         <option value="1st">1st Semester</option>
                         <option value="2nd">2nd Semester</option>
                       </select>
@@ -895,7 +887,6 @@ const AdvisoryDetailsModals = ({
                 </div>
               </div>
 
-              {/* GRADES DATATABLES */}
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
                   className="table-responsive custom-scrollbar"
@@ -991,29 +982,29 @@ const AdvisoryDetailsModals = ({
                             </td>
                             <td className="text-center py-2">
                               {record.status === "pending" && (
-                                <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning-subtle px-2 py-1 rounded-3">
+                                <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning-subtle px-2 py-1 rounded-3 shadow-sm">
                                   Pending
                                 </span>
                               )}
                               {record.status === "approved" && (
-                                <span className="text-secondary  rounded-3">
+                                <span className="text-secondary rounded-3">
                                   <i className="bi bi-lock-fill me-1"></i>
                                 </span>
                               )}
                               {record.status === "declined" && (
-                                <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle px-2 py-1 rounded-3">
+                                <span className="badge bg-danger bg-opacity-10 text-danger fw-medium border border-danger-subtle px-2 py-1 rounded-3 shadow-sm">
                                   Declined
                                 </span>
                               )}
                             </td>
                             <td className="text-center pe-4 py-2">
                               {record.status !== "approved" ? (
-                                <div className="d-flex justify-content-center gap-2">
+                                <div className="d-flex justify-content-center">
                                   {record.status === "declined" && (
                                     <button
                                       type="button"
-                                      className="btn btn-sm btn-light border shadow-sm rounded-circle transition-all hover-danger"
-                                      style={{ width: "32px", height: "32px" }}
+                                      className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                                      style={{ width: "35px", height: "35px" }}
                                       onClick={() =>
                                         handleViewFeedback(
                                           record.admin_feedback ||
@@ -1027,8 +1018,8 @@ const AdvisoryDetailsModals = ({
                                   )}
                                   <button
                                     type="button"
-                                    className="btn btn-sm btn-light border shadow-sm rounded-circle transition-all hover-primary"
-                                    style={{ width: "32px", height: "32px" }}
+                                    className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                                    style={{ width: "35px", height: "35px" }}
                                     onClick={() => handleEditClick(record)}
                                     title="Edit Grade"
                                   >
@@ -1073,7 +1064,6 @@ const AdvisoryDetailsModals = ({
                 </div>
               </div>
 
-              {/* PAGINATION */}
               {studentGrades.length > 0 && !isLoadingGrades && (
                 <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 px-2 gap-3">
                   <p className="text-muted small mb-0">
@@ -1130,7 +1120,6 @@ const AdvisoryDetailsModals = ({
         </div>
       </div>
 
-      {/* CONFIRMATION MODALS BELOW */}
       <div
         className="modal fade"
         id="confirmGradeModal"
@@ -1215,7 +1204,11 @@ const AdvisoryDetailsModals = ({
               <h4 className="fw-bold text-dark mt-2">Confirm Enrollment</h4>
               <p className="text-muted mb-0">
                 Are you sure you want to add the selected{" "}
-                <b>{selectedStudentIds.length} student(s)</b>?
+                <b>
+                  {selectedStudentIds.length} selected student
+                  {selectedStudentIds.length > 1 ? "s" : ""}
+                </b>
+                ?
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">

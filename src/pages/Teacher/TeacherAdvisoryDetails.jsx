@@ -26,12 +26,8 @@ const getAuthHeader = () => {
 const TeacherAdvisoryDetails = () => {
   const { id } = useParams();
   const [advisoryClass, setAdvisoryClass] = useState(null);
-
-  // GLOBAL SPINNER
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Class Details...");
-
-  // MAIN ENROLLED TABLE STATES
   const [students, setStudents] = useState([]);
   const [isFetchingEnrolled, setIsFetchingEnrolled] = useState(false);
   const [searchEnrolled, setSearchEnrolled] = useState("");
@@ -40,8 +36,6 @@ const TeacherAdvisoryDetails = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalEnrolled, setTotalEnrolled] = useState(0);
-
-  // AVAILABLE STUDENTS MODAL STATES
   const [availableStudents, setAvailableStudents] = useState([]);
   const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
   const [availableSearch, setAvailableSearch] = useState("");
@@ -51,14 +45,13 @@ const TeacherAdvisoryDetails = () => {
   const [availableTotalRecords, setAvailableTotalRecords] = useState(0);
   const [selectedStudentIds, setSelectedStudentIds] = useState([]);
   const [studentToRemove, setStudentToRemove] = useState(null);
-
-  // GRADES MODAL STATES
   const [activeStudent, setActiveStudent] = useState(null);
   const [studentGrades, setStudentGrades] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [encodedSubjectIds, setEncodedSubjectIds] = useState([]);
   const [isEditingGrade, setIsEditingGrade] = useState(false);
   const [viewingFeedback, setViewingFeedback] = useState(null);
+
   const [gradeForm, setGradeForm] = useState({
     id: null,
     subject_id: "",
@@ -121,8 +114,6 @@ const TeacherAdvisoryDetails = () => {
   useEffect(() => {
     setGradesPage(1);
   }, [gradesSearch, gradesEntries, gradesSyFilter, gradesSemFilter]);
-
-  // --- API CALLS ---
 
   const fetchAdvisoryDetails = async () => {
     setIsLoading(true);
@@ -219,8 +210,6 @@ const TeacherAdvisoryDetails = () => {
       setIsLoadingGrades(false);
     }
   };
-
-  // --- MODAL ACTIONS ---
 
   const openAddStudentModal = () => {
     setAvailableSearch("");
@@ -419,7 +408,7 @@ const TeacherAdvisoryDetails = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative">
+      <div className="card bg-white border-0 shadow-sm rounded-4 mb-4 overflow-hidden position-relative premium-hover-card">
         <div className="card-body p-4 p-md-5">
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-4">
             <div className="flex-grow-1" style={{ maxWidth: "800px" }}>
@@ -516,7 +505,7 @@ const TeacherAdvisoryDetails = () => {
                   Capacity
                 </span>
                 <span
-                  className={`badge ${isClassFull ? "bg-danger text-danger border-danger" : "bg-success text-success border-success"} bg-opacity-10 border border-opacity-25 mt-1 px-2 py-1 fw-medium`}
+                  className={`badge ${isClassFull ? "bg-danger text-danger border-danger" : "bg-success text-success border-success"} bg-opacity-10 border border-opacity-25 mt-1 px-2 py-1 fw-medium shadow-sm`}
                 >
                   {totalEnrolled} / {classCapacity} Enrolled
                 </span>
@@ -526,7 +515,7 @@ const TeacherAdvisoryDetails = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -563,7 +552,7 @@ const TeacherAdvisoryDetails = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -626,12 +615,13 @@ const TeacherAdvisoryDetails = () => {
                         className="d-block fw-bold font-monospace text-dark tracking-wide"
                         style={{ fontSize: "0.90rem" }}
                       >
+                        <i className="bi bi-123 me-1 text-muted"></i>{" "}
                         {student.lrn || "N/A"}
                       </span>
                     </td>
                     <td className="py-2">
                       <span
-                        className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle"
+                        className="badge bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 border border-dark-subtle shadow-sm"
                         style={{ backgroundColor: "var(--accent-color)" }}
                       >
                         {student.strand?.name || "N/A"}

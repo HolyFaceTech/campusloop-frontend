@@ -271,7 +271,7 @@ const TeacherActivityLogsModal = () => {
                           </td>
                           <td>
                             <span
-                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1"
+                              className="badge border border-dark-subtle bg-opacity-10 text-dark fw-medium text-uppercase rounded-3 px-2 py-1 shadow-sm"
                               style={{ backgroundColor: "var(--accent-color)" }}
                             >
                               {log.action}
@@ -323,7 +323,7 @@ const TeacherActivityLogsModal = () => {
                 <p className="text-muted small mb-0">
                   Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
                   {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-                  {totalRecords} entries
+                  {totalRecords} activities
                 </p>
                 <nav>
                   <ul className="pagination pagination-sm mb-0">
