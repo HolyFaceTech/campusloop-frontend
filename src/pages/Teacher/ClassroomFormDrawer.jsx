@@ -25,7 +25,6 @@ const ClassroomFormDrawer = ({
 }) => {
   const [strands, setStrands] = useState([]);
   const [subjects, setSubjects] = useState([]);
-
   const subjectDropdownRef = useRef(null);
   const [subjectSearchQuery, setSubjectSearchQuery] = useState("");
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
@@ -71,7 +70,6 @@ const ClassroomFormDrawer = ({
       String(sub.grade_level) === String(formData.grade_level),
   );
 
-  // LOGIC PARA SA CUSTOM SELECT SEARCH
   const searchedSubjects = filteredSubjects.filter((subj) =>
     `${subj.code} ${subj.description}`
       .toLowerCase()
@@ -271,7 +269,6 @@ const ClassroomFormDrawer = ({
                   </span>
                 </div>
 
-                {/* HIDDEN INPUT FOR NATIVE HTML VALIDATION */}
                 <input
                   type="text"
                   required

@@ -25,7 +25,11 @@ const TeacherRecycleBinModals = ({ selectedCount, executeAction }) => {
             <h4 className="fw-bold text-dark">Confirm Restoration</h4>
             <p className="text-muted mb-0">
               Are you sure you want to restore{" "}
-              <b>{selectedCount} selected item(s)</b>?
+              <b>
+                {selectedCount} selected item
+                {selectedCount > 1 ? "s" : ""}
+              </b>
+              ?
               <br />
               They will be returned to their active status in your classes.
             </p>

@@ -320,7 +320,6 @@ const TeacherHome = () => {
       <GlobalSpinner isLoading={isLoading} text="Loading your home page..." />
 
       <div className="row g-4">
-        {/* LEFT COLUMN: Feed (Announcements) */}
         <div className="col-12 col-lg-8 d-flex flex-column gap-4">
           <div
             className="card border-0 shadow-sm rounded-4 overflow-hidden position-relative premium-hover-card"
@@ -386,7 +385,7 @@ const TeacherHome = () => {
             </div>
           </div>
 
-          {/* 2. FEED / ANNOUNCEMENTS */}
+          {/* FEED / ANNOUNCEMENTS */}
           {data.announcements.length > 0 ? (
             data.announcements.map((announcement) => {
               const statusColor =
@@ -446,7 +445,6 @@ const TeacherHome = () => {
                         {announcement.content}
                       </p>
 
-                      {/* ATTACHMENTS */}
                       <div className="d-flex flex-column gap-2 mb-3">
                         {announcement.link && (
                           <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
@@ -540,7 +538,6 @@ const TeacherHome = () => {
                           })}
                       </div>
 
-                      {/* COMMENTS THREAD */}
                       <div className="border-top pt-3 mt-4">
                         <div className="d-flex align-items-center justify-content-between mb-3">
                           <span className="fw-bold text-dark small d-flex align-items-center gap-2">
@@ -584,10 +581,8 @@ const TeacherHome = () => {
                                     {comment.user?.first_name?.charAt(0)}
                                   </div>
                                   <div className="flex-grow-1">
-                                    {/* RENDER PARENT COMMENT BOX */}
                                     {renderCommentBox(comment, false)}
 
-                                    {/* RENDER REPLIES */}
                                     {comment.replies &&
                                       comment.replies.length > 0 && (
                                         <div className="d-flex flex-column gap-2 mt-2">
@@ -619,7 +614,6 @@ const TeacherHome = () => {
                                         </div>
                                       )}
 
-                                    {/* REPLY INPUT BOX */}
                                     {activeReplyBox === comment.id && (
                                       <div className="d-flex align-items-start gap-2 mt-2">
                                         <div
@@ -662,7 +656,7 @@ const TeacherHome = () => {
                                           disabled={isPosting}
                                           style={{ height: "32px" }}
                                         >
-                                          <i className="bi bi-send-fill fs-6"></i>
+                                          <i className="bi bi-send-check-fill fs-6"></i>
                                         </button>
                                         <button
                                           className="btn btn-sm btn-light border shadow-sm rounded-circle mt-1 ms-1 text-muted"
@@ -684,7 +678,6 @@ const TeacherHome = () => {
                             </div>
                           )}
 
-                        {/* MAIN COMMENT INPUT BOX */}
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div
                             className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0 mt-1"
@@ -718,7 +711,8 @@ const TeacherHome = () => {
                             onClick={() => submitComment(announcement.id)}
                             disabled={isPosting}
                           >
-                            <i className="bi bi-send-fill fs-6 me-1"></i> Send
+                            <i className="bi bi-send-check-fill fs-6 me-2"></i>{" "}
+                            <span className="d-none d-sm-inline">Send</span>
                           </button>
                         </div>
                       </div>
@@ -741,7 +735,6 @@ const TeacherHome = () => {
           )}
         </div>
 
-        {/* RIGHT COLUMN: Info Cards & To-Do List */}
         <div className="col-12 col-lg-4 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div className="card border-0 shadow-sm rounded-4 bg-white p-4 mb-3 d-flex flex-row align-items-center justify-content-between premium-hover-card">
             <div>
@@ -751,24 +744,26 @@ const TeacherHome = () => {
               >
                 Total Classrooms
               </span>
-              <h2 className="fw-bolder text-dark mb-0 display-5">
+              <h2 className="fw-bolder text-primary mb-0 display-5">
                 {data.classrooms_count || 0}
               </h2>
             </div>
             <div
-              className="rounded-4 bg-primary border border-primary-subtle bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0"
+              className="rounded-4 bg-primary border border-primary-subtle bg-opacity-10 d-flex justify-content-center align-items-center flex-shrink-0 shadow-sm"
               style={{ width: "60px", height: "60px" }}
             >
               <i className="bi bi-easel-fill text-primary fs-2"></i>
             </div>
           </div>
 
-          {/* TODAY'S SCHEDULES CARD (LISTAHAN NGAYON) */}
           <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
             <div className="card-header bg-light border-bottom p-3 d-flex justify-content-between align-items-center rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center">
-                <i className="bi bi-calendar-event fs-5 me-2"></i> Today's
-                Schedules
+                <i
+                  className="bi bi-calendar-event fs-5 me-2"
+                  style={{ color: "var(--bs-purple, #6f42c1)" }}
+                ></i>{" "}
+                Today's Schedules
               </h6>
               <span
                 className="badge rounded-3 shadow-sm fw-medium"
@@ -873,7 +868,8 @@ const TeacherHome = () => {
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center justify-content-between">
                 <span>
-                  <i className="bi bi-list-check fs-5 me-2"></i> Needs Grading
+                  <i className="bi bi-list-check text-danger fs-5 me-2"></i>{" "}
+                  Needs Grading
                 </span>
                 <span
                   className="badge rounded-3 shadow-sm fw-medium"
@@ -951,14 +947,14 @@ const TeacherHome = () => {
                               </span>
                               {todo.status === "late_submission" ? (
                                 <span
-                                  className="badge bg-warning bg-opacity-10 text-warning px-2 py-1 flex-shrink-0 mt-1 border border-warning-subtle"
+                                  className="badge bg-warning bg-opacity-10 text-warning px-2 py-1 flex-shrink-0 mt-1 border border-warning-subtle shadow-sm"
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   DONE LATE
                                 </span>
                               ) : (
                                 <span
-                                  className="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 flex-shrink-0 mt-1 border border-secondary-subtle"
+                                  className="badge bg-secondary bg-opacity-10 text-secondary px-2 py-1 flex-shrink-0 mt-1 border border-secondary-subtle shadow-sm"
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   PENDING

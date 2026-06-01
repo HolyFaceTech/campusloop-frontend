@@ -79,7 +79,8 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                         {respondent.student?.last_name}
                       </h5>
                       <span className="text-muted small font-monospace">
-                        LRN: {respondent.student?.lrn || "N/A"}
+                        <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                        {respondent.student?.lrn || "N/A"}
                       </span>
                     </div>
                   </div>
@@ -106,7 +107,6 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                 </div>
 
                 <div className="mx-auto pb-4" style={{ maxWidth: "770px" }}>
-                  {/* EXACT ADMIN DESIGN: FORM HEADER */}
                   <div
                     className="card bg-white shadow-sm mb-4 position-relative"
                     style={{
@@ -137,10 +137,10 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                     </div>
                   </div>
 
-                  {/* QUESTIONS RENDERER */}
+                  {/* QUESTIONS */}
                   {groupedQuestions.map((group, gIndex) => (
                     <div className="mb-5 pb-2" key={gIndex}>
-                      {/* SECTION HEADER */}
+                      {/* SECTION */}
                       {group.sectionName !== "" && (
                         <div className="position-relative mt-5 mb-3">
                           <div
@@ -204,7 +204,6 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                               key={q.id}
                             >
                               <div className="card-body p-4 pt-5 pb-4">
-                                {/* Question Header & Points Indicator */}
                                 <div className="d-flex justify-content-between align-items-start gap-3 mb-4 border-bottom pb-3">
                                   <div className="d-flex gap-2 align-items-start flex-grow-1">
                                     <span className="fw-normal text-dark mt-1">
@@ -222,7 +221,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                   </div>
                                   <div className="text-end flex-shrink-0 mt-1">
                                     <span
-                                      className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3`}
+                                      className={`badge ${isCorrect ? "bg-success bg-opacity-10 text-success fw-medium border border-success" : "bg-danger bg-opacity-10 text-danger fw-medium border border-danger"} px-3 py-2 rounded-3 shadow-sm`}
                                     >
                                       {isCorrect ? (
                                         <i className="bi bi-check-circle-fill me-1"></i>
@@ -235,7 +234,6 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                   </div>
                                 </div>
 
-                                {/* Options / Inputs Display */}
                                 <div className="ps-4">
                                   {q.type === "multiple_choice" &&
                                     q.choices && (
@@ -257,7 +255,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                               "bi-check-circle-fill text-success";
                                             badge = (
                                               <span
-                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
+                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                 style={{ fontSize: "0.65rem" }}
                                               >
                                                 <i className="bi bi-check-circle-fill me-1"></i>{" "}
@@ -286,7 +284,7 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                               "bi-check-circle-fill text-success opacity-75";
                                             badge = (
                                               <span
-                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1"
+                                                className="badge bg-success bg-opacity-10 text-success fw-medium border border-success ms-auto rounded-3 px-2 py-1 shadow-sm"
                                                 style={{ fontSize: "0.65rem" }}
                                               >
                                                 <i className="bi bi-check-circle-fill me-1"></i>{" "}
@@ -346,7 +344,6 @@ const ReviewSubmissionModal = ({ form, respondent, totalPoints }) => {
                                         disabled
                                       />
 
-                                      {/* INCORRECT SHORT ANSWER */}
                                       {!isCorrect && (
                                         <div className="d-flex align-items-center gap-3 p-2 mt-1 rounded-3">
                                           <i className="bi bi-check-circle-fill text-success opacity-75 fs-5"></i>

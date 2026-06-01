@@ -13,21 +13,16 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
   const [respondents, setRespondents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // VIEW SUBMISSION MODAL STATES
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [gradeInput, setGradeInput] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [isUnsubmitMode, setIsUnsubmitMode] = useState(false);
-
-  // SEARCH AT PAGINATION STATES (SMART SERVER-SIDE)
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
-  // Reset page kapag nagbago ang classwork
   useEffect(() => {
     if (selectedItem && selectedItem.type !== "material") {
       setCurrentPage(1);
@@ -73,7 +68,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     }
   };
 
-  // SAFE MODAL TRANSITION HELPER
   const switchModal = (hideId, showId) => {
     const hideEl = document.getElementById(hideId);
     if (hideEl) {
@@ -110,7 +104,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     }, 400);
   };
 
-  // VIEW SUBMISSION & GRADING LOGIC
   const openViewSubmission = (student) => {
     setSelectedStudent(student);
     setGradeInput(
@@ -220,7 +213,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     }, 400);
   };
 
-  // RETURNING / UNSUBMIT LOGIC
   const promptUnsubmit = () => {
     switchModal("viewSubmissionModal", "confirmReturnModal");
   };
@@ -339,7 +331,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     };
   };
 
-  // SMART PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -389,7 +380,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
     <>
       <GlobalSpinner isLoading={isProcessing} text="Processing Request..." />
 
-      {/* MAIN RESPONDENTS MODAL */}
       <div
         className="modal fade"
         id="respondentsModal"
@@ -410,7 +400,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 <i className="bi bi-people-fill me-2"></i> Respondents:{" "}
                 {selectedItem?.title || "Classwork"}
                 {selectedItem?.points
-                  ? ` • Total Points: ${selectedItem.points}`
+                  ? ` • Total Point${selectedItem.points > 1 ? "s" : ""}: ${selectedItem.points}`
                   : ""}
               </h5>
               <button
@@ -462,7 +452,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 </div>
               </div>
 
-              {/* TABLE BODY */}
               <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-0">
                 <div
                   className="table-responsive custom-scrollbar"
@@ -588,7 +577,8 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                         maxWidth: "250px",
                                       }}
                                     >
-                                      LRN: {student.lrn || "N/A"}
+                                      <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                                      {student.lrn || "N/A"}
                                     </p>
                                   </div>
                                 </div>
@@ -603,7 +593,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                     Returned
                                   </span>
                                 ) : isDoneLate ? (
-                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1">
+                                  <span className="badge bg-warning bg-opacity-10 text-warning fw-medium border border-warning rounded-3 px-2 py-1 shadow-sm">
                                     Done Late
                                   </span>
                                 ) : hasSubmission ? (
@@ -627,6 +617,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                     {new Date(sub.submitted_at).toLocaleString(
                                       [],
                                       {
+                                        year: "numeric",
                                         month: "short",
                                         day: "numeric",
                                         hour: "2-digit",
@@ -638,9 +629,9 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                   "-"
                                 )}
                               </td>
-                              <td className="text-center fw-bolder fs-6">
+                              <td className="text-center fs-6">
                                 {isGraded ? (
-                                  <span className="text-success">
+                                  <span className="text-success fw-bolder">
                                     {sub.grade}
                                   </span>
                                 ) : (
@@ -661,13 +652,9 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                     ></i>
                                   </button>
                                 ) : (
-                                  <button
-                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle opacity-50"
-                                    style={{ width: "35px", height: "35px" }}
-                                    disabled
-                                  >
-                                    <i className="bi bi-lock-fill text-muted"></i>
-                                  </button>
+                                  <span className="text-secondary rounded-3">
+                                    <i className="bi bi-lock-fill me-1"></i>
+                                  </span>
                                 )}
                               </td>
                             </tr>
@@ -679,7 +666,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 </div>
               </div>
 
-              {/* PAGINATION METADATA FOOTER (SMART UPDATE) */}
               {totalRecords > 0 && (
                 <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3 px-2">
                   <p className="text-muted small mb-0">
@@ -737,7 +723,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         </div>
       </div>
 
-      {/* VIEW SUBMISSION MODAL */}
       <div
         className="modal fade"
         id="viewSubmissionModal"
@@ -782,7 +767,8 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                       {selectedStudent?.first_name} {selectedStudent?.last_name}
                     </h5>
                     <span className="text-muted small">
-                      LRN: {selectedStudent?.lrn || "N/A"}
+                      <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                      {selectedStudent?.lrn || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -810,10 +796,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                 </div>
               </div>
 
-              <h6 className="fw-bold text-dark mb-3">
-                <i className="bi bi-paperclip me-2 text-muted"></i>Attached
-                Files
-              </h6>
+              <h6 className="small text-muted mb-2 d-block">Attached Files:</h6>
               {selectedStudent?.submission?.files &&
               selectedStudent.submission.files.length > 0 ? (
                 <div className="d-flex flex-column gap-2 mb-4">
@@ -987,7 +970,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         </div>
       </div>
 
-      {/* CONFIRM GRADE UPDATE MODAL */}
       <div
         className="modal fade"
         id="confirmGradeUpdateModal"
@@ -1044,7 +1026,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         </div>
       </div>
 
-      {/* CONFIRM RETURN MODAL */}
       <div
         className="modal fade"
         id="confirmReturnModal"
@@ -1099,7 +1080,6 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteConfirmModal"

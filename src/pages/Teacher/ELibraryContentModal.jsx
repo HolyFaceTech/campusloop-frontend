@@ -43,7 +43,6 @@ const ELibraryContentModal = ({
           <div className="modal-body p-4 p-md-5 bg-white">
             {viewingItem && (
               <>
-                {/* 🚨 ADMIN FEEDBACK (Inilipat dito mula sa labas) */}
                 {viewingItem.status === "declined" &&
                   viewingItem.creator_id === currentUser.id &&
                   viewingItem.admin_feedback && (
@@ -52,7 +51,7 @@ const ELibraryContentModal = ({
                         <div className="d-flex align-items-center">
                           <h6 className="fw-bold text-danger mb-2">
                             <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
-                            Admin Feedback Note
+                            Admin Feedback
                           </h6>
                         </div>
                       </div>
@@ -80,7 +79,7 @@ const ELibraryContentModal = ({
                   </h4>
                   <p
                     className="text-muted small mb-0"
-                    style={{ lineHeight: "1.6" }}
+                    style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                   >
                     {viewingItem.description}
                   </p>

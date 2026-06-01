@@ -17,8 +17,6 @@ const TabGrades = () => {
   const [students, setStudents] = useState([]);
   const [classworks, setClassworks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Filters & Pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -141,7 +139,7 @@ const TabGrades = () => {
           </span>
           {isDoneLate && (
             <span
-              className="badge bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning fw-medium mt-1 rounded-3"
+              className="badge bg-warning bg-opacity-10 border border-warning border-opacity-25 text-warning fw-medium mt-1 rounded-3 shadow-sm"
               style={{ fontSize: "0.6rem" }}
             >
               Done Late
@@ -154,7 +152,7 @@ const TabGrades = () => {
     if (isReturned) {
       return (
         <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Returned
@@ -165,7 +163,7 @@ const TabGrades = () => {
     if (isDoneLate) {
       return (
         <span
-          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Done Late
@@ -176,7 +174,7 @@ const TabGrades = () => {
     if (hasSubmission) {
       return (
         <span
-          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Turned In
@@ -187,7 +185,7 @@ const TabGrades = () => {
     if (isMissing) {
       return (
         <span
-          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+          className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
           style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
         >
           Missing
@@ -197,7 +195,7 @@ const TabGrades = () => {
 
     return (
       <span
-        className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1 rounded-3 fw-medium"
+        className="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-1 rounded-3 fw-medium shadow-sm"
         style={{ fontSize: "0.7rem", letterSpacing: "0.5px" }}
       >
         Pending
@@ -254,7 +252,7 @@ const TabGrades = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Class Record..." />
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -275,7 +273,7 @@ const TabGrades = () => {
 
             <div
               className="input-group flex-shrink-0"
-              style={{ maxWidth: "350px", minWidth: "280px" }}
+              style={{ maxWidth: "400px", minWidth: "350px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -292,7 +290,7 @@ const TabGrades = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div
           className="table-responsive custom-scrollbar"
           style={{ maxHeight: "650px" }}
@@ -356,13 +354,14 @@ const TabGrades = () => {
                           </div>
                           <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
                             <span
-                              className="text-dark fw-semibold "
+                              className="text-dark fw-medium"
                               style={{
                                 fontSize: "0.65rem",
-                                padding: "0.25rem 0.4rem",
                               }}
                             >
-                              {cw.points ? `${cw.points} PTS` : "NO PTS"}
+                              {cw.points
+                                ? `${cw.points} Point${cw.points > 1 ? "s" : ""}`
+                                : "NO PTS"}
                             </span>
                             <i
                               className="bi bi-dot opacity-50"
@@ -454,7 +453,8 @@ const TabGrades = () => {
                             className="text-muted small d-block font-monospace tracking-wide mt-1"
                             style={{ fontSize: "0.75rem" }}
                           >
-                            LRN: {student.lrn || "N/A"}
+                            <i className="bi bi-123 me-1 text-muted"></i>{" "}
+                            {student.lrn || "N/A"}
                           </span>
                         </div>
                       </div>

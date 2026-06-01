@@ -842,7 +842,7 @@ const AdminTabStream = () => {
                                 letterSpacing: "0.5px",
                               }}
                             >
-                              Points:
+                              Point{cw.points > 1 ? "s" : ""}:
                             </span>
                             <span
                               className="fw-bolder text-dark"

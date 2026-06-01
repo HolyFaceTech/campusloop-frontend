@@ -19,17 +19,12 @@ const TeacherLayout = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
-
   const [showAvatar, setShowAvatar] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
-
   const [hasActiveEvent, setHasActiveEvent] = useState(false);
   const [hasTodayAlert, setHasTodayAlert] = useState(false);
-
-  // MGA STATES PARA SA NOTIFICATIONS
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-
   const avatarRef = useRef(null);
   const notifRef = useRef(null);
 
@@ -82,7 +77,6 @@ const TeacherLayout = () => {
 
       let settingsData = response.data;
 
-      // Handle arrays or objects seamlessly
       if (Array.isArray(settingsData)) {
         settingsData = settingsData[0];
       } else if (settingsData && settingsData.data) {
@@ -155,7 +149,6 @@ const TeacherLayout = () => {
     }
   };
 
-  // 🚨 ADMIN-STYLE NOTIFICATION FETCHING
   const fetchNotifications = async () => {
     try {
       const response = await axios.get(
@@ -298,7 +291,7 @@ const TeacherLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium shadow-sm"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-person-video3 me-1"></i> TEACHER
@@ -306,6 +299,12 @@ const TeacherLayout = () => {
           </div>
 
           <div className="sidebar-links-container custom-scrollbar py-3">
+            <div
+              className="menu-header text-muted small fw-bold px-4 mb-2"
+              style={{ letterSpacing: "1px", fontSize: "0.75rem" }}
+            >
+              MAIN MENU
+            </div>
             <NavLink
               to="/teacher/home"
               className="sidebar-link"
@@ -440,7 +439,7 @@ const TeacherLayout = () => {
             </div>
             <button
               onClick={handleLogout}
-              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3"
+              className="sidebar-footer-text btn btn-outline-danger shadow-sm ms-3 flex-grow-1 rounded-3 shadow-sm"
               style={{ transition: "all 0.3s ease" }}
             >
               <i className="bi bi-box-arrow-right me-1"></i> Sign Out
@@ -464,7 +463,7 @@ const TeacherLayout = () => {
                 <i className="bi bi-list"></i>
               </button>
 
-              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
+              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light shadow-sm">
                 <span className="fw-medium text-dark small">
                   <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
@@ -539,8 +538,8 @@ const TeacherLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
-                        {unreadCount} Unread
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle shadow-sm">
+                        {unreadCount} Unread{unreadCount > 1 ? "s" : ""}
                       </span>
                     )}
                   </div>

@@ -28,6 +28,7 @@ const ClassworkFormDrawer = ({
   const formDropdownRef = useRef(null);
   const [formSearchQuery, setFormSearchQuery] = useState("");
   const [showFormDropdown, setShowFormDropdown] = useState(false);
+
   const formatSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -701,7 +702,6 @@ const ClassworkFormDrawer = ({
         </div>
       </div>
 
-      {/* UPDATE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="updateConfirmModal"
@@ -755,7 +755,6 @@ const ClassworkFormDrawer = ({
         </div>
       </div>
 
-      {/* DELETE CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="deleteConfirmModal"

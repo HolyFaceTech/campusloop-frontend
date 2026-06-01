@@ -32,7 +32,6 @@ const TeacherCalendar = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const navigate = useNavigate();
 
-  // Dinadala sa backend ang range para DoS Protection
   const fetchEvents = async (startStr, endStr) => {
     setIsLoading(true);
     try {
@@ -118,7 +117,7 @@ const TeacherCalendar = () => {
           </p>
         </div>
 
-        <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 bg-white px-3 py-2 rounded-3 shadow-sm border">
+        <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 bg-white px-3 py-2 rounded-3 shadow-sm border premium-hover-card">
           <span className="small fw-bold text-muted me-1 border-end pe-3 d-none d-sm-block">
             Legend
           </span>
@@ -173,7 +172,7 @@ const TeacherCalendar = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 bg-white p-4">
+      <div className="card border-0 shadow-sm rounded-4 bg-white p-4 premium-hover-card">
         <FullCalendar
           plugins={[
             dayGridPlugin,

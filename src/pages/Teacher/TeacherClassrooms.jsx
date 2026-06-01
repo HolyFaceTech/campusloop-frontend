@@ -25,14 +25,11 @@ const TeacherClassrooms = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const navigate = useNavigate();
-
-  // TOOLKIT & SMART PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [drawerMode, setDrawerMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
@@ -343,6 +340,7 @@ const TeacherClassrooms = () => {
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
+
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-3 gap-3">
         <div>
           <h3
@@ -365,7 +363,7 @@ const TeacherClassrooms = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -551,10 +549,10 @@ const TeacherClassrooms = () => {
                 <div className="bg-light rounded-4 p-3 mb-4 border border-light-subtle flex-grow-1">
                   <div className="d-flex align-items-start mb-3">
                     <div
-                      className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                      className="rounded-circle bg-primary shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                       style={{ width: "35px", height: "35px" }}
                     >
-                      <i className="bi bi-calendar3 text-primary"></i>
+                      <i className="bi bi-calendar3 text-white"></i>
                     </div>
                     <div className="overflow-hidden">
                       <span
@@ -570,10 +568,10 @@ const TeacherClassrooms = () => {
                   </div>
                   <div className="d-flex align-items-start">
                     <div
-                      className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                      className="rounded-circle bg-success shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                       style={{ width: "35px", height: "35px" }}
                     >
-                      <i className="bi bi-people text-success"></i>
+                      <i className="bi bi-people text-white"></i>
                     </div>
                     <div>
                       <span
@@ -606,7 +604,7 @@ const TeacherClassrooms = () => {
                       Class Code
                     </span>
                     <span
-                      className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold"
+                      className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold shadow-sm"
                       style={{ letterSpacing: "1px", fontSize: "0.85rem" }}
                     >
                       {item.code}

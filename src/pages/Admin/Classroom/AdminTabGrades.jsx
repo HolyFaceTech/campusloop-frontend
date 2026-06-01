@@ -360,14 +360,13 @@ const AdminTabGrades = () => {
                           </div>
                           <div className="d-flex align-items-center justify-content-center gap-2 text-muted">
                             <span
-                              className="text-dark fw-semibold "
+                              className="text-dark fw-medium "
                               style={{
                                 fontSize: "0.65rem",
-                                padding: "0.25rem 0.4rem",
                               }}
                             >
                               {cw.points
-                                ? `${cw.points} PT${cw.points > 1 ? "s" : ""}`
+                                ? `${cw.points} Point${cw.points > 1 ? "s" : ""}`
                                 : "NO PTS"}
                             </span>
                             <i

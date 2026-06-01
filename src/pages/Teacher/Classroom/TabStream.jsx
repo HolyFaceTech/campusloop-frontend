@@ -16,7 +16,6 @@ const TabStream = () => {
   const { classroom } = useOutletContext();
   const [classworks, setClassworks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [drawerMode, setDrawerMode] = useState("");
   const [selectedItem, setSelectedItem] = useState(null);
 
@@ -30,18 +29,12 @@ const TabStream = () => {
     : "U";
 
   const [openDropdownId, setOpenDropdownId] = useState(null);
-
-  // MGA STATES PARA SA COMMENTS AT REPLIES
   const [commentText, setCommentText] = useState({});
   const [replyText, setReplyText] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
-
-  // NEW STATES PARA SA EDIT, DELETE AT BUTTON DISABLE
   const [isPosting, setIsPosting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
-
-  // STATES FOR DYNAMIC FILE HANDLING
   const [includeLink, setIncludeLink] = useState(false);
   const [includeFiles, setIncludeFiles] = useState(false);
   const [includeForm, setIncludeForm] = useState(false);
@@ -92,7 +85,7 @@ const TabStream = () => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
-    setIsPosting(true); // DISABLE BUTTONS
+    setIsPosting(true);
 
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
@@ -120,11 +113,10 @@ const TabStream = () => {
         ...darkToast,
       });
     } finally {
-      setIsPosting(false); // ENABLE BUTTONS
+      setIsPosting(false);
     }
   };
 
-  // EDIT AT DELETE COMMENTS
   const startEditing = (comment) => {
     setEditingCommentId(comment.id);
     setEditContent(comment.content);
@@ -145,7 +137,7 @@ const TabStream = () => {
       );
       setEditingCommentId(null);
       setEditContent("");
-      fetchClassworks(); // REFRESH FEED
+      fetchClassworks();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -168,7 +160,7 @@ const TabStream = () => {
           },
         },
       );
-      fetchClassworks(); // REFRESH FEED
+      fetchClassworks();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -488,7 +480,6 @@ const TabStream = () => {
     }
   };
 
-  // HELPER FUNCTION PARA SA PAG-RENDER NG COMMENT BOX
   const renderCommentBox = (comment, isReply = false, cwId) => {
     const isOwner = comment.user_id === currentUser?.id;
 
@@ -615,7 +606,6 @@ const TabStream = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Stream..." />
       <div className="row g-4">
-        {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div
             className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
@@ -686,7 +676,7 @@ const TabStream = () => {
                                   {task.title}
                                 </span>
                                 <span
-                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1 fw-medium`}
+                                  className={`badge bg-opacity-10 border ${taskStyle.badge} flex-shrink-0 mt-1 fw-medium shadow-sm`}
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   {task.type.toUpperCase()}
@@ -743,7 +733,7 @@ const TabStream = () => {
           </div>
         </div>
 
-        {/* FEED / STREAM */}
+        {/* STREAM */}
         <div className="col-12 col-lg-9 pb-5">
           <div
             className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card"
@@ -826,7 +816,7 @@ const TabStream = () => {
                           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2 flex-wrap">
                             {cw.title}
                             <span
-                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge}`}
+                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge} shadow-sm`}
                               style={{
                                 fontSize: "0.65rem",
                                 letterSpacing: "1px",
@@ -869,7 +859,6 @@ const TabStream = () => {
                         </div>
                       </div>
 
-                      {/* ACTIONS & DROPDOWN */}
                       <div className="d-flex align-items-center gap-2 position-relative ms-3">
                         {!isMaterial && (
                           <button
@@ -1115,7 +1104,7 @@ const TabStream = () => {
                                 letterSpacing: "0.5px",
                               }}
                             >
-                              Points:
+                              Point{cw.points > 1 ? "s" : ""}:
                             </span>
                             <span
                               className="fw-bolder text-dark"
@@ -1139,7 +1128,6 @@ const TabStream = () => {
                           </span>
                         </div>
 
-                        {/* RENDER COMMENTS GAMIT ANG BAGONG HELPER FUNCTION */}
                         {cw.comments && cw.comments.length > 0 && (
                           <div
                             className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
@@ -1167,7 +1155,6 @@ const TabStream = () => {
                                   {comment.user?.first_name?.charAt(0)}
                                 </div>
                                 <div className="flex-grow-1">
-                                  {/* PARENT COMMENT */}
                                   {renderCommentBox(comment, false, cw.id)}
 
                                   {/* RENDER REPLIES */}
@@ -1206,7 +1193,6 @@ const TabStream = () => {
                                       </div>
                                     )}
 
-                                  {/* REPLY INPUT BOX */}
                                   {activeReplyBox === comment.id && (
                                     <div className="d-flex align-items-start gap-2 mt-2">
                                       <div
@@ -1247,7 +1233,7 @@ const TabStream = () => {
                                         disabled={isPosting}
                                         style={{ height: "32px" }}
                                       >
-                                        <i className="bi bi-send-fill fs-6"></i>
+                                        <i className="bi bi-send-check-fill fs-6"></i>
                                       </button>
                                       <button
                                         className="btn btn-sm btn-light border shadow-sm rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 mt-1 text-muted"
@@ -1268,7 +1254,6 @@ const TabStream = () => {
                           </div>
                         )}
 
-                        {/* MAIN COMMENT INPUT BOX */}
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div
                             className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0 mt-1"
@@ -1305,7 +1290,8 @@ const TabStream = () => {
                             disabled={isPosting}
                             style={{ height: "38px" }}
                           >
-                            <i className="bi bi-send-fill fs-6 me-1"></i> Send
+                            <i className="bi bi-send-check-fill fs-6 me-2"></i>{" "}
+                            <span className="d-none d-sm-inline">Send</span>
                           </button>
                         </div>
                       </div>
