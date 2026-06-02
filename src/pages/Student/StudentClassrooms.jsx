@@ -422,9 +422,7 @@ const StudentClassrooms = () => {
                     className="bi bi-inbox text-muted d-block mb-3"
                     style={{ fontSize: "3rem", opacity: 0.5 }}
                   ></i>
-                  <h5 className="fw-bold text-dark">
-                    {searchQuery ? "No records found." : "No classrooms found."}
-                  </h5>
+                  <h5 className="fw-bold text-dark">No classrooms found.</h5>
                   <p className="text-muted small mb-0">
                     {searchQuery
                       ? "No matching classrooms found for your search."

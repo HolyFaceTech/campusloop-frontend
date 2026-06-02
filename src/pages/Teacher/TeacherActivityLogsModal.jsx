@@ -300,9 +300,7 @@ const TeacherActivityLogsModal = () => {
                               style={{ fontSize: "3rem", opacity: 0.5 }}
                             ></i>
                             <h5 className="fw-bold text-dark">
-                              {searchQuery
-                                ? "No records found."
-                                : "Activity logs are empty."}
+                              No activities found.
                             </h5>
                             <p className="text-muted small mb-0">
                               {searchQuery

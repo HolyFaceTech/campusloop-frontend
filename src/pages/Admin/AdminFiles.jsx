@@ -581,7 +581,7 @@ const AdminFiles = () => {
                     className="bi bi-inbox text-muted d-block mb-3"
                     style={{ fontSize: "3rem", opacity: 0.5 }}
                   ></i>
-                  <h5 className="fw-bold text-dark">No Directories Found.</h5>
+                  <h5 className="fw-bold text-dark">No directories found.</h5>
                   <p className="text-muted small mb-0">
                     {searchQuery
                       ? "No matching directories for your search."
@@ -895,9 +895,7 @@ const AdminFiles = () => {
                         className="bi bi-inbox text-muted d-block mb-3"
                         style={{ fontSize: "3rem", opacity: 0.5 }}
                       ></i>
-                      <h5 className="fw-bold text-dark">
-                        No matching files found.
-                      </h5>
+                      <h5 className="fw-bold text-dark">No files found.</h5>
                       <p className="text-muted small mb-0">
                         We couldn't find any files matching your search or
                         selected filter.
