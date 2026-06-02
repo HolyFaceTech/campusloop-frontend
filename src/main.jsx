@@ -11,8 +11,6 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 
-// === GLOBAL AXIOS CONFIGURATION (Para sa Single Session Policy) ===
-
 const darkToast = {
   fill: "#242424",
   styles: {
@@ -47,16 +45,7 @@ axios.interceptors.response.use(
         sessionStorage.removeItem("campusloop_token");
         localStorage.removeItem("campusloop_user");
         sessionStorage.removeItem("campusloop_user");
-
-        // Mag-pakita ng Dark Sileo Toast
-        sileo.error({
-          title: "Session Terminated",
-          description:
-            "Your account was logged in on another device. For security, you have been logged out.",
-          ...darkToast,
-        });
-
-        // I-redirect / Kick-out pabalik sa Login Page
+        sessionStorage.setItem("session_terminated", "true");
         window.location.href = "/login";
       }
     }

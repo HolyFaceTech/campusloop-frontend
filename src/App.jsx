@@ -5,6 +5,7 @@ import axios from "axios";
 
 // Maintenace Shared
 import MaintenanceGuard from "./components/Shared/MaintenanceGuard";
+import NotFound from "./components/Shared/NotFound";
 
 // Auth Components
 import Login from "./pages/Auth/Login";
@@ -66,40 +67,6 @@ import StudentELibrary from "./pages/Student/StudentELibrary";
 import StudentGrades from "./pages/Student/StudentGrades";
 import StudentCalendar from "./pages/Student/StudentCalendar";
 import StudentNotifications from "./pages/Student/StudentNotifications";
-
-// Taga-test kung valid pa ang session
-const DashboardPlaceholder = ({ title }) => {
-  const testSession = async () => {
-    try {
-      // Susubukan niyang kumuha ng data sa backend
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/user`,
-      );
-      alert("Session is still active! User: " + response.data.email);
-    } catch (error) {
-      // Kapag 401 Unauthorized (dahil nabura na yung token sa kabilang device),
-      // automatic sasaluin ito ng interceptor sa main.jsx at iki-kick out ka!
-      console.log("Session verified as expired.");
-    }
-  };
-
-  return (
-    <div className="text-center mt-5">
-      <h1 style={{ color: "var(--primary-color)" }} className="fw-bold">
-        {title} (Coming Soon)
-      </h1>
-      <p className="text-muted">
-        Click the button below to simulate fetching data from the database.
-      </p>
-      <button
-        onClick={testSession}
-        className="btn btn-campusloop mt-3 shadow-sm px-4"
-      >
-        Test Single Session Connection
-      </button>
-    </div>
-  );
-};
 
 function App() {
   return (
@@ -196,14 +163,7 @@ function App() {
         </Route>
 
         {/* 404 ROUTE */}
-        <Route
-          path="*"
-          element={
-            <h2 className="text-center mt-5 text-danger">
-              404 - Page Not Found
-            </h2>
-          }
-        />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
