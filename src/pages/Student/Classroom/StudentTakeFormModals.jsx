@@ -13,7 +13,6 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
 
   return (
     <>
-      {/* FOCUS MODE VIOLATION MODAL */}
       <div
         className="modal fade"
         id="focusViolationModal"
@@ -56,7 +55,6 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
         </div>
       </div>
 
-      {/* TIME'S UP MODAL */}
       <div
         className="modal fade"
         id="timeUpModal"
@@ -98,7 +96,6 @@ const StudentTakeFormModals = ({ executeSubmit }) => {
         </div>
       </div>
 
-      {/* NORMAL SUBMIT CONFIRMATION MODAL */}
       <div
         className="modal fade"
         id="submitConfirmModal"

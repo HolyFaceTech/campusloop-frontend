@@ -23,22 +23,17 @@ const getAuthHeader = () => {
 const StudentTakeForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [form, setForm] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isSaving, setIsSaving] = useState(false);
   const initialRender = useRef(true);
-
   const [groupedQuestions, setGroupedQuestions] = useState([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-
   const [isDone, setIsDone] = useState(false);
   const [resultData, setResultData] = useState(null);
-
   const [timeLeft, setTimeLeft] = useState(null);
   const [timerInitialized, setTimerInitialized] = useState(false);
   const timerRef = useRef(null);
@@ -338,7 +333,7 @@ const StudentTakeForm = () => {
           style={{ minHeight: "80vh" }}
         >
           <div
-            className="card border-0 shadow-lg rounded-4 text-center animate__animated animate__zoomIn"
+            className="card border-0 shadow-lg rounded-4 text-center animate__animated animate__zoomIn premium-hover-card"
             style={{ maxWidth: "500px", width: "100%" }}
           >
             <div className="card-header border-0 pb-0 pt-5 bg-white">
@@ -406,7 +401,7 @@ const StudentTakeForm = () => {
               >
                 {form.is_focus_mode && (
                   <span
-                    className="badge bg-danger px-3 py-2 rounded-pill shadow-sm animate__animated animate__pulse animate__infinite"
+                    className="badge bg-danger fw-medium px-3 py-2 rounded-pill border border-danger-subtle text-danger bg-opacity-25 shadow-sm animate__animated animate__pulse animate__infinite"
                     style={{ fontSize: "0.8rem", letterSpacing: "0.5px" }}
                   >
                     <i className="bi bi-eye-fill me-2"></i>{" "}
@@ -416,12 +411,12 @@ const StudentTakeForm = () => {
 
                 {Object.keys(answers).length > 0 &&
                   (isSaving ? (
-                    <span className="badge bg-secondary bg-opacity-75 px-3 py-2 rounded-pill shadow-sm animate__animated animate__fadeIn">
+                    <span className="badge bg-secondary fw-medium px-3 py-2 rounded-pill border border-secondary-subtle text-secondary bg-opacity-25 shadow-sm animate__animated animate__fadeIn">
                       <i className="bi bi-cloud-arrow-up-fill me-1"></i>{" "}
                       <span className="d-none d-sm-inline">Saving</span>...
                     </span>
                   ) : (
-                    <span className="badge bg-success fw-medium px-3 py-2 rounded-pill shadow-sm animate__animated animate__fadeIn">
+                    <span className="badge bg-success fw-medium px-3 py-2 rounded-pill border border-success-subtle text-success bg-opacity-25 shadow-sm animate__animated animate__fadeIn">
                       <i className="bi bi-cloud-check-fill me-1"></i>{" "}
                       <span className="d-none d-sm-inline">Saved</span>
                     </span>
@@ -430,7 +425,7 @@ const StudentTakeForm = () => {
               <div style={{ pointerEvents: "auto" }}>
                 {timeLeft !== null && (
                   <span
-                    className={`badge px-4 py-2 fs-5 rounded-3 fw-medium shadow-sm ${timeLeft <= 60 ? "bg-danger animate__animated animate__flash animate__infinite" : "bg-dark"}`}
+                    className={`badge px-4 py-2 fs-5 bg-opacity-50 border rounded-3 fw-medium shadow-sm ${timeLeft <= 60 ? " text-danger bg-danger border-danger-subtle animate__animated animate__flash animate__infinite" : "bg-dark text-white border-dark-subtle"}`}
                   >
                     <i className="bi bi-stopwatch me-2"></i>{" "}
                     {formatTime(timeLeft)}
@@ -440,7 +435,7 @@ const StudentTakeForm = () => {
             </div>
 
             <div
-              className="card bg-white shadow-sm mb-4 position-relative"
+              className="card bg-white shadow-sm mb-4 position-relative premium-hover-card"
               style={{
                 border: "1px solid #e0e0e0",
                 borderTop: "10px solid var(--primary-color)",
@@ -468,7 +463,7 @@ const StudentTakeForm = () => {
                       className="text-muted fw-medium small d-block text-uppercase"
                       style={{ letterSpacing: "1px", fontSize: "0.65rem" }}
                     >
-                      Total Points
+                      Total Point{totalPoints > 1 ? "s" : ""}
                     </span>
                     <span
                       className="fw-bold text-dark"
@@ -515,7 +510,7 @@ const StudentTakeForm = () => {
                       {groupedQuestions.length}
                     </div>
                     <div
-                      className="card bg-white shadow-sm position-relative"
+                      className="card bg-white shadow-sm position-relative premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderTopLeftRadius: "0",
@@ -545,7 +540,7 @@ const StudentTakeForm = () => {
                 <div className="d-flex flex-column gap-3 mt-3">
                   {currentGroup.questions.map((q, index) => (
                     <div
-                      className="card bg-white shadow-sm position-relative transition-all"
+                      className="card bg-white shadow-sm position-relative transition-all premium-hover-card"
                       style={{
                         border: "1px solid #e0e0e0",
                         borderLeft: "6px solid var(--primary-color)",

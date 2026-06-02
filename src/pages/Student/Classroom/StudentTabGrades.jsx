@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 
-// Centralized Token para protektado laban sa XSS
 const getAuthHeader = () => {
   const token =
     localStorage.getItem("campusloop_token") ||
@@ -18,8 +17,6 @@ const StudentTabGrades = () => {
   const [classworks, setClassworks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [percentage, setPercentage] = useState(0);
-
-  // Filters, Sort, & Pagination States (Server-Side)
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
@@ -192,7 +189,7 @@ const StudentTabGrades = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Grades..." />
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
@@ -212,8 +209,8 @@ const StudentTabGrades = () => {
             </div>
 
             <div
-              className="input-group"
-              style={{ minWidth: "250px", maxWidth: "350px" }}
+              className="input-group flex-grow-1"
+              style={{ minWidth: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -227,7 +224,7 @@ const StudentTabGrades = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "150px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-funnel"></i>
               </span>
@@ -264,7 +261,7 @@ const StudentTabGrades = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-sort-down"></i>
               </span>
@@ -293,7 +290,7 @@ const StudentTabGrades = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -350,7 +347,7 @@ const StudentTabGrades = () => {
                                 style={{ fontSize: "0.75rem" }}
                               >
                                 {cw.points
-                                  ? `${cw.points} Points`
+                                  ? `${cw.points} Point${cw.points > 1 ? "s" : ""}`
                                   : "No Points"}
                               </span>
                             </div>
@@ -359,11 +356,7 @@ const StudentTabGrades = () => {
 
                         <td className="py-3">
                           <span
-                            className={`badge bg-opacity-10 border px-2 py-1 text-uppercase ${display.color} border-${display.color.split("-")[1]}`}
-                            style={{
-                              fontSize: "0.65rem",
-                              backgroundColor: `var(--bs-${display.color.split("-")[1]})`,
-                            }}
+                            className={`badge shadow-sm  border px-3 py-2 text-uppercase fw-medium ${display.bg} border-${display.bg.split("-")[0]}`}
                           >
                             {cw.type}
                           </span>
@@ -388,7 +381,10 @@ const StudentTabGrades = () => {
                         </td>
 
                         <td className="text-center pe-4 py-3">
-                          {cw.student_status === "graded" ? (
+                          {cw.student_status === "graded" ||
+                          (cw.student_status === "late_submission" &&
+                            sub?.grade &&
+                            sub?.grade !== "NULL") ? (
                             <div className="d-flex flex-column align-items-center justify-content-center">
                               <span
                                 className="fw-bolder text-primary"

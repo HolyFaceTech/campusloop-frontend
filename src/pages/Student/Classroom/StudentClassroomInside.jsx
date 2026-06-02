@@ -82,7 +82,7 @@ const StudentClassroomInside = () => {
   return (
     <div className="classroom-view-container custom-scrollbar">
       <div
-        className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative"
+        className="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 position-relative premium-hover-card"
         style={{
           minHeight: "280px",
           backgroundColor: classroom.color_bg || "var(--primary-color)",

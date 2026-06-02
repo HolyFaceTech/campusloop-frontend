@@ -76,7 +76,7 @@ const StudentTabStream = () => {
     const content = parentId ? replyText[parentId] : commentText[classworkId];
     if (!content || content.trim() === "") return;
 
-    setIsPosting(true); // DISABLE BUTTONS
+    setIsPosting(true);
 
     if (parentId) {
       setReplyText((prev) => ({ ...prev, [parentId]: "" }));
@@ -100,7 +100,7 @@ const StudentTabStream = () => {
         ...darkToast,
       });
     } finally {
-      setIsPosting(false); // ENABLE BUTTONS
+      setIsPosting(false);
     }
   };
 
@@ -120,7 +120,7 @@ const StudentTabStream = () => {
       );
       setEditingCommentId(null);
       setEditContent("");
-      fetchStream(); // REFRESH FEED
+      fetchStream();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -139,7 +139,7 @@ const StudentTabStream = () => {
         `${import.meta.env.VITE_API_BASE_URL}/comments/${commentId}`,
         getAuthHeader(),
       );
-      fetchStream(); // REFRESH FEED
+      fetchStream();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -604,10 +604,9 @@ const StudentTabStream = () => {
     <>
       <GlobalSpinner isLoading={isLoading} text="Loading Stream..." />
       <div className="row g-4">
-        {/* CLASSWORK OUTLINE SIDEBAR */}
         <div className="col-12 col-lg-3 mb-4 mb-lg-0" style={{ zIndex: 10 }}>
           <div
-            className="card border-0 shadow-sm rounded-4 bg-white sticky-top"
+            className="card border-0 shadow-sm rounded-4 bg-white sticky-top premium-hover-card"
             style={{ top: "100px" }}
           >
             <div className="card-header bg-light border-bottom p-4 rounded-top-4">
@@ -675,7 +674,7 @@ const StudentTabStream = () => {
                                   {task.title}
                                 </span>
                                 <span
-                                  className={`badge bg-opacity-10 fw-medium border ${taskStyle.badge} flex-shrink-0 mt-1`}
+                                  className={`badge bg-opacity-10 fw-medium border ${taskStyle.badge} flex-shrink-0 mt-1 shadow-sm`}
                                   style={{ fontSize: "0.55rem" }}
                                 >
                                   {task.type.toUpperCase()}
@@ -732,10 +731,10 @@ const StudentTabStream = () => {
           </div>
         </div>
 
-        {/* FEED / STREAM */}
+        {/* STREAM */}
         <div className="col-12 col-lg-9 pb-5">
           {stream.length === 0 ? (
-            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4">
+            <div className="card border-0 shadow-sm rounded-4 bg-white mb-4 premium-hover-card">
               <div className="card-body p-5 text-center">
                 <i
                   className="bi bi-inbox text-muted d-block mb-3 opacity-50"
@@ -764,7 +763,7 @@ const StudentTabStream = () => {
                 <div
                   key={cw.id}
                   id={`classwork-${cw.id}`}
-                  className="card border-0 shadow-sm bg-white mb-4 position-relative"
+                  className="card border-0 shadow-sm bg-white mb-4 position-relative premium-hover-card"
                   style={{
                     borderRadius: "1rem",
                     borderLeft: `5px solid ${typeStyle.hex}`,
@@ -788,7 +787,7 @@ const StudentTabStream = () => {
                           <h4 className="fw-bold text-dark mb-1 d-flex align-items-center gap-2 flex-wrap">
                             {cw.title}
                             <span
-                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge}`}
+                              className={`badge bg-opacity-10 border fw-medium text-uppercase px-2 py-1 ${typeStyle.badge} shadow-sm`}
                               style={{
                                 fontSize: "0.65rem",
                                 letterSpacing: "1px",
@@ -1127,7 +1126,7 @@ const StudentTabStream = () => {
                                 letterSpacing: "0.5px",
                               }}
                             >
-                              Points:
+                              Point{cw.points > 1 ? "s" : ""}:
                             </span>
                             <span
                               className="fw-bolder text-dark"
@@ -1177,7 +1176,6 @@ const StudentTabStream = () => {
                                   {comment.user?.first_name?.charAt(0)}
                                 </div>
                                 <div className="flex-grow-1">
-                                  {/* PARENT COMMENT */}
                                   {renderCommentBox(comment, false, cw.id)}
 
                                   {/* RENDER REPLIES */}
@@ -1216,7 +1214,6 @@ const StudentTabStream = () => {
                                       </div>
                                     )}
 
-                                  {/* REPLY INPUT BOX */}
                                   {activeReplyBox === comment.id && (
                                     <div className="d-flex align-items-start gap-2 mt-2">
                                       <div
@@ -1257,7 +1254,7 @@ const StudentTabStream = () => {
                                         disabled={isPosting}
                                         style={{ height: "32px" }}
                                       >
-                                        <i className="bi bi-send-fill fs-6"></i>
+                                        <i className="bi bi-send-check-fill fs-6"></i>
                                       </button>
                                       <button
                                         className="btn btn-sm btn-light border shadow-sm rounded-circle d-flex justify-content-center align-items-center flex-shrink-0 mt-1 text-muted"
@@ -1278,7 +1275,6 @@ const StudentTabStream = () => {
                           </div>
                         )}
 
-                        {/* MAIN COMMENT INPUT BOX */}
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div
                             className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold shadow-sm flex-shrink-0 mt-1"
@@ -1315,7 +1311,8 @@ const StudentTabStream = () => {
                             disabled={isPosting}
                             style={{ height: "38px" }}
                           >
-                            <i className="bi bi-send-fill fs-6 me-1"></i> Send
+                            <i className="bi bi-send-check-fill fs-6 me-2"></i>{" "}
+                            <span className="d-none d-sm-inline">Send</span>
                           </button>
                         </div>
                       </div>

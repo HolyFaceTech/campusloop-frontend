@@ -16,8 +16,6 @@ const StudentGrades = () => {
   const [grades, setGrades] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Grades...");
-
-  // Server-Side Pagination States
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -131,7 +129,6 @@ const StudentGrades = () => {
     <div className="container-fluid px-0">
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER SECTION */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h3
@@ -146,10 +143,9 @@ const StudentGrades = () => {
         </div>
       </div>
 
-      {/* UNIFIED TOP CONTROL BAR */}
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
-        <div className="card-body p-3">
-          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar pb-1">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
+        <div className="card-body p-0">
+          <div className="d-flex flex-nowrap align-items-center gap-3 overflow-x-auto custom-scrollbar p-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small">
               Show
               <select
@@ -168,7 +164,7 @@ const StudentGrades = () => {
 
             <div
               className="input-group flex-grow-1"
-              style={{ minWidth: "250px" }}
+              style={{ minWidth: "300px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -182,7 +178,7 @@ const StudentGrades = () => {
               />
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-calendar3"></i>
               </span>
@@ -200,7 +196,7 @@ const StudentGrades = () => {
               </select>
             </div>
 
-            <div className="input-group" style={{ minWidth: "160px" }}>
+            <div className="input-group" style={{ minWidth: "300px" }}>
               <span className="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i className="bi bi-clock-history"></i>
               </span>
@@ -218,7 +214,7 @@ const StudentGrades = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+      <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-summer align-middle mb-0"
@@ -365,7 +361,7 @@ const StudentGrades = () => {
           <span className="text-muted small">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} records
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">

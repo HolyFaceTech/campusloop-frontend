@@ -25,14 +25,11 @@ const StudentClassrooms = () => {
   const [classrooms, setClassrooms] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
-
-  // PAGINATION STATES
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [joinCode, setJoinCode] = useState("");
   const navigate = useNavigate();
 
@@ -110,7 +107,7 @@ const StudentClassrooms = () => {
         description: res.data.message,
         ...darkToast,
       });
-      fetchMyClassrooms(); // Refresh list after join
+      fetchMyClassrooms();
     } catch (error) {
       sileo.error({
         title: "Failed to Join",
@@ -146,7 +143,6 @@ const StudentClassrooms = () => {
     }
   };
 
-  // PAGINATION HELPER
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -215,7 +211,7 @@ const StudentClassrooms = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -345,10 +341,10 @@ const StudentClassrooms = () => {
                     <div className="bg-light rounded-4 p-3 mb-4 border border-light-subtle flex-grow-1">
                       <div className="d-flex align-items-start mb-3">
                         <div
-                          className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                          className="rounded-circle bg-primary shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                           style={{ width: "35px", height: "35px" }}
                         >
-                          <i className="bi bi-calendar3 text-primary"></i>
+                          <i className="bi bi-calendar3 text-white"></i>
                         </div>
                         <div className="overflow-hidden">
                           <span
@@ -364,10 +360,10 @@ const StudentClassrooms = () => {
                       </div>
                       <div className="d-flex align-items-start">
                         <div
-                          className="rounded-circle bg-white shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
+                          className="rounded-circle bg-success shadow-sm d-flex justify-content-center align-items-center me-3 flex-shrink-0"
                           style={{ width: "35px", height: "35px" }}
                         >
-                          <i className="bi bi-people text-success"></i>
+                          <i className="bi bi-people text-white"></i>
                         </div>
                         <div>
                           <span
@@ -401,7 +397,7 @@ const StudentClassrooms = () => {
                           Class Code
                         </span>
                         <span
-                          className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold"
+                          className="badge bg-secondary bg-opacity-10 text-dark border px-3 py-2 fw-bold shadow-sm"
                           style={{ letterSpacing: "1px", fontSize: "0.85rem" }}
                         >
                           {item.code || "---"}

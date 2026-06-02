@@ -1,7 +1,6 @@
 import React from "react";
 
 const StudentELibraryModal = ({ viewingItem }) => {
-  // --- HELPERS PARA SA FILE DETAILS AT ICONS ---
   const formatBytes = (bytes) => {
     if (bytes === 0 || !bytes) return "0 Bytes";
     const k = 1024;
@@ -21,7 +20,6 @@ const StudentELibraryModal = ({ viewingItem }) => {
     return { icon: "bi-file-earmark-fill", color: "#6c757d", bg: "#e2e3e5" };
   };
 
-  // FUNCTION TO VIEW/DOWNLOAD THE FILE
   const handleViewDocument = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
     window.open(`${baseUrl}/storage/${filePath}`, "_blank");
@@ -67,7 +65,7 @@ const StudentELibraryModal = ({ viewingItem }) => {
                   </h4>
                   <p
                     className="text-muted small mb-0"
-                    style={{ lineHeight: "1.6" }}
+                    style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                   >
                     {viewingItem.description}
                   </p>

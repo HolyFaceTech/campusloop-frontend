@@ -18,14 +18,11 @@ const StudentELibrary = () => {
   const [libraries, setLibraries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading E-Library...");
-
-  // Server-Side Pagination States
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [viewingItem, setViewingItem] = useState(null);
 
   // Reset Page to 1 kapag nagbago ang search query o entries limit
@@ -138,7 +135,7 @@ const StudentELibrary = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -175,7 +172,6 @@ const StudentELibrary = () => {
         </div>
       </div>
 
-      {/* GRID CARDS */}
       <div className="row g-4 mb-4">
         {libraries.length > 0 ? (
           libraries.map((item) => (
@@ -252,7 +248,7 @@ const StudentELibrary = () => {
                     </span>
                     <p
                       className="text-dark small fw-medium mb-0 text-clamp-3"
-                      style={{ lineHeight: "1.6" }}
+                      style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                     >
                       {item.description}
                     </p>
@@ -327,7 +323,7 @@ const StudentELibrary = () => {
           <span className="text-muted small">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} materials
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">

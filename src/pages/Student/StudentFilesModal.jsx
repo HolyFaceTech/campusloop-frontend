@@ -13,16 +13,15 @@ const StudentFilesModal = ({ selectedIds, executeDownloadZip }) => {
         <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
           <div className="modal-header border-0 pb-0 justify-content-center mt-4">
             <div
-              className="rounded-circle d-flex justify-content-center align-items-center"
+              className="rounded-circle bg-primary bg-opacity-10 d-flex justify-content-center align-items-center"
               style={{
                 width: "80px",
                 height: "80px",
-                backgroundColor: "rgba(98, 111, 71, 0.1)",
               }}
             >
               <i
-                className="bi bi-file-earmark-zip-fill"
-                style={{ fontSize: "2.5rem", color: "var(--primary-color)" }}
+                className="bi bi-file-earmark-zip-fill text-primary"
+                style={{ fontSize: "2.5rem" }}
               ></i>
             </div>
           </div>
@@ -47,7 +46,7 @@ const StudentFilesModal = ({ selectedIds, executeDownloadZip }) => {
             </button>
             <button
               type="button"
-              className="btn btn-campusloop px-4 fw-medium shadow-sm rounded-3"
+              className="btn btn-primary px-4 fw-medium shadow-sm rounded-3"
               onClick={executeDownloadZip}
             >
               Yes, Download

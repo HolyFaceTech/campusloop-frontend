@@ -20,13 +20,9 @@ const getAuthHeader = () => {
 
 const StudentNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading notifications...");
-
   const navigate = useNavigate();
-
-  // STATES PARA SA DEBOUNCE AT PAGINATION
   const [searchQuery, setSearchQuery] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -208,7 +204,7 @@ const StudentNotifications = () => {
         </button>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-3 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -246,7 +242,7 @@ const StudentNotifications = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+      <div className="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4 premium-hover-card">
         <div className="table-responsive custom-scrollbar">
           <table
             className="table table-hover align-middle mb-0"
@@ -318,7 +314,7 @@ const StudentNotifications = () => {
                       style={{ width: "120px" }}
                     >
                       {!notif.is_read && (
-                        <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle rounded-3">
+                        <span className="badge bg-success bg-opacity-10 text-success fw-medium border border-success-subtle rounded-3 shadow-sm">
                           New
                         </span>
                       )}
