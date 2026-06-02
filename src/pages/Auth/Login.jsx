@@ -30,6 +30,16 @@ const Login = () => {
   const [recaptchaToken, setRecaptchaToken] = useState("");
 
   useEffect(() => {
+    if (sessionStorage.getItem("session_terminated") === "true") {
+      sileo.error({
+        title: "Session Terminated",
+        description:
+          "Your account was logged in on another device. For security, you have been logged out.",
+        ...darkToast,
+      });
+      sessionStorage.removeItem("session_terminated");
+    }
+
     const checkExistingSession = () => {
       const token =
         localStorage.getItem("campusloop_token") ||
