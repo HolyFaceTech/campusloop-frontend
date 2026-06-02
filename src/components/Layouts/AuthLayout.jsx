@@ -17,7 +17,6 @@ const AuthLayout = ({ children, illustration }) => {
             style={{ backgroundColor: "var(--neutral-color)" }}
           >
             <div className="row g-0 h-100">
-              {/* Left Column: Illustration + Logo (Hidden on Mobile) */}
               <div
                 className="col-md-6 d-none d-md-flex position-relative align-items-center justify-content-center p-4"
                 style={{ backgroundColor: "white" }}
@@ -50,7 +49,6 @@ const AuthLayout = ({ children, illustration }) => {
                 />
               </div>
 
-              {/* Right Column: Form Content */}
               <div className="col-md-6 d-flex align-items-center">
                 <div className="card-body p-4 p-lg-5 bg-white h-100 d-flex flex-column justify-content-center">
                   <div className="d-flex d-md-none align-items-center justify-content-center mb-4">
@@ -83,7 +81,6 @@ const AuthLayout = ({ children, illustration }) => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="py-3 mt-auto px-4 px-md-5">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-center">
           <small className="text-muted fw-medium mb-2 mb-md-0">

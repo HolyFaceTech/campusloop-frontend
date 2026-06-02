@@ -17,7 +17,6 @@ const darkToast = {
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const recaptchaRef = useRef();
-
   const [email, setEmail] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState("");
   const [isLoading, setIsLoading] = useState(false);
