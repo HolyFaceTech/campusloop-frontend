@@ -545,7 +545,18 @@ const StudentHome = () => {
                           </span>
                           <span className="text-muted small">
                             {announcement.comments
-                              ? announcement.comments.length
+                              ? announcement.comments.reduce(
+                                  (total, comment) => {
+                                    return (
+                                      total +
+                                      1 +
+                                      (comment.replies
+                                        ? comment.replies.length
+                                        : 0)
+                                    );
+                                  },
+                                  0,
+                                )
                               : 0}{" "}
                             comments
                           </span>
