@@ -391,7 +391,8 @@ const AdminFiles = () => {
               >
                 Folders
               </span>
-              / Viewing files of {currentFolder?.name}
+              / Viewing files of {currentFolder?.name}. Max 50 files per
+              download.
             </p>
           )}
         </div>

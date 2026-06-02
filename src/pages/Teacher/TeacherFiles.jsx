@@ -290,7 +290,8 @@ const TeacherFiles = () => {
             My Files <i className="bi bi-folder2-open"></i>
           </h3>
           <p className="text-muted small mb-0">
-            View and download all the files you uploaded to the system.
+            View and download all the files you uploaded to the system. Max 20
+            files per download.
           </p>
         </div>
         <div className="flex-shrink-0">

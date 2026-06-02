@@ -288,7 +288,7 @@ const StudentLayout = () => {
               </span>
             </div>
             <span
-              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium"
+              className="sidebar-badge badge rounded-pill w-100 py-2 fw-medium shadow-sm"
               style={{ backgroundColor: "var(--secondary-color)" }}
             >
               <i className="bi bi-mortarboard-fill me-1"></i> STUDENT
@@ -296,6 +296,12 @@ const StudentLayout = () => {
           </div>
 
           <div className="sidebar-links-container custom-scrollbar py-3">
+            <div
+              className="menu-header text-muted small fw-bold px-4 mb-2"
+              style={{ letterSpacing: "1px", fontSize: "0.75rem" }}
+            >
+              MAIN MENU
+            </div>
             <NavLink
               to="/student/home"
               className="sidebar-link"
@@ -395,7 +401,7 @@ const StudentLayout = () => {
                       style={{ fontSize: "0.80rem", fontWeight: "500" }}
                       title={`LRN: ${user.lrn}`}
                     >
-                      LRN: {user.lrn}
+                      <i className="bi bi-123 me-1 text-muted"></i> {user.lrn}
                     </span>
                   )}
                   <span
@@ -452,7 +458,7 @@ const StudentLayout = () => {
                 <i className="bi bi-list"></i>
               </button>
 
-              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light">
+              <div className="d-none d-md-flex align-items-center gap-3 border rounded-pill px-3 py-1 bg-light shadow-sm">
                 <span className="fw-medium text-dark small">
                   <i className="bi bi-calendar-event me-2 text-primary"></i>{" "}
                   {activeSettings.school_year !== "Not Set"
@@ -527,8 +533,8 @@ const StudentLayout = () => {
                       Notifications
                     </h6>
                     {unreadCount > 0 && (
-                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle">
-                        {unreadCount} Unread
+                      <span className="badge rounded-3 bg-success bg-opacity-10 text-success fw-medium border border-success-subtle shadow-sm">
+                        {unreadCount} Unread{unreadCount > 1 ? "s" : ""}
                       </span>
                     )}
                   </div>

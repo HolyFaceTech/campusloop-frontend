@@ -24,14 +24,11 @@ const StudentFiles = () => {
   const [files, setFiles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading Files...");
-
-  // Server-Side Pagination States
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Reset Page to 1 kapag nagbago ang search query o entries limit
@@ -274,7 +271,6 @@ const StudentFiles = () => {
     <div className="container-fluid px-0">
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
 
-      {/* HEADER SECTION */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-4 gap-3">
         <div>
           <h3
@@ -284,25 +280,24 @@ const StudentFiles = () => {
             My Files <i className="bi bi-folder2-open"></i>
           </h3>
           <p className="text-muted small mb-0">
-            View and download all your attached files and submissions. (Max 20
-            files per download)
+            View and download all your attached files and submissions. Max 20
+            files per download.
           </p>
         </div>
         <div className="flex-shrink-0">
           <button
-            className="btn btn-campusloop shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold w-100 justify-content-center transition-all"
+            className="btn btn-outline-primary shadow-sm px-4 py-2 rounded-3 d-flex align-items-center gap-2 fw-bold w-100 justify-content-center transition-all"
             disabled={selectedIds.length === 0}
             onClick={openDownloadConfirmation}
           >
-            <i className="bi bi-file-earmark-zip-fill fs-5"></i> Download ZIP
+            <i className="bi bi-download fs-5"></i> Download File
           </button>
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
-            {/* Show Entries */}
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
               Show
               <select
@@ -319,10 +314,9 @@ const StudentFiles = () => {
               entries
             </div>
 
-            {/* Search */}
             <div
               className="input-group flex-grow-1"
-              style={{ maxWidth: "450px", minWidth: "250px" }}
+              style={{ maxWidth: "400px", minWidth: "350px" }}
             >
               <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                 <i className="bi bi-search"></i>
@@ -336,11 +330,10 @@ const StudentFiles = () => {
               />
             </div>
 
-            {/* Select All & Count */}
             <div className="d-flex align-items-center flex-shrink-0 ps-2 ps-3 gap-3">
               <div className="form-check mb-0 d-flex align-items-center">
                 <input
-                  className="form-check-input border-secondary m-0"
+                  className="form-check-input m-0 shadow-sm"
                   type="checkbox"
                   id="selectAll"
                   style={{
@@ -362,7 +355,7 @@ const StudentFiles = () => {
                 >
                   Select All
                   <span
-                    className="badge bg-primary fw-medium rounded-3 ms-2"
+                    className="badge bg-primary fw-medium rounded-3 ms-2 shadow-sm"
                     style={{ fontSize: "0.75rem" }}
                   >
                     {selectedIds.length}
@@ -374,7 +367,6 @@ const StudentFiles = () => {
         </div>
       </div>
 
-      {/* GRID FILES */}
       <div className="row g-4 mb-4">
         {files.length > 0 ? (
           files.map((file) => {
@@ -384,7 +376,7 @@ const StudentFiles = () => {
             return (
               <div className="col-12 col-md-6 col-lg-4 col-xl-3" key={file.id}>
                 <div
-                  className={`card border-0 shadow-sm rounded-4 h-100 bg-white transition-all ${isSelected ? "border-primary" : "hover-shadow"}`}
+                  className={`card border-0 shadow-sm rounded-4 h-100 bg-white transition-all ${isSelected ? "border-primary" : "hover-shadow"} premium-hover-card`}
                   style={{
                     border: isSelected
                       ? "2px solid var(--primary-color)"

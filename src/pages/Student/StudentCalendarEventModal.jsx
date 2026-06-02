@@ -101,22 +101,22 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
               <div className="row g-0">
                 <div className="col-md-7 p-4 border-end">
                   <div className="mb-3 d-flex align-items-center flex-wrap gap-2">
-                    <span className="badge bg-secondary text-light fw-medium shadow-sm border rounded-3 px-3 py-2">
+                    <span className="badge bg-secondary text-light fw-medium shadow-sm border rounded-3 px-3 py-2 shadow-sm">
                       <i className="bi bi-megaphone me-1"></i>{" "}
                       {selectedEvent.type}
                     </span>
                     {selectedEvent.status === "Pending" && (
-                      <span className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-3 py-2 border border-warning-subtle">
+                      <span className="badge bg-warning bg-opacity-10 text-warning fw-medium rounded-3 px-3 py-2 border border-warning-subtle shadow-sm">
                         <i className="bi bi-hourglass-split"></i> Pending
                       </span>
                     )}
                     {selectedEvent.status === "Published" && (
-                      <span className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-3 py-2 border border-success-subtle">
+                      <span className="badge bg-success bg-opacity-10 text-success fw-medium rounded-3 px-3 py-2 border border-success-subtle shadow-sm">
                         <i className="bi bi-check-circle-fill"></i> Published
                       </span>
                     )}
                     {selectedEvent.status === "Done" && (
-                      <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium rounded-3 px-3 py-2 border border-secondary-subtle">
+                      <span className="badge bg-secondary bg-opacity-10 text-secondary fw-medium rounded-3 px-3 py-2 border border-secondary-subtle shadow-sm">
                         <i className="bi bi-dash-circle-fill"></i> Done
                       </span>
                     )}
@@ -152,7 +152,7 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
                   <div className="p-3 bg-white border rounded-4 shadow-sm mb-4">
                     <div className="d-flex align-items-start mb-3">
                       <div
-                        className="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center me-3 mt-1 flex-shrink-0"
+                        className="rounded-circle bg-success bg-opacity-10 d-flex justify-content-center align-items-center me-3 mt-1 flex-shrink-0 shadow-sm"
                         style={{ width: "32px", height: "32px" }}
                       >
                         <i className="bi bi-calendar-check text-success"></i>
@@ -168,7 +168,7 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
                     </div>
                     <div className="d-flex align-items-start">
                       <div
-                        className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center me-3 mt-1 flex-shrink-0"
+                        className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center me-3 mt-1 flex-shrink-0 shadow-sm"
                         style={{ width: "32px", height: "32px" }}
                       >
                         <i className="bi bi-calendar-x text-danger"></i>

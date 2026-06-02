@@ -85,7 +85,7 @@ const StudentWorkModal = ({
 
               {workFiles.length > 0 && (
                 <div>
-                  <span className="small text-muted mb-2 d-block fw-bold">
+                  <span className="small text-muted mb-2 d-block">
                     Files to Turn In:
                   </span>
                   <div
@@ -104,20 +104,20 @@ const StudentWorkModal = ({
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3"
                               style={{
-                                width: "40px",
-                                height: "40px",
+                                width: "45px",
+                                height: "45px",
                                 backgroundColor: style.bg,
                                 color: style.color,
                               }}
                             >
                               <i className={`bi ${style.icon} fs-5`}></i>
                             </div>
-                            <div>
+                            <div className="overflow-hidden">
                               <p
                                 className="mb-0 fw-bold text-dark text-truncate"
                                 style={{
                                   fontSize: "0.85rem",
-                                  maxWidth: "250px",
+                                  maxWidth: "130px",
                                 }}
                               >
                                 {file.name}
@@ -310,24 +310,9 @@ const StudentWorkModal = ({
                     <div className="d-flex align-items-center">
                       <h6 className="fw-bold text-danger mb-2">
                         <i className="bi bi-exclamation-triangle-fill me-2"></i>{" "}
-                        Work Returned
+                        Teacher's Feedback
                       </h6>
                     </div>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline-secondary px-3 fw-medium rounded-3 shadow-sm border border-secondary-subtle"
-                      onClick={() => {
-                        const m = Modal.getInstance(
-                          document.getElementById("viewSubmissionModal"),
-                        );
-                        if (m) m.hide();
-                        setTimeout(() => {
-                          openAddWorkModal(selectedItemForWork);
-                        }, 400);
-                      }}
-                    >
-                      <i className="bi bi-cloud-upload me-2"></i> Re-submit
-                    </button>
                   </div>
                   <div
                     className="bg-white p-3 rounded-3 border border-danger border-opacity-25 text-dark mb-0 custom-scrollbar shadow-sm"
@@ -382,7 +367,7 @@ const StudentWorkModal = ({
                 </div>
               </div>
 
-              <span className="small text-muted mb-2 d-block fw-bold">
+              <span className="small text-muted mb-2 d-block">
                 Attached Files:
               </span>
 
@@ -403,18 +388,18 @@ const StudentWorkModal = ({
                           <div
                             className="rounded-3 d-flex align-items-center justify-content-center me-3"
                             style={{
-                              width: "40px",
-                              height: "40px",
+                              width: "45px",
+                              height: "45px",
                               backgroundColor: style.bg,
                               color: style.color,
                             }}
                           >
                             <i className={`bi ${style.icon} fs-5`}></i>
                           </div>
-                          <div>
+                          <div className="overflow-hidden">
                             <p
                               className="mb-0 fw-bold text-dark text-truncate"
-                              style={{ fontSize: "0.85rem", maxWidth: "250px" }}
+                              style={{ fontSize: "0.85rem", maxWidth: "130px" }}
                             >
                               {file.name}
                             </p>

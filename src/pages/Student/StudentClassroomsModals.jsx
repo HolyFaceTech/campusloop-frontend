@@ -7,7 +7,6 @@ const StudentClassroomsModals = ({
 }) => {
   return (
     <>
-      {/* JOIN CLASSROOM MODAL */}
       <div
         className="modal fade"
         id="joinClassroomModal"
@@ -73,7 +72,7 @@ const StudentClassroomsModals = ({
                   className="btn btn-campusloop px-4 fw-bold rounded-3 shadow-sm"
                   disabled={!joinCode}
                 >
-                  <i className="bi bi-send-fill"></i> Send Request
+                  <i className="bi bi-send-check-fill me-2"></i> Send Request
                 </button>
               </div>
             </form>
