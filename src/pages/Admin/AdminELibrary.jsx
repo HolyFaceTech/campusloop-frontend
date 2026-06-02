@@ -575,7 +575,7 @@ const AdminELibrary = () => {
                 className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
-              <h5 className="fw-bold text-dark">No records found.</h5>
+              <h5 className="fw-bold text-dark">No materials found.</h5>
               <p className="text-muted small mb-0">
                 {searchQuery || statusFilter !== "all"
                   ? "No matching records found."

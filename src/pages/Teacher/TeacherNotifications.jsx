@@ -259,9 +259,7 @@ const TeacherNotifications = () => {
                         style={{ fontSize: "3rem", opacity: 0.5 }}
                       ></i>
                       <h5 className="fw-bold text-dark">
-                        {searchQuery
-                          ? "No records found."
-                          : "No notifications yet."}
+                        No notifications found.
                       </h5>
                       <p className="text-muted small mb-0">
                         {searchQuery

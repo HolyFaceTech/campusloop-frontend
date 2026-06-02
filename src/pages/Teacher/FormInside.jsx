@@ -745,9 +745,7 @@ const FormInside = () => {
                             style={{ fontSize: "3rem", opacity: 0.5 }}
                           ></i>
                           <h5 className="fw-bold text-dark">
-                            {totalRecords === 0 && !searchQuery
-                              ? "No submissions yet"
-                              : "No matching records found"}
+                            No submissions found
                           </h5>
                           <p className="text-muted small mb-0">
                             {totalRecords === 0 && !searchQuery
@@ -768,7 +766,7 @@ const FormInside = () => {
               <span className="text-muted small">
                 Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
                 {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-                {totalRecords} entries
+                {totalRecords} respondents
               </span>
               <nav>
                 <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">

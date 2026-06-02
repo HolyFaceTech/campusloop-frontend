@@ -501,7 +501,7 @@ const TeacherAdvisory = () => {
                 className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
               ></i>
-              <h5 className="fw-bold text-dark">No records found.</h5>
+              <h5 className="fw-bold text-dark">No advisories found.</h5>
               <p className="text-muted small mb-0">
                 {searchQuery
                   ? "No matching advisory classes for your search."
@@ -517,7 +517,7 @@ const TeacherAdvisory = () => {
           <p className="text-muted small mb-0">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} records
+            {totalRecords} advisories
           </p>
           <nav>
             <ul className="pagination pagination-sm mb-0 flex-wrap justify-content-end">

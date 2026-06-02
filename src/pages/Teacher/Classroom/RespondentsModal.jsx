@@ -499,7 +499,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                                 style={{ fontSize: "3rem", opacity: 0.5 }}
                               ></i>
                               <h5 className="fw-bold text-dark">
-                                No records found.
+                                No respondents found.
                               </h5>
                               <p className="text-muted small mb-0">
                                 {searchTerm

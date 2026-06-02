@@ -831,9 +831,7 @@ const AdminFormInside = () => {
                             style={{ fontSize: "3rem", opacity: 0.5 }}
                           ></i>
                           <h5 className="fw-bold text-dark">
-                            {totalRecords === 0 && !searchQuery
-                              ? "No submissions yet"
-                              : "No matching records found"}
+                            No submissions found.
                           </h5>
                           <p className="text-muted small mb-0">
                             {totalRecords === 0 && !searchQuery

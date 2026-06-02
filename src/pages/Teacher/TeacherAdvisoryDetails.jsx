@@ -661,11 +661,7 @@ const TeacherAdvisoryDetails = () => {
                         className="bi bi-inbox text-muted d-block mb-3"
                         style={{ fontSize: "3rem", opacity: 0.5 }}
                       ></i>
-                      <h5 className="fw-bold text-dark">
-                        {searchEnrolled
-                          ? "No matching records found."
-                          : "No students enrolled yet."}
-                      </h5>
+                      <h5 className="fw-bold text-dark">No students found.</h5>
                       <p className="text-muted small mb-0">
                         {searchEnrolled
                           ? "Try adjusting your search query."
@@ -685,7 +681,7 @@ const TeacherAdvisoryDetails = () => {
           <span className="text-muted small">
             Showing {(currentPage - 1) * entriesPerPage + 1} to{" "}
             {Math.min(currentPage * entriesPerPage, totalRecords)} of{" "}
-            {totalRecords} entries
+            {totalRecords} students
           </span>
           <nav>
             <ul className="pagination pagination-sm mb-0">
