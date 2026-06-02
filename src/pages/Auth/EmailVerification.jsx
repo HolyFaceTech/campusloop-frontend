@@ -16,12 +16,10 @@ const darkToast = {
 const EmailVerification = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
   const id = searchParams.get("id");
   const hash = searchParams.get("hash");
   const emailParam = searchParams.get("email");
   const expires = searchParams.get("expires");
-
   const [email, setEmail] = useState(emailParam || "");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
