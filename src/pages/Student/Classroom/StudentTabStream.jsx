@@ -1145,7 +1145,18 @@ const StudentTabStream = () => {
                             Class Comments
                           </span>
                           <span className="text-muted small">
-                            {cw.comments ? cw.comments.length : 0} comments
+                            {cw.comments
+                              ? cw.comments.reduce((total, comment) => {
+                                  return (
+                                    total +
+                                    1 +
+                                    (comment.replies
+                                      ? comment.replies.length
+                                      : 0)
+                                  );
+                                }, 0)
+                              : 0}{" "}
+                            comments
                           </span>
                         </div>
 
