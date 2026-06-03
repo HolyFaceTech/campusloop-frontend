@@ -49,7 +49,12 @@ Add your backend API base URL and reCAPTCHA keys:
 
 ```env
 # Production/Testing Keys
-VITE_RECAPTCHA_SITE_KEY=6LeUEH4sAAAAAJHibQNUPuWgaOIvJblg65cGVVB2
+
+# Google Test Site Key para laging pumasa sa localhost testing
+# VITE_RECAPTCHA_SITE_KEY=6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+
+# Production Key
+VITE_RECAPTCHA_SITE_KEY=
 VITE_API_BASE_URL=http://localhost:8000/api
 
 ```
@@ -76,7 +81,3 @@ The application utilizes token-based authentication via Laravel Sanctum.
 
 - Tokens and User data are stored securely in `localStorage` or `sessionStorage` (depending on "Remember Me").
 - If a session is terminated remotely (Single Session Policy), the Axios interceptor immediately clears storage, flags the session in `sessionStorage`, and hard-redirects the user to `/login` where a Sileo toast explains the termination.
-
-```
-
-```
