@@ -3,6 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import SubjectFormModal from "./SubjectFormModal";
+import SubjectImportModal from "./SubjectImportModal";
 import { Modal } from "bootstrap";
 
 const darkToast = {
@@ -293,6 +294,11 @@ const Subjects = () => {
     else setSelectedIds([]);
   };
 
+  const openImportModal = () => {
+    const modal = new Modal(document.getElementById("importSubjectModal"));
+    modal.show();
+  };
+
   const renderPageNumbers = () => {
     let pages = [];
     if (totalPages <= 5) {
@@ -354,13 +360,23 @@ const Subjects = () => {
             Manage and assign subjects to specific strands and semesters.
           </p>
         </div>
-        <button
-          onClick={openFormModalForCreate}
-          className="btn btn-campusloop fw-medium shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
-        >
-          <i className="bi bi-plus-lg fs-5"></i>{" "}
-          <span className="d-none d-sm-inline">New Subject</span>
-        </button>
+        <div className="flex-shrink-0 d-flex gap-2">
+          <button
+            onClick={openImportModal}
+            className="btn btn-outline-success border-success shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
+          >
+            <i className="bi bi-file-earmark-arrow-up fs-5"></i>
+            <span className="d-none d-sm-inline">Import CSV</span>
+          </button>
+
+          <button
+            onClick={openFormModalForCreate}
+            className="btn btn-campusloop fw-medium shadow-sm px-3 rounded-3 d-flex align-items-center gap-2"
+          >
+            <i className="bi bi-plus-lg fs-5"></i>{" "}
+            <span className="d-none d-sm-inline">New Subject</span>
+          </button>
+        </div>
       </div>
 
       <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
@@ -636,6 +652,12 @@ const Subjects = () => {
         proceedToUpdateForm={proceedToUpdateForm}
         executeDelete={executeDelete}
         selectedIdsCount={selectedIds.length}
+      />
+
+      <SubjectImportModal
+        fetchSubjects={fetchSubjects}
+        setIsLoading={setIsLoading}
+        setLoadingText={setLoadingText}
       />
     </>
   );
