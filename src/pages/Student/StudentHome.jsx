@@ -198,6 +198,30 @@ const StudentHome = () => {
     }
   };
 
+  const renderWithLinks = (text) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split(urlRegex).map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-underline fw-medium"
+            style={{ color: "var(--primary-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   const renderCommentBox = (comment, isReply = false) => {
     const isOwner = comment.user_id === data.user?.id;
 
@@ -258,11 +282,12 @@ const StudentHome = () => {
           <span
             className="text-dark lh-sm d-block"
             style={{
-              fontSize: isReply ? "0.85rem" : "0.9rem",
+              fontSize: "0.85rem",
               whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
             }}
           >
-            {comment.content}
+            {renderWithLinks(comment.content)}
           </span>
         </div>
 
