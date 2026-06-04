@@ -312,6 +312,30 @@ const AdminTabStream = () => {
     return "#";
   };
 
+  const renderWithLinks = (text) => {
+    if (!text) return null;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split(urlRegex).map((part, index) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-decoration-underline fw-medium"
+            style={{ color: "var(--primary-color)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <>
       <GlobalSpinner isLoading={isLoading} text={loadingText} />
@@ -925,11 +949,12 @@ const AdminTabStream = () => {
                                     <span
                                       className="text-dark lh-sm d-block"
                                       style={{
-                                        fontSize: "0.9rem",
+                                        fontSize: "0.85rem",
                                         whiteSpace: "pre-wrap",
+                                        wordBreak: "break-word",
                                       }}
                                     >
-                                      {comment.content}
+                                      {renderWithLinks(comment.content)}
                                     </span>
                                   </div>
                                   <div className="ms-2 mt-1 d-flex align-items-center gap-3">
@@ -1008,9 +1033,12 @@ const AdminTabStream = () => {
                                                   style={{
                                                     fontSize: "0.85rem",
                                                     whiteSpace: "pre-wrap",
+                                                    wordBreak: "break-word",
                                                   }}
                                                 >
-                                                  {reply.content}
+                                                  {renderWithLinks(
+                                                    reply.content,
+                                                  )}
                                                 </span>
                                               </div>
                                               <div className="ms-2 mt-1 d-flex align-items-center gap-3">
