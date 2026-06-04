@@ -647,6 +647,9 @@ const AdminLayout = () => {
                             <div className="flex-grow-1">
                               <p
                                 className={`mb-1 small ${notif.is_read ? "text-muted" : "text-dark fw-bold"}`}
+                                style={{
+                                  wordBreak: "break-word",
+                                }}
                               >
                                 {notif.description}
                               </p>
