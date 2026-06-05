@@ -1040,6 +1040,7 @@ const AdminTabStream = () => {
                                         {new Date(
                                           comment.created_at,
                                         ).toLocaleString([], {
+                                          year: "numeric",
                                           month: "short",
                                           day: "numeric",
                                           hour: "2-digit",
@@ -1187,6 +1188,7 @@ const AdminTabStream = () => {
                                                         {new Date(
                                                           reply.created_at,
                                                         ).toLocaleString([], {
+                                                          year: "numeric",
                                                           month: "short",
                                                           day: "numeric",
                                                           hour: "2-digit",

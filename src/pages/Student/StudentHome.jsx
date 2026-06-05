@@ -326,6 +326,7 @@ const StudentHome = () => {
             style={{ fontSize: "0.65rem", fontWeight: "500" }}
           >
             {new Date(comment.created_at).toLocaleString([], {
+              year: "numeric",
               month: "short",
               day: "numeric",
               hour: "2-digit",
