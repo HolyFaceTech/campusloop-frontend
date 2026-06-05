@@ -805,9 +805,9 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                     return (
                       <div
                         key={file.id}
-                        className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm hover-shadow transition-all w-100"
+                        className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                       >
-                        <div className="d-flex align-items-center overflow-hidden">
+                        <div className="d-flex align-items-center overflow-hidden pe-3">
                           <div
                             className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                             style={{
@@ -828,7 +828,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                               {file.name}
                             </p>
                             <p
-                              className="mb-0 text-muted"
+                              className="mb-0 text-muted text-uppercase"
                               style={{ fontSize: "0.75rem" }}
                             >
                               {formatBytes(file.file_size)} •{" "}

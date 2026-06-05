@@ -832,7 +832,7 @@ const AdminFiles = () => {
                                 {file.file_extension}
                               </span>
                               <span
-                                className={`badge ${badgeStyle} bg-opacity-10 fw-medium border shadow-sm`}
+                                className={`badge ${badgeStyle} bg-opacity-10 fw-medium border shadow-sm d-none d-sm-inline`}
                                 style={{
                                   fontSize: "0.60rem",
                                   letterSpacing: "0.5px",

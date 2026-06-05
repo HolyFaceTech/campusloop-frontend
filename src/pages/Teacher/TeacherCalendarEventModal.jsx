@@ -201,8 +201,8 @@ const TeacherCalendarEventModal = ({ selectedEvent }) => {
                       <div
                         className="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                         style={{
-                          width: "40px",
-                          height: "40px",
+                          width: "45px",
+                          height: "45px",
                         }}
                       >
                         <i className="bi bi-link-45deg fs-5"></i>
@@ -210,7 +210,7 @@ const TeacherCalendarEventModal = ({ selectedEvent }) => {
                       <div className="overflow-hidden">
                         <span
                           className="d-block fw-bold text-dark text-truncate"
-                          style={{ fontSize: "0.85rem" }}
+                          style={{ fontSize: "0.95rem" }}
                         >
                           Attached URL Link
                         </span>
@@ -242,8 +242,8 @@ const TeacherCalendarEventModal = ({ selectedEvent }) => {
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                               style={{
-                                width: "40px",
-                                height: "40px",
+                                width: "45px",
+                                height: "45px",
                                 backgroundColor: style.bg,
                                 color: style.color,
                               }}
@@ -253,7 +253,8 @@ const TeacherCalendarEventModal = ({ selectedEvent }) => {
                             <div className="overflow-hidden">
                               <span
                                 className="d-block fw-bold text-dark text-truncate"
-                                style={{ fontSize: "0.85rem" }}
+                                style={{ fontSize: "0.95rem" }}
+                                title={file.name}
                               >
                                 {file.name}
                               </span>
