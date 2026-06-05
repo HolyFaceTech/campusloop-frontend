@@ -34,6 +34,10 @@ const StudentHome = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState("");
+  const [expandedAnnouncements, setExpandedAnnouncements] = useState({});
+  const [expandedComments, setExpandedComments] = useState({});
+  const [expandedReplies, setExpandedReplies] = useState({});
+  const [expandedCommentTexts, setExpandedCommentTexts] = useState({});
   const navigate = useNavigate();
 
   const userInitial = data.user?.first_name
@@ -69,8 +73,10 @@ const StudentHome = () => {
     if (parentId) {
       setReplyInputs({ ...replyInputs, [parentId]: "" });
       setActiveReplyBox(null);
+      setExpandedReplies((prev) => ({ ...prev, [parentId]: true }));
     } else {
       setCommentInputs({ ...commentInputs, [announcementId]: "" });
+      setExpandedComments((prev) => ({ ...prev, [announcementId]: true }));
     }
 
     try {
@@ -253,6 +259,15 @@ const StudentHome = () => {
       );
     }
 
+    const isTextExpanded = expandedCommentTexts[comment.id];
+    const textLimit = 150;
+    const shouldTruncate =
+      comment.content && comment.content.length > textLimit;
+    const displayContent =
+      isTextExpanded || !shouldTruncate
+        ? comment.content
+        : comment.content.substring(0, textLimit) + "...";
+
     return (
       <div className="w-100 d-flex flex-column align-items-start">
         <div
@@ -287,8 +302,22 @@ const StudentHome = () => {
               wordBreak: "break-word",
             }}
           >
-            {renderWithLinks(comment.content)}
+            {renderWithLinks(displayContent)}
           </span>
+          {shouldTruncate && (
+            <button
+              className="btn btn-link p-0 text-decoration-none fw-bold shadow-none mt-1"
+              style={{ fontSize: "0.75rem", color: "var(--primary-color)" }}
+              onClick={() =>
+                setExpandedCommentTexts((prev) => ({
+                  ...prev,
+                  [comment.id]: !isTextExpanded,
+                }))
+              }
+            >
+              {isTextExpanded ? "See Less" : "See More"}
+            </button>
+          )}
         </div>
 
         <div className="ms-2 mt-1 d-flex align-items-center gap-3">
@@ -413,6 +442,30 @@ const StudentHome = () => {
             data.announcements.map((announcement) => {
               const statusColor =
                 announcement.status === "Done" ? "#6c757d" : "#198754";
+              const isContentExpanded = expandedAnnouncements[announcement.id];
+              const contentLimit = 250;
+              const shouldTruncateContent =
+                announcement.content &&
+                announcement.content.length > contentLimit;
+              const displayContent =
+                isContentExpanded || !shouldTruncateContent
+                  ? announcement.content
+                  : announcement.content.substring(0, contentLimit) + "...";
+
+              const isCommentsExpanded = expandedComments[announcement.id];
+              const commentsList = announcement.comments || [];
+              const visibleComments = isCommentsExpanded
+                ? commentsList
+                : commentsList.slice(0, 2);
+              const hasMoreComments = commentsList.length > 2;
+              const totalCommentsAndReplies = commentsList.reduce(
+                (total, comment) => {
+                  return (
+                    total + 1 + (comment.replies ? comment.replies.length : 0)
+                  );
+                },
+                0,
+              );
 
               return (
                 <div
@@ -462,15 +515,33 @@ const StudentHome = () => {
 
                     <div className="ps-0 ps-sm-5 ms-sm-3 mt-2">
                       <p
-                        className="text-dark mb-4 lh-base"
+                        className={`text-dark lh-base ${shouldTruncateContent && !isContentExpanded ? "mb-1" : "mb-4"}`}
                         style={{ whiteSpace: "pre-line", fontSize: "0.95rem" }}
                       >
-                        {announcement.content}
+                        {displayContent}
                       </p>
+
+                      {shouldTruncateContent && (
+                        <button
+                          className="btn btn-link p-0 text-decoration-none mb-4 fw-bold shadow-none"
+                          style={{
+                            fontSize: "0.85rem",
+                            color: "var(--primary-color)",
+                          }}
+                          onClick={() =>
+                            setExpandedAnnouncements((prev) => ({
+                              ...prev,
+                              [announcement.id]: !isContentExpanded,
+                            }))
+                          }
+                        >
+                          {isContentExpanded ? "See Less" : "See More"}
+                        </button>
+                      )}
 
                       <div className="d-flex flex-column gap-2 mb-3">
                         {announcement.link && (
-                          <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
+                          <div className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow">
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-primary bg-opacity-10 text-primary"
                               style={{ width: "45px", height: "45px" }}
@@ -585,17 +656,22 @@ const StudentHome = () => {
                           </span>
                         </div>
 
-                        {announcement.comments &&
-                          announcement.comments.length > 0 && (
-                            <div
-                              className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
-                              style={{
-                                maxHeight: "350px",
-                                overflowY: "auto",
-                                paddingRight: "10px",
-                              }}
-                            >
-                              {announcement.comments.map((comment) => (
+                        {commentsList.length > 0 && (
+                          <div
+                            className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
+                            style={{
+                              maxHeight: "350px",
+                              overflowY: "auto",
+                              paddingRight: "10px",
+                            }}
+                          >
+                            {visibleComments.map((comment) => {
+                              const isRepliesExpanded =
+                                expandedReplies[comment.id];
+                              const repliesList = comment.replies || [];
+                              const hasReplies = repliesList.length > 0;
+
+                              return (
                                 <div
                                   key={comment.id}
                                   className="d-flex align-items-start gap-2"
@@ -614,37 +690,78 @@ const StudentHome = () => {
                                   </div>
                                   <div className="flex-grow-1">
                                     {renderCommentBox(comment, false)}
-
-                                    {comment.replies &&
-                                      comment.replies.length > 0 && (
-                                        <div className="d-flex flex-column gap-2 mt-2">
-                                          {comment.replies.map((reply) => (
-                                            <div
-                                              key={reply.id}
-                                              className="d-flex align-items-start gap-2"
-                                            >
+                                    {hasReplies && (
+                                      <div className="mt-1">
+                                        {!isRepliesExpanded ? (
+                                          <button
+                                            className="btn btn-link text-muted p-0 text-decoration-none fw-medium shadow-none d-flex align-items-center gap-1"
+                                            style={{
+                                              fontSize: "0.75rem",
+                                              marginLeft: "8px",
+                                            }}
+                                            onClick={() =>
+                                              setExpandedReplies((prev) => ({
+                                                ...prev,
+                                                [comment.id]: true,
+                                              }))
+                                            }
+                                          >
+                                            <i className="bi bi-arrow-return-right"></i>{" "}
+                                            View {repliesList.length}{" "}
+                                            {repliesList.length === 1
+                                              ? "reply"
+                                              : "replies"}
+                                          </button>
+                                        ) : (
+                                          <div className="d-flex flex-column gap-2 mt-2">
+                                            {repliesList.map((reply) => (
                                               <div
-                                                className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
-                                                style={{
-                                                  width: "24px",
-                                                  height: "24px",
-                                                  backgroundColor:
-                                                    "var(--secondary-color)",
-                                                  fontSize: "0.6rem",
-                                                  fontWeight: "bold",
-                                                }}
+                                                key={reply.id}
+                                                className="d-flex align-items-start gap-2"
                                               >
-                                                {reply.user?.first_name?.charAt(
-                                                  0,
-                                                )}
+                                                <div
+                                                  className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
+                                                  style={{
+                                                    width: "24px",
+                                                    height: "24px",
+                                                    backgroundColor:
+                                                      "var(--secondary-color)",
+                                                    fontSize: "0.6rem",
+                                                    fontWeight: "bold",
+                                                  }}
+                                                >
+                                                  {reply.user?.first_name?.charAt(
+                                                    0,
+                                                  )}
+                                                </div>
+                                                <div className="flex-grow-1">
+                                                  {renderCommentBox(
+                                                    reply,
+                                                    true,
+                                                  )}
+                                                </div>
                                               </div>
-                                              <div className="flex-grow-1">
-                                                {renderCommentBox(reply, true)}
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
+                                            ))}
+                                            <button
+                                              className="btn btn-link text-muted p-0 text-decoration-none fw-medium shadow-none mt-1 d-flex align-items-center gap-1"
+                                              style={{
+                                                fontSize: "0.75rem",
+                                                marginLeft: "32px",
+                                              }}
+                                              onClick={() =>
+                                                setExpandedReplies((prev) => ({
+                                                  ...prev,
+                                                  [comment.id]: false,
+                                                }))
+                                              }
+                                            >
+                                              <i className="bi bi-chevron-up"></i>{" "}
+                                              Hide replies
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
 
                                     {activeReplyBox === comment.id && (
                                       <div className="d-flex align-items-start gap-2 mt-2">
@@ -706,9 +823,39 @@ const StudentHome = () => {
                                     )}
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                              );
+                            })}
+
+                            {hasMoreComments && !isCommentsExpanded && (
+                              <button
+                                className="btn btn-link text-muted text-decoration-none text-start p-0 fw-medium shadow-none mt-1"
+                                style={{ fontSize: "0.85rem" }}
+                                onClick={() =>
+                                  setExpandedComments((prev) => ({
+                                    ...prev,
+                                    [announcement.id]: true,
+                                  }))
+                                }
+                              >
+                                View all {totalCommentsAndReplies} comments
+                              </button>
+                            )}
+                            {hasMoreComments && isCommentsExpanded && (
+                              <button
+                                className="btn btn-link text-muted text-decoration-none text-start p-0 fw-medium shadow-none mt-1"
+                                style={{ fontSize: "0.85rem" }}
+                                onClick={() =>
+                                  setExpandedComments((prev) => ({
+                                    ...prev,
+                                    [announcement.id]: false,
+                                  }))
+                                }
+                              >
+                                Hide comments
+                              </button>
+                            )}
+                          </div>
+                        )}
 
                         <div className="d-flex align-items-start gap-2 mt-3 pt-2 border-top">
                           <div

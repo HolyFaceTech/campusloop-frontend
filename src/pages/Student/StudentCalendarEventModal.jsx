@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const StudentCalendarEventModal = ({ selectedEvent }) => {
   const formatDisplayDateTime = (dateObj) => {
@@ -12,6 +12,12 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
     };
     return new Date(dateObj).toLocaleDateString("en-US", options);
   };
+
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [selectedEvent]);
 
   const formatSize = (bytes) => {
     if (!bytes || bytes === 0) return "0 Bytes";
@@ -68,6 +74,14 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
     }
     return trimmed;
   };
+
+  const rawContent = selectedEvent?.content || "";
+  const contentLimit = 250;
+  const shouldTruncate = rawContent.length > contentLimit;
+  const displayContent =
+    isExpanded || !shouldTruncate
+      ? rawContent
+      : rawContent.substring(0, contentLimit) + "...";
 
   return (
     <div
@@ -134,11 +148,23 @@ const StudentCalendarEventModal = ({ selectedEvent }) => {
                       <i className="bi bi-text-paragraph me-1"></i> Full Content
                     </label>
                     <p
-                      className="text-dark small lh-lg"
-                      style={{ whiteSpace: "pre-wrap" }}
+                      className={`text-muted small ${shouldTruncate && !isExpanded ? "mb-1" : "mb-3"}`}
+                      style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                     >
-                      {selectedEvent.content}
+                      {displayContent}
                     </p>
+                    {shouldTruncate && (
+                      <button
+                        className="btn btn-link p-0 text-decoration-none fw-bold shadow-none mb-3 d-block"
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--primary-color)",
+                        }}
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? "See Less" : "See More"}
+                      </button>
+                    )}
                   </div>
                 </div>
 

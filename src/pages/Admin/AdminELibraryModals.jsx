@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const AdminELibraryModals = ({
   viewItem,
@@ -15,6 +15,12 @@ const AdminELibraryModals = ({
     window.open(`${baseUrl}/storage/${filePath}`, "_blank");
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  useEffect(() => {
+    setIsExpanded(false);
+  }, [viewItem]);
+
   const formatBytes = (bytes) => {
     if (bytes === 0 || !bytes) return "Unknown Size";
     const k = 1024;
@@ -22,6 +28,14 @@ const AdminELibraryModals = ({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
+
+  const rawDescription = viewItem?.description || "";
+  const descriptionLimit = 250;
+  const shouldTruncate = rawDescription.length > descriptionLimit;
+  const displayDescription =
+    isExpanded || !shouldTruncate
+      ? rawDescription
+      : rawDescription.substring(0, descriptionLimit) + "...";
 
   return (
     <>
@@ -63,11 +77,23 @@ const AdminELibraryModals = ({
                       {viewItem.title}
                     </h4>
                     <p
-                      className="text-muted small mb-0"
+                      className={`text-muted small ${shouldTruncate && !isExpanded ? "mb-1" : "mb-3"}`}
                       style={{ lineHeight: "1.6", whiteSpace: "pre-wrap" }}
                     >
-                      {viewItem.description}
+                      {displayDescription}
                     </p>
+                    {shouldTruncate && (
+                      <button
+                        className="btn btn-link p-0 text-decoration-none fw-bold shadow-none mb-3 d-block"
+                        style={{
+                          fontSize: "0.85rem",
+                          color: "var(--primary-color)",
+                        }}
+                        onClick={() => setIsExpanded(!isExpanded)}
+                      >
+                        {isExpanded ? "See Less" : "See More"}
+                      </button>
+                    )}
                   </div>
 
                   <span
