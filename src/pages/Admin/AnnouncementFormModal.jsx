@@ -339,11 +339,11 @@ const AnnouncementFormModal = ({
                           return (
                             <div
                               key={file.id}
-                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm"
+                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                             >
-                              <div className="d-flex align-items-center">
+                              <div className="d-flex align-items-center overflow-hidden pe-3">
                                 <div
-                                  className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                  className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                   style={{
                                     width: "45px",
                                     height: "45px",
@@ -353,18 +353,16 @@ const AnnouncementFormModal = ({
                                 >
                                   <i className={`bi ${style.icon} fs-4`}></i>
                                 </div>
-                                <div>
+                                <div className="overflow-hidden">
                                   <p
                                     className="mb-0 fw-bold text-dark text-truncate"
-                                    style={{
-                                      fontSize: "0.90rem",
-                                      maxWidth: "300px",
-                                    }}
+                                    style={{ fontSize: "0.95rem" }}
+                                    title={file.name}
                                   >
                                     {file.name}
                                   </p>
                                   <p
-                                    className="mb-0 text-muted"
+                                    className="mb-0 text-muted text-uppercase"
                                     style={{ fontSize: "0.75rem" }}
                                   >
                                     {formatSize(file.file_size)} • {style.label}
@@ -387,14 +385,14 @@ const AnnouncementFormModal = ({
                           return (
                             <div
                               key={index}
-                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm"
+                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                               style={{
                                 borderLeft: `4px solid ${style.color} !important`,
                               }}
                             >
-                              <div className="d-flex align-items-center">
+                              <div className="d-flex align-items-center overflow-hidden pe-3">
                                 <div
-                                  className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                  className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                   style={{
                                     width: "45px",
                                     height: "45px",
@@ -404,18 +402,16 @@ const AnnouncementFormModal = ({
                                 >
                                   <i className={`bi ${style.icon} fs-4`}></i>
                                 </div>
-                                <div>
+                                <div className="overflow-hidden">
                                   <p
                                     className="mb-0 fw-bold text-dark text-truncate"
-                                    style={{
-                                      fontSize: "0.90rem",
-                                      maxWidth: "300px",
-                                    }}
+                                    style={{ fontSize: "0.95rem" }}
+                                    title={file.name}
                                   >
                                     {file.name}
                                   </p>
                                   <p
-                                    className="mb-0 text-muted"
+                                    className="mb-0 text-muted text-uppercase"
                                     style={{ fontSize: "0.75rem" }}
                                   >
                                     {formatSize(file.size)} • {style.label}

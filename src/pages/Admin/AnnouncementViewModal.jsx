@@ -393,7 +393,7 @@ const AnnouncementViewModal = ({
                         <p
                           className="mb-0 text-muted"
                           style={{
-                            fontSize: "0.70rem",
+                            fontSize: "0.75rem",
                             letterSpacing: "0.5px",
                           }}
                         >
@@ -418,7 +418,7 @@ const AnnouncementViewModal = ({
                       return (
                         <div
                           key={file.id}
-                          className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden"
+                          className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                         >
                           <div
                             className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
@@ -434,12 +434,13 @@ const AnnouncementViewModal = ({
                           <div className="flex-grow-1 overflow-hidden">
                             <p
                               className="mb-0 fw-bold text-dark text-truncate"
-                              style={{ fontSize: "0.95rem", maxWidth: "400px" }}
+                              style={{ fontSize: "0.95rem" }}
+                              title={file.name}
                             >
                               {file.name}
                             </p>
                             <p
-                              className="mb-0 text-muted"
+                              className="mb-0 text-muted text-uppercase"
                               style={{ fontSize: "0.75rem" }}
                             >
                               {formatBytes(file.file_size)} •{" "}

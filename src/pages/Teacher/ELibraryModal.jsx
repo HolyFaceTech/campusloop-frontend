@@ -181,11 +181,11 @@ const ELibraryModal = ({
                           existingFiles.map((file) => (
                             <div
                               key={`existing-${file.id}`}
-                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm"
+                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                             >
-                              <div className="d-flex align-items-center">
+                              <div className="d-flex align-items-center overflow-hidden pe-3">
                                 <div
-                                  className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                  className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                   style={{
                                     width: "45px",
                                     height: "45px",
@@ -195,13 +195,11 @@ const ELibraryModal = ({
                                 >
                                   <i className="bi bi-file-earmark-pdf-fill fs-4"></i>
                                 </div>
-                                <div>
+                                <div className="overflow-hidden">
                                   <p
                                     className="mb-0 fw-bold text-dark text-truncate"
-                                    style={{
-                                      fontSize: "0.90rem",
-                                      maxWidth: "300px",
-                                    }}
+                                    style={{ fontSize: "0.95rem" }}
+                                    title={file.name}
                                   >
                                     {file.name}
                                   </p>
@@ -236,11 +234,11 @@ const ELibraryModal = ({
                           formData.files.map((file, index) => (
                             <div
                               key={`new-${index}`}
-                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm"
+                              className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                             >
-                              <div className="d-flex align-items-center">
+                              <div className="d-flex align-items-center overflow-hidden pe-3">
                                 <div
-                                  className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                  className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                   style={{
                                     width: "45px",
                                     height: "45px",
@@ -250,13 +248,11 @@ const ELibraryModal = ({
                                 >
                                   <i className="bi bi-file-earmark-pdf-fill fs-4"></i>
                                 </div>
-                                <div>
+                                <div className="overflow-hidden">
                                   <p
                                     className="mb-0 fw-bold text-dark text-truncate"
-                                    style={{
-                                      fontSize: "0.90rem",
-                                      maxWidth: "300px",
-                                    }}
+                                    style={{ fontSize: "0.95rem" }}
+                                    title={file.name}
                                   >
                                     {file.name}
                                   </p>

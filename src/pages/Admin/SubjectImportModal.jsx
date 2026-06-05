@@ -234,29 +234,30 @@ const SubjectImportModal = ({
                   <span className="small text-muted mb-2 d-block fw-bold">
                     File to Import:
                   </span>
-                  <div className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm">
-                    <div className="d-flex align-items-center">
+                  <div className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow">
+                    <div className="d-flex align-items-center overflow-hidden pe-3">
                       <div
-                        className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                        className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                         style={{
-                          width: "40px",
-                          height: "40px",
+                          width: "45px",
+                          height: "45px",
                           backgroundColor: "rgba(70, 165, 121, 0.25)",
                           color: "#198754",
                         }}
                       >
                         <i className="bi bi-file-earmark-excel-fill fs-5"></i>
                       </div>
-                      <div>
+                      <div className="overflow-hidden">
                         <p
                           className="mb-0 fw-bold text-dark text-truncate"
-                          style={{ fontSize: "0.85rem", maxWidth: "250px" }}
+                          style={{ fontSize: "0.95rem" }}
+                          title={importFile.name}
                         >
                           {importFile.name}
                         </p>
                         <p
-                          className="mb-0 text-muted"
-                          style={{ fontSize: "0.70rem" }}
+                          className="mb-0 text-muted text-uppercase"
+                          style={{ fontSize: "0.75rem" }}
                         >
                           {formatBytes(importFile.size)} •{" "}
                           {importFile.name.split(".").pop().toUpperCase()}

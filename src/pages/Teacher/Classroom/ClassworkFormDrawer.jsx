@@ -576,7 +576,7 @@ const ClassworkFormDrawer = ({
                       Attached Files:
                     </span>
                     <div
-                      className="d-flex flex-column gap-2 custom-scrollbar"
+                      className="d-flex flex-column gap-3 custom-scrollbar"
                       style={{ maxHeight: "250px", overflowY: "auto" }}
                     >
                       {existingFiles.map((file) => {
@@ -584,33 +584,31 @@ const ClassworkFormDrawer = ({
                         return (
                           <div
                             key={file.id}
-                            className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm"
+                            className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                           >
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center overflow-hidden pe-3">
                               <div
-                                className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                 style={{
-                                  width: "40px",
-                                  height: "40px",
+                                  width: "45px",
+                                  height: "45px",
                                   backgroundColor: style.bg,
                                   color: style.color,
                                 }}
                               >
                                 <i className={`bi ${style.icon} fs-5`}></i>
                               </div>
-                              <div>
+                              <div className="overflow-hidden">
                                 <p
                                   className="mb-0 fw-bold text-dark text-truncate"
-                                  style={{
-                                    fontSize: "0.85rem",
-                                    maxWidth: "250px",
-                                  }}
+                                  style={{ fontSize: "0.95rem" }}
+                                  title={file.name}
                                 >
                                   {file.name}
                                 </p>
                                 <p
-                                  className="mb-0 text-muted"
-                                  style={{ fontSize: "0.70rem" }}
+                                  className="mb-0 text-muted text-uppercase"
+                                  style={{ fontSize: "0.75rem" }}
                                 >
                                   {formatSize(file.file_size)} • {style.label}
                                 </p>
@@ -632,33 +630,31 @@ const ClassworkFormDrawer = ({
                         return (
                           <div
                             key={index}
-                            className="d-flex align-items-center justify-content-between p-3 bg-light border rounded-4 shadow-sm"
+                            className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow"
                           >
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex align-items-center overflow-hidden pe-3">
                               <div
-                                className="rounded-3 d-flex align-items-center justify-content-center me-3"
+                                className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                 style={{
-                                  width: "40px",
-                                  height: "40px",
+                                  width: "45px",
+                                  height: "45px",
                                   backgroundColor: style.bg,
                                   color: style.color,
                                 }}
                               >
                                 <i className={`bi ${style.icon} fs-5`}></i>
                               </div>
-                              <div>
+                              <div className="overflow-hidden">
                                 <p
                                   className="mb-0 fw-bold text-dark text-truncate"
-                                  style={{
-                                    fontSize: "0.85rem",
-                                    maxWidth: "250px",
-                                  }}
+                                  style={{ fontSize: "0.95rem" }}
+                                  title={file.name}
                                 >
                                   {file.name}
                                 </p>
                                 <p
-                                  className="mb-0 text-muted"
-                                  style={{ fontSize: "0.70rem" }}
+                                  className="mb-0 text-muted text-uppercase"
+                                  style={{ fontSize: "0.75rem" }}
                                 >
                                   {formatSize(file.size)} • {style.label}
                                 </p>

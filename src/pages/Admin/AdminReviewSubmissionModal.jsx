@@ -276,8 +276,11 @@ const AdminReviewSubmissionModal = ({
                                         ) : (
                                           <i className="bi bi-x-circle-fill me-1"></i>
                                         )}
-                                        {answerData?.points_earned || 0} /{" "}
-                                        {q.points} pt{q.points > 1 ? "s" : ""}
+                                        {answerData?.points_earned || 0}{" "}
+                                        <span className="d-none d-sm-inline">
+                                          / {q.points} pt
+                                          {q.points > 1 ? "s" : ""}
+                                        </span>
                                       </span>
                                     </div>
                                   </div>
@@ -310,7 +313,9 @@ const AdminReviewSubmissionModal = ({
                                                   }}
                                                 >
                                                   <i className="bi bi-check-circle-fill me-1"></i>{" "}
-                                                  Correct Answer
+                                                  <span className="d-none d-sm-inline">
+                                                    Correct Answer
+                                                  </span>
                                                 </span>
                                               );
                                             } else if (
@@ -328,7 +333,9 @@ const AdminReviewSubmissionModal = ({
                                                   }}
                                                 >
                                                   <i className="bi bi-x-circle-fill me-1"></i>{" "}
-                                                  Student's Answer
+                                                  <span className="d-none d-sm-inline">
+                                                    Student's Answer
+                                                  </span>
                                                 </span>
                                               );
                                             } else if (isActualCorrectChoice) {
@@ -344,7 +351,9 @@ const AdminReviewSubmissionModal = ({
                                                   }}
                                                 >
                                                   <i className="bi bi-check-circle-fill me-1"></i>{" "}
-                                                  Correct Answer
+                                                  <span className="d-none d-sm-inline">
+                                                    Correct Answer
+                                                  </span>
                                                 </span>
                                               );
                                             }
@@ -416,7 +425,9 @@ const AdminReviewSubmissionModal = ({
                                               style={{ fontSize: "0.65rem" }}
                                             >
                                               <i className="bi bi-check-circle-fill me-1"></i>{" "}
-                                              Correct Answer
+                                              <span className="d-none d-sm-inline">
+                                                Correct Answer
+                                              </span>
                                             </span>
                                           </div>
                                         )}
