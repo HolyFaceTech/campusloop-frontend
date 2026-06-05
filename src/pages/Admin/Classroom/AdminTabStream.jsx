@@ -23,6 +23,10 @@ const AdminTabStream = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [commentToDelete, setCommentToDelete] = useState(null);
+  const [expandedInstructions, setExpandedInstructions] = useState({});
+  const [expandedCommentTexts, setExpandedCommentTexts] = useState({});
+  const [expandedComments, setExpandedComments] = useState({});
+  const [expandedReplies, setExpandedReplies] = useState({});
 
   // SERVER-SIDE DEBOUNCE EFFECT
   useEffect(() => {
@@ -592,6 +596,32 @@ const AdminTabStream = () => {
               const typeStyle = getBadgeStyle(cw?.type);
               const isMaterial = cw?.type === "material";
 
+              const rawInstruction = cw.instruction || cw.description || "";
+              const isInstructionExpanded = expandedInstructions[cw.id];
+              const instructionLimit = 250;
+              const shouldTruncateInstruction =
+                rawInstruction.length > instructionLimit;
+              const displayInstruction =
+                isInstructionExpanded || !shouldTruncateInstruction
+                  ? rawInstruction
+                  : rawInstruction.substring(0, instructionLimit) + "...";
+
+              const isCommentsExpanded = expandedComments[cw.id];
+              const commentsList = cw.comments || [];
+              const visibleComments = isCommentsExpanded
+                ? commentsList
+                : commentsList.slice(0, 2);
+              const hasMoreComments = commentsList.length > 2;
+
+              const totalCommentsAndReplies = commentsList.reduce(
+                (total, comment) => {
+                  return (
+                    total + 1 + (comment.replies ? comment.replies.length : 0)
+                  );
+                },
+                0,
+              );
+
               return (
                 <div
                   key={cw.id}
@@ -689,16 +719,34 @@ const AdminTabStream = () => {
 
                     <div className="ps-0 ps-sm-5 ms-sm-3 mt-2">
                       <p
-                        className="text-dark mb-4 lh-base"
+                        className={`text-dark lh-base ${shouldTruncateInstruction && !isInstructionExpanded ? "mb-1" : "mb-4"}`}
                         style={{ whiteSpace: "pre-line", fontSize: "0.95rem" }}
                       >
-                        {cw.instruction || cw.description}
+                        {displayInstruction}
                       </p>
+
+                      {shouldTruncateInstruction && (
+                        <button
+                          className="btn btn-link p-0 text-decoration-none mb-4 fw-bold shadow-none"
+                          style={{
+                            fontSize: "0.85rem",
+                            color: "var(--primary-color)",
+                          }}
+                          onClick={() =>
+                            setExpandedInstructions((prev) => ({
+                              ...prev,
+                              [cw.id]: !isInstructionExpanded,
+                            }))
+                          }
+                        >
+                          {isInstructionExpanded ? "See Less" : "See More"}
+                        </button>
+                      )}
 
                       {/* ATTACHMENTS */}
                       <div className="d-flex flex-column gap-2 mb-3">
                         {cw.link && (
-                          <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
+                          <div className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow">
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-primary bg-opacity-10 text-primary"
                               style={{ width: "45px", height: "45px" }}
@@ -765,7 +813,7 @@ const AdminTabStream = () => {
                           </div>
                         )}
                         {cw.form && (
-                          <div className="d-flex align-items-center p-3 bg-light rounded-4 border hover-shadow transition-all overflow-hidden">
+                          <div className="d-flex align-items-center justify-content-between p-3 bg-white border rounded-4 shadow-sm transition-all hover-shadow">
                             <div
                               className="rounded-3 d-flex align-items-center justify-content-center me-3 flex-shrink-0 bg-dark bg-opacity-10 text-dark"
                               style={{ width: "45px", height: "45px" }}
@@ -883,23 +931,11 @@ const AdminTabStream = () => {
                             Class Comments
                           </span>
                           <span className="text-muted small">
-                            {cw.comments
-                              ? cw.comments.reduce((total, comment) => {
-                                  return (
-                                    total +
-                                    1 +
-                                    (comment.replies
-                                      ? comment.replies.length
-                                      : 0)
-                                  );
-                                }, 0)
-                              : 0}{" "}
-                            comments
+                            {totalCommentsAndReplies} comments
                           </span>
                         </div>
 
-                        {/* RENDER COMMENTS */}
-                        {cw.comments && cw.comments.length > 0 && (
+                        {commentsList.length > 0 && (
                           <div
                             className="d-flex flex-column gap-3 mb-4 custom-scrollbar"
                             style={{
@@ -908,176 +944,326 @@ const AdminTabStream = () => {
                               paddingRight: "10px",
                             }}
                           >
-                            {cw.comments.map((comment) => (
-                              <div
-                                key={comment.id}
-                                className="d-flex align-items-start gap-2"
-                              >
+                            {visibleComments.map((comment) => {
+                              const isTextExpanded =
+                                expandedCommentTexts[comment.id];
+                              const textLimit = 150;
+                              const shouldTruncate =
+                                comment.content &&
+                                comment.content.length > textLimit;
+                              const displayContent =
+                                isTextExpanded || !shouldTruncate
+                                  ? comment.content
+                                  : comment.content.substring(0, textLimit) +
+                                    "...";
+
+                              const isRepliesExpanded =
+                                expandedReplies[comment.id];
+                              const repliesList = comment.replies || [];
+                              const hasReplies = repliesList.length > 0;
+
+                              return (
                                 <div
-                                  className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
-                                  style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    backgroundColor: "var(--primary-color)",
-                                    fontSize: "0.85rem",
-                                    fontWeight: "bold",
-                                  }}
+                                  key={comment.id}
+                                  className="d-flex align-items-start gap-2"
                                 >
-                                  {comment.user?.first_name?.charAt(0)}
-                                </div>
-                                <div className="flex-grow-1">
                                   <div
-                                    className="bg-light rounded-4 px-3 py-2"
+                                    className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
                                     style={{
-                                      display: "inline-block",
-                                      maxWidth: "100%",
-                                      border: "1px solid #f0f0f0",
+                                      width: "32px",
+                                      height: "32px",
+                                      backgroundColor: "var(--primary-color)",
+                                      fontSize: "0.85rem",
+                                      fontWeight: "bold",
                                     }}
                                   >
-                                    <span
-                                      className="fw-bold text-dark d-block"
-                                      style={{
-                                        fontSize: "0.8rem",
-                                        marginBottom: "2px",
-                                      }}
-                                    >
-                                      {comment.user?.first_name}{" "}
-                                      {comment.user?.last_name}
-                                    </span>
-                                    <span
-                                      className="text-dark lh-sm d-block"
-                                      style={{
-                                        fontSize: "0.85rem",
-                                        whiteSpace: "pre-wrap",
-                                        wordBreak: "break-word",
-                                      }}
-                                    >
-                                      {renderWithLinks(comment.content)}
-                                    </span>
+                                    {comment.user?.first_name?.charAt(0)}
                                   </div>
-                                  <div className="ms-2 mt-1 d-flex align-items-center gap-3">
-                                    <span
-                                      className="text-muted"
+                                  <div className="flex-grow-1">
+                                    <div
+                                      className="bg-light rounded-4 px-3 py-2"
                                       style={{
-                                        fontSize: "0.7rem",
-                                        fontWeight: "500",
+                                        display: "inline-block",
+                                        maxWidth: "100%",
+                                        border: "1px solid #f0f0f0",
                                       }}
                                     >
-                                      {new Date(
-                                        comment.created_at,
-                                      ).toLocaleString([], {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })}
-                                    </span>
-                                    <button
-                                      className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
-                                      style={{ fontSize: "0.7rem" }}
-                                      onClick={() =>
-                                        confirmDeleteComment(comment.id)
-                                      }
-                                    >
-                                      <i className="bi bi-trash-fill"></i>{" "}
-                                    </button>
-                                  </div>
+                                      <span
+                                        className="fw-bold text-dark d-block"
+                                        style={{
+                                          fontSize: "0.8rem",
+                                          marginBottom: "2px",
+                                        }}
+                                      >
+                                        {comment.user?.first_name}{" "}
+                                        {comment.user?.last_name}
+                                      </span>
+                                      <span
+                                        className="text-dark lh-sm d-block"
+                                        style={{
+                                          fontSize: "0.85rem",
+                                          whiteSpace: "pre-wrap",
+                                          wordBreak: "break-word",
+                                        }}
+                                      >
+                                        {renderWithLinks(displayContent)}
+                                      </span>
 
-                                  {/* RENDER REPLIES */}
-                                  {comment.replies &&
-                                    comment.replies.length > 0 && (
-                                      <div className="d-flex flex-column gap-2 mt-2">
-                                        {comment.replies.map((reply) => (
-                                          <div
-                                            key={reply.id}
-                                            className="d-flex align-items-start gap-2"
+                                      {shouldTruncate && (
+                                        <button
+                                          className="btn btn-link p-0 text-decoration-none fw-bold shadow-none mt-1"
+                                          style={{
+                                            fontSize: "0.75rem",
+                                            color: "var(--primary-color)",
+                                          }}
+                                          onClick={() =>
+                                            setExpandedCommentTexts((prev) => ({
+                                              ...prev,
+                                              [comment.id]: !isTextExpanded,
+                                            }))
+                                          }
+                                        >
+                                          {isTextExpanded
+                                            ? "See Less"
+                                            : "See More"}
+                                        </button>
+                                      )}
+                                    </div>
+                                    <div className="ms-2 mt-1 d-flex align-items-center gap-3">
+                                      <span
+                                        className="text-muted"
+                                        style={{
+                                          fontSize: "0.7rem",
+                                          fontWeight: "500",
+                                        }}
+                                      >
+                                        {new Date(
+                                          comment.created_at,
+                                        ).toLocaleString([], {
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })}
+                                      </span>
+                                      <button
+                                        className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
+                                        style={{ fontSize: "0.7rem" }}
+                                        onClick={() =>
+                                          confirmDeleteComment(comment.id)
+                                        }
+                                      >
+                                        <i className="bi bi-trash-fill"></i>{" "}
+                                      </button>
+                                    </div>
+
+                                    {hasReplies && (
+                                      <div className="mt-1">
+                                        {!isRepliesExpanded ? (
+                                          <button
+                                            className="btn btn-link text-muted p-0 text-decoration-none fw-medium shadow-none d-flex align-items-center gap-1"
+                                            style={{
+                                              fontSize: "0.75rem",
+                                              marginLeft: "8px",
+                                            }}
+                                            onClick={() =>
+                                              setExpandedReplies((prev) => ({
+                                                ...prev,
+                                                [comment.id]: true,
+                                              }))
+                                            }
                                           >
-                                            <div
-                                              className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
+                                            <i className="bi bi-arrow-return-right"></i>{" "}
+                                            View {repliesList.length}{" "}
+                                            {repliesList.length === 1
+                                              ? "reply"
+                                              : "replies"}
+                                          </button>
+                                        ) : (
+                                          <div className="d-flex flex-column gap-2 mt-2">
+                                            {repliesList.map((reply) => {
+                                              const isReplyTextExpanded =
+                                                expandedCommentTexts[reply.id];
+                                              const shouldTruncateReply =
+                                                reply.content &&
+                                                reply.content.length >
+                                                  textLimit;
+                                              const displayReplyContent =
+                                                isReplyTextExpanded ||
+                                                !shouldTruncateReply
+                                                  ? reply.content
+                                                  : reply.content.substring(
+                                                      0,
+                                                      textLimit,
+                                                    ) + "...";
+
+                                              return (
+                                                <div
+                                                  key={reply.id}
+                                                  className="d-flex align-items-start gap-2"
+                                                >
+                                                  <div
+                                                    className="rounded-circle text-white d-flex justify-content-center align-items-center flex-shrink-0"
+                                                    style={{
+                                                      width: "24px",
+                                                      height: "24px",
+                                                      backgroundColor:
+                                                        "var(--secondary-color)",
+                                                      fontSize: "0.6rem",
+                                                      fontWeight: "bold",
+                                                    }}
+                                                  >
+                                                    {reply.user?.first_name?.charAt(
+                                                      0,
+                                                    )}
+                                                  </div>
+                                                  <div className="flex-grow-1">
+                                                    <div
+                                                      className="bg-light rounded-4 px-3 py-2"
+                                                      style={{
+                                                        display: "inline-block",
+                                                        maxWidth: "100%",
+                                                        border:
+                                                          "1px solid #f0f0f0",
+                                                      }}
+                                                    >
+                                                      <span
+                                                        className="fw-bold text-dark d-block"
+                                                        style={{
+                                                          fontSize: "0.75rem",
+                                                          marginBottom: "1px",
+                                                        }}
+                                                      >
+                                                        {reply.user?.first_name}{" "}
+                                                        {reply.user?.last_name}
+                                                      </span>
+                                                      <span
+                                                        className="text-dark lh-sm d-block"
+                                                        style={{
+                                                          fontSize: "0.85rem",
+                                                          whiteSpace:
+                                                            "pre-wrap",
+                                                          wordBreak:
+                                                            "break-word",
+                                                        }}
+                                                      >
+                                                        {renderWithLinks(
+                                                          displayReplyContent,
+                                                        )}
+                                                      </span>
+
+                                                      {shouldTruncateReply && (
+                                                        <button
+                                                          className="btn btn-link p-0 text-decoration-none fw-bold shadow-none mt-1"
+                                                          style={{
+                                                            fontSize: "0.7rem",
+                                                            color:
+                                                              "var(--primary-color)",
+                                                          }}
+                                                          onClick={() =>
+                                                            setExpandedCommentTexts(
+                                                              (prev) => ({
+                                                                ...prev,
+                                                                [reply.id]:
+                                                                  !isReplyTextExpanded,
+                                                              }),
+                                                            )
+                                                          }
+                                                        >
+                                                          {isReplyTextExpanded
+                                                            ? "See Less"
+                                                            : "See More"}
+                                                        </button>
+                                                      )}
+                                                    </div>
+                                                    <div className="ms-2 mt-1 d-flex align-items-center gap-3">
+                                                      <span
+                                                        className="text-muted"
+                                                        style={{
+                                                          fontSize: "0.65rem",
+                                                          fontWeight: "500",
+                                                        }}
+                                                      >
+                                                        {new Date(
+                                                          reply.created_at,
+                                                        ).toLocaleString([], {
+                                                          month: "short",
+                                                          day: "numeric",
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
+                                                        })}
+                                                      </span>
+                                                      <button
+                                                        className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
+                                                        style={{
+                                                          fontSize: "0.65rem",
+                                                        }}
+                                                        onClick={() =>
+                                                          confirmDeleteComment(
+                                                            reply.id,
+                                                          )
+                                                        }
+                                                      >
+                                                        <i className="bi bi-trash-fill"></i>{" "}
+                                                      </button>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                            <button
+                                              className="btn btn-link text-muted p-0 text-decoration-none fw-medium shadow-none mt-1 d-flex align-items-center gap-1"
                                               style={{
-                                                width: "24px",
-                                                height: "24px",
-                                                backgroundColor:
-                                                  "var(--secondary-color)",
-                                                fontSize: "0.6rem",
-                                                fontWeight: "bold",
+                                                fontSize: "0.75rem",
+                                                marginLeft: "32px",
                                               }}
+                                              onClick={() =>
+                                                setExpandedReplies((prev) => ({
+                                                  ...prev,
+                                                  [comment.id]: false,
+                                                }))
+                                              }
                                             >
-                                              {reply.user?.first_name?.charAt(
-                                                0,
-                                              )}
-                                            </div>
-                                            <div className="flex-grow-1">
-                                              <div
-                                                className="bg-light rounded-4 px-3 py-2"
-                                                style={{
-                                                  display: "inline-block",
-                                                  maxWidth: "100%",
-                                                  border: "1px solid #f0f0f0",
-                                                }}
-                                              >
-                                                <span
-                                                  className="fw-bold text-dark d-block"
-                                                  style={{
-                                                    fontSize: "0.75rem",
-                                                    marginBottom: "1px",
-                                                  }}
-                                                >
-                                                  {reply.user?.first_name}{" "}
-                                                  {reply.user?.last_name}
-                                                </span>
-                                                <span
-                                                  className="text-dark lh-sm d-block"
-                                                  style={{
-                                                    fontSize: "0.85rem",
-                                                    whiteSpace: "pre-wrap",
-                                                    wordBreak: "break-word",
-                                                  }}
-                                                >
-                                                  {renderWithLinks(
-                                                    reply.content,
-                                                  )}
-                                                </span>
-                                              </div>
-                                              <div className="ms-2 mt-1 d-flex align-items-center gap-3">
-                                                <span
-                                                  className="text-muted"
-                                                  style={{
-                                                    fontSize: "0.65rem",
-                                                    fontWeight: "500",
-                                                  }}
-                                                >
-                                                  {new Date(
-                                                    reply.created_at,
-                                                  ).toLocaleString([], {
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                  })}
-                                                </span>
-                                                <button
-                                                  className="btn btn-link p-0 text-danger fw-bold text-decoration-none shadow-none"
-                                                  style={{
-                                                    fontSize: "0.65rem",
-                                                  }}
-                                                  onClick={() =>
-                                                    confirmDeleteComment(
-                                                      reply.id,
-                                                    )
-                                                  }
-                                                >
-                                                  <i className="bi bi-trash-fill"></i>{" "}
-                                                </button>
-                                              </div>
-                                            </div>
+                                              <i className="bi bi-chevron-up"></i>{" "}
+                                              Hide replies
+                                            </button>
                                           </div>
-                                        ))}
+                                        )}
                                       </div>
                                     )}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
+
+                            {hasMoreComments && !isCommentsExpanded && (
+                              <button
+                                className="btn btn-link text-muted text-decoration-none text-start p-0 fw-medium shadow-none mt-1"
+                                style={{ fontSize: "0.85rem" }}
+                                onClick={() =>
+                                  setExpandedComments((prev) => ({
+                                    ...prev,
+                                    [cw.id]: true,
+                                  }))
+                                }
+                              >
+                                View all {totalCommentsAndReplies} comments
+                              </button>
+                            )}
+                            {hasMoreComments && isCommentsExpanded && (
+                              <button
+                                className="btn btn-link text-muted text-decoration-none text-start p-0 fw-medium shadow-none mt-1"
+                                style={{ fontSize: "0.85rem" }}
+                                onClick={() =>
+                                  setExpandedComments((prev) => ({
+                                    ...prev,
+                                    [cw.id]: false,
+                                  }))
+                                }
+                              >
+                                Hide comments
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
