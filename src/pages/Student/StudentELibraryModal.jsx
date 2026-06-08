@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const StudentELibraryModal = ({ viewingItem }) => {
   const formatBytes = (bytes) => {
@@ -28,7 +29,7 @@ const StudentELibraryModal = ({ viewingItem }) => {
 
   const handleViewDocument = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
-    window.open(`${baseUrl}/storage/${filePath}`, "_blank");
+    window.open(`${resolveStoragePath(filePath)}`, "_blank");
   };
 
   const rawDescription = viewingItem?.description || "";

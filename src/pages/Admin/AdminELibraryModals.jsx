@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const AdminELibraryModals = ({
   viewItem,
@@ -12,7 +13,7 @@ const AdminELibraryModals = ({
 }) => {
   const handleViewDocument = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
-    window.open(`${baseUrl}/storage/${filePath}`, "_blank");
+    window.open(`${resolveStoragePath(filePath)}`, "_blank");
   };
 
   const [isExpanded, setIsExpanded] = useState(false);

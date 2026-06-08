@@ -1,0 +1,19 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, linux, campusloop-prod]
+    steps:
+      - name: Pull latest frontend
+        working-directory: /opt/campusloop/campusloop-frontend
+        run: git pull origin main
+
+      - name: Build and start frontend
+        working-directory: /opt/campusloop/campusloop-backend
+        run: |
+          docker compose -f compose.prod.yaml --env-file compose.prod.env up -d --build frontend

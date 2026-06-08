@@ -3,6 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import { Modal } from "bootstrap";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
+import { resolveFileUrl, resolveStoragePath } from '../../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -837,7 +838,7 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                           </div>
                         </div>
                         <a
-                          href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
+                          href={`${resolveFileUrl(file.path)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="btn btn-sm btn-campusloop rounded-3 shadow-sm flex-shrink-0 ms-3 d-flex justify-content-center align-items-center"

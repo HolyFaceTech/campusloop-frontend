@@ -5,6 +5,7 @@ import { Modal } from "bootstrap";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import ELibraryModal from "./ELibraryModal";
 import ELibraryContentModal from "./ELibraryContentModal";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -337,7 +338,7 @@ const TeacherELibrary = () => {
 
   const handleViewDocument = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
-    window.open(`${baseUrl}/storage/${filePath}`, "_blank");
+    window.open(`${resolveStoragePath(filePath)}`, "_blank");
   };
 
   const renderPageNumbers = () => {
