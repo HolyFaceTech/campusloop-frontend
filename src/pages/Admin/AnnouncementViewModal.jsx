@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { sileo } from "sileo";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -519,7 +520,7 @@ const AnnouncementViewModal = ({
                             </p>
                           </div>
                           <a
-                            href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
+                            href={`${resolveFileUrl(file.path)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"

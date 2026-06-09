@@ -4,6 +4,7 @@ import { Modal } from "bootstrap";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import {
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
   AdminDownloadZipModal,
   AdminDeleteFilesModal,
 } from "./AdminFilesModal";
@@ -205,7 +206,7 @@ const AdminFiles = () => {
     const formattedPath =
       filePath.startsWith("/storage") || filePath.startsWith("storage")
         ? `/${filePath.replace(/^\/?storage\//, "storage/")}`
-        : `/storage/${filePath}`;
+        : resolveStoragePath(filePath);
     window.open(`${baseUrl}${formattedPath}`, "_blank");
   };
 

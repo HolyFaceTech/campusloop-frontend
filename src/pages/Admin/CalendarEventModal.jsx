@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const CalendarEventModal = ({ selectedEvent }) => {
   const formatDisplayDateTime = (dateObj) => {
@@ -259,7 +260,7 @@ const CalendarEventModal = ({ selectedEvent }) => {
                         const style = getFileIcon(file.file_extension);
                         return (
                           <a
-                            href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
+                            href={`${resolveFileUrl(file.path)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             key={file.id}

@@ -4,6 +4,7 @@ import { Modal } from "bootstrap";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import StudentFilesModal from "./StudentFilesModal";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -129,7 +130,7 @@ const StudentFiles = () => {
     const formattedPath =
       filePath.startsWith("/storage") || filePath.startsWith("storage")
         ? `/${filePath.replace(/^\/?storage\//, "storage/")}`
-        : `/storage/${filePath}`;
+        : resolveStoragePath(filePath);
     window.open(`${baseUrl}${formattedPath}`, "_blank");
   };
 

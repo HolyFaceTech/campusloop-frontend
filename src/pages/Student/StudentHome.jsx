@@ -3,6 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import { useNavigate } from "react-router-dom";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
+import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -618,7 +619,7 @@ const StudentHome = () => {
                                   </p>
                                 </div>
                                 <a
-                                  href={`${import.meta.env.VITE_API_BASE_URL.replace("/api", "")}${file.path}`}
+                                  href={`${resolveFileUrl(file.path)}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"

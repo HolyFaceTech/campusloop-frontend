@@ -1,0 +1,41 @@
+# Standalone frontend dev container.
+# Backend can run locally or via campusloop-backend compose.
+#
+#   docker compose up --build
+#
+# Optional: join backend network (start backend stack first):
+#   docker compose --profile with-backend up --build
+
+name: campusloop-frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api}
+      VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY:-}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
+    volumes:
+      - .:/app
+      - frontend_node_modules:/app/node_modules
+
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api}
+        VITE_RECAPTCHA_SITE_KEY: ${VITE_RECAPTCHA_SITE_KEY:-}
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8081}:80"
+
+volumes:
+  frontend_node_modules:
