@@ -3,8 +3,8 @@ import axios from "axios";
 import { Modal } from "bootstrap";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
+import { resolveFileUrl, resolveStoragePath } from "../../utils/fileUrl";
 import {
-import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
   AdminDownloadZipModal,
   AdminDeleteFilesModal,
 } from "./AdminFilesModal";
