@@ -3,7 +3,7 @@ import axios from "axios";
 import { Modal } from "bootstrap";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
-import { resolveFileUrl, resolveStoragePath } from "../../utils/fileUrl";
+import { openFileUrl, resolveFileUrl } from "../../utils/fileUrl";
 import {
   AdminDownloadZipModal,
   AdminDeleteFilesModal,
@@ -202,12 +202,7 @@ const AdminFiles = () => {
   };
 
   const handleViewDocument = (filePath) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
-    const formattedPath =
-      filePath.startsWith("/storage") || filePath.startsWith("storage")
-        ? `/${filePath.replace(/^\/?storage\//, "storage/")}`
-        : resolveStoragePath(filePath);
-    window.open(`${baseUrl}${formattedPath}`, "_blank");
+    openFileUrl(filePath);
   };
 
   const toggleSelection = (id) => {

@@ -32,3 +32,12 @@ export function resolveStoragePath(filePath) {
 
   return `${base}${normalized}`;
 }
+
+/** Open a stored file path or URL in a new tab (local /storage or S3 signed URL). */
+export function openFileUrl(path) {
+  const url = resolveFileUrl(path);
+
+  if (url) {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}

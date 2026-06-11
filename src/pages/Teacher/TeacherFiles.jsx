@@ -4,7 +4,7 @@ import { Modal } from "bootstrap";
 import { sileo } from "sileo";
 import GlobalSpinner from "../../components/Shared/GlobalSpinner";
 import TeacherFilesModal from "./TeacherFilesModal";
-import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
+import { openFileUrl, resolveFileUrl } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -132,13 +132,7 @@ const TeacherFiles = () => {
   };
 
   const handleViewDocument = (filePath) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL.replace("/api", "");
-    const formattedPath =
-      filePath.startsWith("/storage") || filePath.startsWith("storage")
-        ? `/${filePath.replace(/^\/?storage\//, "storage/")}`
-        : resolveStoragePath(filePath);
-
-    window.open(`${baseUrl}${formattedPath}`, "_blank");
+    openFileUrl(filePath);
   };
 
   const handleSelectFile = (id) => {
