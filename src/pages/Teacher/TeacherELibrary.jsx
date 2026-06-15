@@ -280,9 +280,13 @@ const TeacherELibrary = () => {
       }
       fetchLibraries();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.files?.[0] ||
+        "Could not process request.";
       sileo.error({
         title: "Upload Failed",
-        description: "Could not process request.",
+        description: errorMsg,
         ...darkToast,
       });
       setIsLoading(false);
