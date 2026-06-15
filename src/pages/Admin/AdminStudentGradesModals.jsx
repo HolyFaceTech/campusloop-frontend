@@ -7,11 +7,16 @@ const AdminStudentGradesModals = ({
   isLoadingGrades,
   triggerApprove,
   triggerDecline,
+  triggerDelete,
   proceedToFeedback,
   executeApprove,
   executeDecline,
+  executeDelete,
   declineFeedback,
   setDeclineFeedback,
+  selectedGradeIds,
+  setSelectedGradeIds,
+  isBulkAction,
 }) => {
   const [syFilter, setSyFilter] = useState("all");
   const [semFilter, setSemFilter] = useState("all");
@@ -52,12 +57,41 @@ const AdminStudentGradesModals = ({
     startIndex + entriesPerPage,
   );
 
+  const selectedGradesData = currentGrades.filter((g) =>
+    selectedGradeIds.includes(g.id),
+  );
+
+  const hasSelection = selectedGradeIds.length > 0;
+
+  const canApproveOrDecline =
+    hasSelection && selectedGradesData.every((g) => g.status === "pending");
+
+  const canDelete =
+    hasSelection && selectedGradesData.every((g) => g.status === "approved");
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedGradeIds(currentGrades.map((g) => g.id));
+    } else {
+      setSelectedGradeIds([]);
+    }
+  };
+
+  const toggleSelection = (id) => {
+    if (selectedGradeIds.includes(id)) {
+      setSelectedGradeIds((prev) => prev.filter((item) => item !== id));
+    } else {
+      setSelectedGradeIds((prev) => [...prev, id]);
+    }
+  };
+
   const handleCloseMainModal = () => {
     setSyFilter("all");
     setSemFilter("all");
     setSearchQuery("");
     setDebouncedSearch("");
     setCurrentPage(1);
+    setSelectedGradeIds([]);
   };
 
   const handleCancelAction = () => {
@@ -166,7 +200,7 @@ const AdminStudentGradesModals = ({
 
                     <div
                       className="input-group flex-grow-1"
-                      style={{ minWidth: "200px" }}
+                      style={{ minWidth: "300px" }}
                     >
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-search"></i>
@@ -180,7 +214,7 @@ const AdminStudentGradesModals = ({
                       />
                     </div>
 
-                    <div className="input-group" style={{ minWidth: "200px" }}>
+                    <div className="input-group" style={{ minWidth: "300px" }}>
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-calendar-event"></i>
                       </span>
@@ -198,7 +232,7 @@ const AdminStudentGradesModals = ({
                       </select>
                     </div>
 
-                    <div className="input-group" style={{ minWidth: "200px" }}>
+                    <div className="input-group" style={{ minWidth: "300px" }}>
                       <span className="input-group-text bg-white border-end-0 text-muted ps-3 rounded-start-3">
                         <i className="bi bi-calendar-range"></i>
                       </span>
@@ -211,6 +245,30 @@ const AdminStudentGradesModals = ({
                         <option value="1st">1st Semester</option>
                         <option value="2nd">2nd Semester</option>
                       </select>
+                    </div>
+
+                    <div className="d-flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => triggerApprove(null)}
+                        disabled={!canApproveOrDecline}
+                        className="btn btn-success text-light d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
+                      >
+                        <i className="bi bi-check-circle me-1"></i> Approve
+                      </button>
+                      <button
+                        onClick={() => triggerDecline(null)}
+                        disabled={!canApproveOrDecline}
+                        className="btn btn-warning text-dark d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
+                      >
+                        <i className="bi bi-x-circle me-1"></i> Decline
+                      </button>
+                      <button
+                        onClick={() => triggerDelete(null)}
+                        disabled={!canDelete}
+                        className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
+                      >
+                        <i className="bi bi-trash me-1"></i> Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -228,10 +286,19 @@ const AdminStudentGradesModals = ({
                     <thead className="bg-white sticky-top z-1 shadow-sm">
                       <tr>
                         <th
-                          className="ps-4"
-                          style={{ width: "60px", borderTop: "none" }}
+                          className="ps-4 text-center"
+                          style={{ width: "50px", borderTop: "none" }}
                         >
-                          #
+                          <input
+                            className="form-check-input shadow-sm"
+                            type="checkbox"
+                            style={{ cursor: "pointer" }}
+                            checked={
+                              currentGrades.length > 0 &&
+                              selectedGradeIds.length === currentGrades.length
+                            }
+                            onChange={handleSelectAll}
+                          />
                         </th>
                         <th style={{ borderTop: "none" }}>SY & Sem</th>
                         <th style={{ borderTop: "none" }}>Subject Details</th>
@@ -252,7 +319,7 @@ const AdminStudentGradesModals = ({
                           className="text-center pe-4"
                           style={{ borderTop: "none" }}
                         >
-                          Admin Action
+                          Action
                         </th>
                       </tr>
                     </thead>
@@ -273,8 +340,14 @@ const AdminStudentGradesModals = ({
                       ) : currentGrades.length > 0 ? (
                         currentGrades.map((record, index) => (
                           <tr key={record.id} className="hover-bg-light">
-                            <td className="ps-4 fw-bold text-muted py-2">
-                              {startIndex + index + 1}
+                            <td className="ps-4 text-center py-2">
+                              <input
+                                className="form-check-input shadow-sm"
+                                type="checkbox"
+                                style={{ cursor: "pointer" }}
+                                checked={selectedGradeIds.includes(record.id)}
+                                onChange={() => toggleSelection(record.id)}
+                              />
                             </td>
                             <td className="py-2">
                               <span className="d-block fw-bold text-dark small">
@@ -340,13 +413,13 @@ const AdminStudentGradesModals = ({
                                   <button
                                     className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
                                     style={{ width: "35px", height: "35px" }}
-                                    title="Approved Grade"
+                                    title="Approve Grade"
                                     onClick={() => triggerApprove(record.id)}
                                   >
                                     <i className="bi bi-check-circle-fill text-success"></i>
                                   </button>
                                   <button
-                                    className="btn btn-sm btn-light border-0 shadow-sm me-2 rounded-circle"
+                                    className="btn btn-sm btn-light border-0 shadow-sm rounded-circle"
                                     style={{ width: "35px", height: "35px" }}
                                     title="Decline Grade"
                                     onClick={() => triggerDecline(record.id)}
@@ -354,9 +427,15 @@ const AdminStudentGradesModals = ({
                                     <i className="bi bi-x-circle-fill text-warning"></i>
                                   </button>
                                 </div>
+                              ) : record.status === "approved" ? (
+                                <span className="text-muted small fw-medium">
+                                  <i className="bi bi-check2-all me-1"></i>{" "}
+                                  Reviewed
+                                </span>
                               ) : (
-                                <span className="text-muted small fw-medium italic">
-                                  <i className="bi bi-check2-all"></i> Reviewed
+                                <span className="text-muted small fw-medium">
+                                  <i className="bi bi-arrow-return-left"></i>{" "}
+                                  Returned
                                 </span>
                               )}
                             </td>
@@ -476,9 +555,20 @@ const AdminStudentGradesModals = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark mt-2">Approve Grade</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to approve this grade? This action will{" "}
-                <b>lock</b> the record, and the teacher will no longer be able
-                to edit it.
+                Are you sure you want to approve{" "}
+                {isBulkAction ? (
+                  <b>
+                    {selectedGradeIds.length} selected grade
+                    {selectedGradeIds.length > 1 ? "s" : ""}
+                  </b>
+                ) : (
+                  "this grade"
+                )}
+                ? This action will <b>lock</b> the{" "}
+                {isBulkAction
+                  ? `record${selectedGradeIds.length > 1 ? "s" : ""}`
+                  : "record"}
+                , and the teacher will no longer be able to edit it.
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -497,6 +587,7 @@ const AdminStudentGradesModals = ({
                 onClick={executeApprove}
               >
                 Yes, Lock Grade
+                {isBulkAction && selectedGradeIds.length > 1 ? "s" : ""}
               </button>
             </div>
           </div>
@@ -526,8 +617,16 @@ const AdminStudentGradesModals = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark mt-2">Decline Grade</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to decline this grade? It will be returned
-                to the teacher for correction.
+                Are you sure you want to decline{" "}
+                {isBulkAction ? (
+                  <b>
+                    {selectedGradeIds.length} selected grade
+                    {selectedGradeIds.length > 1 ? "s" : ""}
+                  </b>
+                ) : (
+                  "this grade"
+                )}
+                ? It will be returned to the teacher for correction.
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
@@ -589,15 +688,16 @@ const AdminStudentGradesModals = ({
                   Reason for Declining <span className="text-danger">*</span>
                 </label>
                 <p className="small text-muted mb-2">
-                  Please explain why this grade is being declined so the teacher
-                  can make the necessary corrections.
+                  Please explain why{" "}
+                  {isBulkAction ? "these grades are" : "this grade is"} being
+                  declined so the teacher can make the necessary corrections.
                 </p>
                 <textarea
                   className="form-control bg-light toolbar-input custom-scrollbar"
                   rows="4"
                   required
                   autoFocus
-                  placeholder="e.g. Please verify the calculation for this student..."
+                  placeholder="e.g. Please verify the calculation..."
                   value={declineFeedback}
                   onChange={(e) => setDeclineFeedback(e.target.value)}
                 ></textarea>
@@ -615,11 +715,66 @@ const AdminStudentGradesModals = ({
                   type="submit"
                   className="btn btn-campusloop px-4 fw-bold shadow-sm rounded-3"
                 >
-                  <i className="bi bi-plus-circle-fill me-2"></i>
-                  Submit
+                  <i className="bi bi-plus-circle-fill me-2"></i> Submit
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="modal fade"
+        id="confirmDeleteGradeModal"
+        tabIndex="-1"
+        aria-hidden="true"
+        data-bs-backdrop="static"
+      >
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div className="modal-header border-0 pb-0 justify-content-center mt-4">
+              <div
+                className="rounded-circle bg-danger bg-opacity-10 d-flex justify-content-center align-items-center"
+                style={{ width: "80px", height: "80px" }}
+              >
+                <i
+                  className="bi bi-exclamation-triangle-fill text-danger"
+                  style={{ fontSize: "2.5rem" }}
+                ></i>
+              </div>
+            </div>
+            <div className="modal-body text-center p-4">
+              <h4 className="fw-bold text-dark mt-2">Delete Grade</h4>
+              <p className="text-muted mb-0">
+                Are you sure you want to permanently delete{" "}
+                <b>
+                  {selectedGradeIds.length} selected grade
+                  {selectedGradeIds.length > 1 ? "s" : ""}
+                </b>
+                ?{" "}
+                <b className="text-danger fw-medium">
+                  This action cannot be undone.
+                </b>
+              </p>
+            </div>
+            <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">
+              <button
+                type="button"
+                className="btn btn-light px-4 fw-medium shadow-sm rounded-3 border"
+                data-bs-dismiss="modal"
+                onClick={handleCancelAction}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger text-white px-4 fw-medium shadow-sm rounded-3"
+                data-bs-dismiss="modal"
+                onClick={executeDelete}
+              >
+                Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>

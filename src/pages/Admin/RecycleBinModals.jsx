@@ -41,12 +41,12 @@ const RecycleBinModals = ({ actionType, selectedCount, executeAction }) => {
                 {selectedCount > 1 ? "s" : ""}
               </b>
               ?
-              <br />
               {actionType === "restore" ? (
                 "They will be returned to their active status."
               ) : (
                 <>
                   <b className="text-danger fw-medium">
+                    {" "}
                     This action cannot be undone.
                   </b>
                 </>

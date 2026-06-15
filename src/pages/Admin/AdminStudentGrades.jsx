@@ -27,6 +27,8 @@ const AdminStudentGrades = () => {
   const [studentGrades, setStudentGrades] = useState([]);
   const [isLoadingGrades, setIsLoadingGrades] = useState(false);
   const [selectedGradeId, setSelectedGradeId] = useState(null);
+  const [selectedGradeIds, setSelectedGradeIds] = useState([]);
+  const [isBulkAction, setIsBulkAction] = useState(false);
   const [declineFeedback, setDeclineFeedback] = useState("");
 
   useEffect(() => {
@@ -102,6 +104,7 @@ const AdminStudentGrades = () => {
   const handleViewGrades = async (student) => {
     setActiveStudent(student);
     setStudentGrades([]);
+    setSelectedGradeIds([]);
 
     const modalEl = document.getElementById("studentGradesModal");
     if (modalEl) Modal.getOrCreateInstance(modalEl).show();
@@ -128,20 +131,43 @@ const AdminStudentGrades = () => {
     }
   };
 
-  const triggerApprove = (gradeId) => {
-    setSelectedGradeId(gradeId);
+  const triggerApprove = (gradeId = null) => {
+    if (gradeId) {
+      setSelectedGradeId(gradeId);
+      setIsBulkAction(false);
+    } else {
+      setIsBulkAction(true);
+    }
     Modal.getInstance(document.getElementById("studentGradesModal"))?.hide();
     setTimeout(() => {
       new Modal(document.getElementById("confirmApproveGradeModal")).show();
     }, 400);
   };
 
-  const triggerDecline = (gradeId) => {
-    setSelectedGradeId(gradeId);
+  const triggerDecline = (gradeId = null) => {
+    if (gradeId) {
+      setSelectedGradeId(gradeId);
+      setIsBulkAction(false);
+    } else {
+      setIsBulkAction(true);
+    }
     setDeclineFeedback("");
     Modal.getInstance(document.getElementById("studentGradesModal"))?.hide();
     setTimeout(() => {
       new Modal(document.getElementById("confirmDeclineGradeModal")).show();
+    }, 400);
+  };
+
+  const triggerDelete = (gradeId = null) => {
+    if (gradeId) {
+      setSelectedGradeId(gradeId);
+      setIsBulkAction(false);
+    } else {
+      setIsBulkAction(true);
+    }
+    Modal.getInstance(document.getElementById("studentGradesModal"))?.hide();
+    setTimeout(() => {
+      new Modal(document.getElementById("confirmDeleteGradeModal")).show();
     }, 400);
   };
 
@@ -156,33 +182,34 @@ const AdminStudentGrades = () => {
 
   const executeApprove = async () => {
     setIsLoading(true);
-    setLoadingText("Approving Grade...");
+    setLoadingText(
+      isBulkAction ? "Approving Selected Grades..." : "Approving Grade...",
+    );
+    Modal.getInstance(
+      document.getElementById("confirmApproveGradeModal"),
+    )?.hide();
+
+    const payload = isBulkAction
+      ? { grade_ids: selectedGradeIds }
+      : { grade_id: selectedGradeId };
+    const url = isBulkAction
+      ? "/admin/student-grades/bulk-approve"
+      : "/admin/student-grades/approve";
+
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/approve`,
-        { grade_id: selectedGradeId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}${url}`, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
         },
-      );
+      });
       sileo.success({
         title: "Approved",
-        description: "Grade is now locked.",
+        description: "Grade record(s) locked successfully.",
         ...darkToast,
       });
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${activeStudent.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
-      );
-      setStudentGrades(res.data);
-      fetchStudents();
+      setSelectedGradeIds([]);
+      await refreshGrades();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -203,36 +230,31 @@ const AdminStudentGrades = () => {
       document.getElementById("feedbackDeclineGradeModal"),
     )?.hide();
     setIsLoading(true);
-    setLoadingText("Declining Grade...");
+    setLoadingText(
+      isBulkAction ? "Declining Selected Grades..." : "Declining Grade...",
+    );
+
+    const payload = isBulkAction
+      ? { grade_ids: selectedGradeIds, feedback: declineFeedback }
+      : { grade_id: selectedGradeId, feedback: declineFeedback };
+    const url = isBulkAction
+      ? "/admin/student-grades/bulk-decline"
+      : "/admin/student-grades/decline";
+
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/decline`,
-        {
-          grade_id: selectedGradeId,
-          feedback: declineFeedback,
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}${url}`, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
-      );
+      });
       sileo.success({
         title: "Declined",
-        description: "Grade returned to teacher.",
+        description: "Grade(s) returned to teacher.",
         ...darkToast,
       });
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${activeStudent.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
-          },
-        },
-      );
-      setStudentGrades(res.data);
-      fetchStudents();
+      setSelectedGradeIds([]);
+      await refreshGrades();
     } catch (error) {
       sileo.error({
         title: "Error",
@@ -245,6 +267,69 @@ const AdminStudentGrades = () => {
         new Modal(document.getElementById("studentGradesModal")).show();
       }, 400);
     }
+  };
+
+  const executeDelete = async () => {
+    setIsLoading(true);
+    setLoadingText(isBulkAction ? "Deleting Records..." : "Deleting Record...");
+    Modal.getInstance(
+      document.getElementById("confirmDeleteGradeModal"),
+    )?.hide();
+
+    try {
+      if (isBulkAction) {
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/bulk-delete`,
+          { grade_ids: selectedGradeIds },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
+        );
+      } else {
+        await axios.delete(
+          `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${selectedGradeId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+            },
+          },
+        );
+      }
+
+      sileo.success({
+        title: "Deleted",
+        description: "Record(s) deleted permanently.",
+        ...darkToast,
+      });
+      setSelectedGradeIds([]);
+      await refreshGrades();
+    } catch (error) {
+      sileo.error({
+        title: "Failed",
+        description: error.response?.data?.message || "Could not delete grade.",
+        ...darkToast,
+      });
+    } finally {
+      setIsLoading(false);
+      setTimeout(() => {
+        new Modal(document.getElementById("studentGradesModal")).show();
+      }, 400);
+    }
+  };
+
+  const refreshGrades = async () => {
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_BASE_URL}/admin/student-grades/${activeStudent.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("campusloop_token") || sessionStorage.getItem("campusloop_token")}`,
+        },
+      },
+    );
+    setStudentGrades(res.data);
+    fetchStudents(); // Para ma-update yung global counts
   };
 
   const renderPageNumbers = () => {
@@ -617,11 +702,16 @@ const AdminStudentGrades = () => {
         isLoadingGrades={isLoadingGrades}
         triggerApprove={triggerApprove}
         triggerDecline={triggerDecline}
+        triggerDelete={triggerDelete}
         proceedToFeedback={proceedToFeedback}
         executeApprove={executeApprove}
         executeDecline={executeDecline}
+        executeDelete={executeDelete}
         declineFeedback={declineFeedback}
         setDeclineFeedback={setDeclineFeedback}
+        selectedGradeIds={selectedGradeIds}
+        setSelectedGradeIds={setSelectedGradeIds}
+        isBulkAction={isBulkAction}
       />
     </>
   );
