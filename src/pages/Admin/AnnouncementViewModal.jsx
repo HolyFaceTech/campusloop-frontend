@@ -13,15 +13,38 @@ const AnnouncementViewModal = ({
   currentUser,
   fetchAnnouncements,
 }) => {
-  const handleViewFile = (filePath) => {
-    if (!openFileUrl(filePath)) {
-      sileo.error({
-        title: "Cannot Open File",
-        description:
-          "The file link is missing or invalid. Try re-uploading the attachment.",
-        ...darkToast,
-      });
+  const handleViewFile = async (file) => {
+    const openUrl = (url) => {
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        return true;
+      }
+
+      return false;
+    };
+
+    if (openUrl(file.path) || openFileUrl(file.path)) {
+      return;
     }
+
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/files/${file.id}/view-url`,
+      );
+
+      if (openUrl(res.data?.url)) {
+        return;
+      }
+    } catch (error) {
+      console.error("Failed to fetch file view URL.", error);
+    }
+
+    sileo.error({
+      title: "Cannot Open File",
+      description:
+        "The file link could not be generated. Try re-uploading the attachment.",
+      ...darkToast,
+    });
   };
 
   const [commentInput, setCommentInput] = useState("");
@@ -532,7 +555,7 @@ const AnnouncementViewModal = ({
                           </div>
                           <button
                             type="button"
-                            onClick={() => handleViewFile(file.path)}
+                            onClick={() => handleViewFile(file)}
                             className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                             style={{ width: "35px", height: "35px" }}
                             title="View file"
