@@ -23,10 +23,6 @@ const AnnouncementViewModal = ({
       return false;
     };
 
-    if (openUrl(file.path) || openFileUrl(file.path)) {
-      return;
-    }
-
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/files/${file.id}/view-url`,
@@ -37,6 +33,10 @@ const AnnouncementViewModal = ({
       }
     } catch (error) {
       console.error("Failed to fetch file view URL.", error);
+    }
+
+    if (openUrl(file.path) || openFileUrl(file.path)) {
+      return;
     }
 
     sileo.error({
