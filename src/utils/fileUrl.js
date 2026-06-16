@@ -37,7 +37,11 @@ export function resolveStoragePath(filePath) {
 export function openFileUrl(path) {
   const url = resolveFileUrl(path);
 
-  if (url) {
-    window.open(url, "_blank", "noopener,noreferrer");
+  if (!url) {
+    return false;
   }
+
+  window.open(url, "_blank", "noopener,noreferrer");
+
+  return true;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { sileo } from "sileo";
-import { resolveFileUrl, resolveStoragePath } from '../../utils/fileUrl';
+import { openFileUrl, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -13,6 +13,17 @@ const AnnouncementViewModal = ({
   currentUser,
   fetchAnnouncements,
 }) => {
+  const handleViewFile = (filePath) => {
+    if (!openFileUrl(filePath)) {
+      sileo.error({
+        title: "Cannot Open File",
+        description:
+          "The file link is missing or invalid. Try re-uploading the attachment.",
+        ...darkToast,
+      });
+    }
+  };
+
   const [commentInput, setCommentInput] = useState("");
   const [replyInputs, setReplyInputs] = useState({});
   const [activeReplyBox, setActiveReplyBox] = useState(null);
@@ -519,15 +530,15 @@ const AnnouncementViewModal = ({
                               {fileDetails.label}
                             </p>
                           </div>
-                          <a
-                            href={`${resolveFileUrl(file.path)}`}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => handleViewFile(file.path)}
                             className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                             style={{ width: "35px", height: "35px" }}
+                            title="View file"
                           >
                             <i className="bi bi-eye-fill"></i>
-                          </a>
+                          </button>
                         </div>
                       );
                     })}
