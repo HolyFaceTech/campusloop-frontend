@@ -16,4 +16,14 @@ jobs:
       - name: Build and start frontend
         working-directory: /opt/campusloop/campusloop-backend
         run: |
-          docker compose -f compose.prod.yaml --env-file compose.prod.env up -d --build frontend
+          set -e
+          COMPOSE="docker compose -f compose.prod.yaml --env-file compose.prod.env"
+
+          # Frontend-only deploy: do not recreate backend (avoids stale container errors)
+          $COMPOSE stop frontend 2>/dev/null || true
+          $COMPOSE rm -f frontend 2>/dev/null || true
+          for name in $(docker ps -a --format '{{.Names}}' | grep -E 'campusloop-prod.*frontend' || true); do
+            docker rm -f "$name" || true
+          done
+
+          $COMPOSE up -d --build --no-deps --force-recreate frontend
