@@ -248,36 +248,28 @@ const AdminStudentGradesModals = ({
                         <option value="2nd">2nd Semester</option>
                       </select>
                     </div>
-                  </div>
 
-                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 px-3 pb-3 border-top bg-light">
-                    <span className="text-muted small fw-medium">
-                      {hasSelection
-                        ? `${selectedGradeIds.length} grade${selectedGradeIds.length > 1 ? "s" : ""} selected`
-                        : "Select rows to approve, decline, or delete in bulk."}
-                    </span>
-                    <div className="d-flex flex-wrap gap-2">
+                    <div className="d-flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => triggerApprove(null)}
                         disabled={!canApproveOrDecline}
                         className="btn btn-success text-light d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
                       >
                         <i className="bi bi-check-circle me-1"></i> Approve
-                        Selected
                       </button>
                       <button
                         onClick={() => triggerDecline(null)}
                         disabled={!canApproveOrDecline}
                         className="btn btn-warning text-dark d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
                       >
-                        <i className="bi bi-x-circle me-1"></i> Decline Selected
+                        <i className="bi bi-x-circle me-1"></i> Decline
                       </button>
                       <button
                         onClick={() => triggerDelete(null)}
                         disabled={!canDelete}
                         className="btn btn-danger d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded-3 shadow-sm"
                       >
-                        <i className="bi bi-trash me-1"></i> Delete Selected
+                        <i className="bi bi-trash me-1"></i> Delete
                       </button>
                     </div>
                   </div>
