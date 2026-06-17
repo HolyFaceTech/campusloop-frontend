@@ -49,11 +49,11 @@ const ClassroomFormDrawer = ({
   const fetchStrandsAndSubjects = async () => {
     try {
       const strandRes = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/strands`,
+        `${import.meta.env.VITE_API_BASE_URL}/strands?all=true`,
         getAuthHeader(),
       );
       const subjectRes = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/subjects`,
+        `${import.meta.env.VITE_API_BASE_URL}/subjects?all=true`,
         getAuthHeader(),
       );
       setStrands(strandRes.data?.data || strandRes.data || []);
@@ -64,11 +64,17 @@ const ClassroomFormDrawer = ({
   };
 
   const safeSubjects = Array.isArray(subjects) ? subjects : [];
-  const filteredSubjects = safeSubjects.filter(
-    (sub) =>
-      String(sub.strand_id) === String(formData.strand_id) &&
-      String(sub.grade_level) === String(formData.grade_level),
-  );
+  const filteredSubjects = safeSubjects.filter((sub) => {
+    const isStrandMatch =
+      !sub.strand_id ||
+      String(sub.strand_id) === "null" ||
+      String(sub.strand_id) === String(formData.strand_id);
+
+    const isGradeMatch =
+      String(sub.grade_level) === String(formData.grade_level);
+
+    return isStrandMatch && isGradeMatch;
+  });
 
   const searchedSubjects = filteredSubjects.filter((subj) =>
     `${subj.code} ${subj.description}`
