@@ -903,7 +903,7 @@ const StudentHome = () => {
               );
             })
           ) : (
-            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+            <div className="p-5 bg-white rounded-4 shadow-sm text-center border-0 premium-hover-card">
               <i
                 className="bi bi-megaphone text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}

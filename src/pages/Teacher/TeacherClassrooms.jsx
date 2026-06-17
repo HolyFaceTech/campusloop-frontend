@@ -91,8 +91,19 @@ const TeacherClassrooms = () => {
     }
   };
 
-  const handleInputChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+
+      if (name === "strand_id" || name === "grade_level") {
+        newData.subject_id = "";
+      }
+
+      return newData;
+    });
+  };
 
   const handleScheduleChange = (field, value) => {
     setFormData((prev) => ({
@@ -624,7 +635,7 @@ const TeacherClassrooms = () => {
         ))}
         {classrooms.length === 0 && !isLoading && (
           <div className="col-12">
-            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+            <div className="p-5 bg-white rounded-4 shadow-sm text-center border-0 premium-hover-card">
               <i
                 className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}

@@ -373,7 +373,7 @@ const FormBuilder = () => {
 
       <div className="mx-auto pb-5" style={{ maxWidth: "770px" }}>
         <div
-          className="card bg-white shadow-sm mb-4 position-relative"
+          className="card bg-white shadow-sm mb-4 position-relative border-0 premium-hover-card"
           style={{
             border: "1px solid #e0e0e0",
             borderTop: "10px solid var(--primary-color)",
@@ -432,7 +432,7 @@ const FormBuilder = () => {
                     Section {gIndex + 1} of {groupedQuestions.length}
                   </div>
                   <div
-                    className="card bg-white shadow-sm position-relative"
+                    className="card bg-white shadow-sm position-relative border-0 premium-hover-card shadow-sm"
                     style={{
                       border: "1px solid #e0e0e0",
                       borderTopLeftRadius: "0",
@@ -464,7 +464,7 @@ const FormBuilder = () => {
               <div className="d-flex flex-column gap-3 mt-3">
                 {group.questions.map((q, index) => (
                   <div
-                    className="card bg-white shadow-sm position-relative transition-all"
+                    className="card bg-white shadow-sm position-relative transition-all border-0 premium-hover-card"
                     style={{
                       border: "1px solid #e0e0e0",
                       borderLeft: "6px solid var(--primary-color)",
@@ -599,7 +599,7 @@ const FormBuilder = () => {
         ) : (
           <div className="col-12 mt-4">
             <div
-              className="card bg-white border border-light-subtle shadow-sm text-center py-5"
+              className="card bg-white border-0 premium-hover-card border-light-subtle shadow-sm text-center py-5"
               style={{ borderRadius: "8px" }}
             >
               <div className="card-body py-5">

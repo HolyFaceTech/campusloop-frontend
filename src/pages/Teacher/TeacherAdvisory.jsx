@@ -293,7 +293,7 @@ const TeacherAdvisory = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden premium-hover-card">
         <div className="card-body p-0">
           <div className="d-flex flex-nowrap align-items-center justify-content-between overflow-x-auto custom-scrollbar p-3 gap-3">
             <div className="d-flex align-items-center flex-shrink-0 text-muted small pe-2">
@@ -496,7 +496,7 @@ const TeacherAdvisory = () => {
           ))
         ) : (
           <div className="col-12">
-            <div className="p-5 bg-white rounded-4 shadow-sm text-center border">
+            <div className="p-5 bg-white rounded-4 shadow-sm text-center border-0 premium-hover-card">
               <i
                 className="bi bi-inbox text-muted d-block mb-3"
                 style={{ fontSize: "3rem", opacity: 0.5 }}
