@@ -3,7 +3,7 @@ import axios from "axios";
 import { sileo } from "sileo";
 import { Modal } from "bootstrap";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
-import { resolveFileUrl, resolveStoragePath } from '../../../utils/fileUrl';
+import { openStoredFile, resolveStoragePath } from '../../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -837,15 +837,14 @@ const RespondentsModal = ({ selectedItem, executeDelete }) => {
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={`${resolveFileUrl(file.path)}`}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(file)}
                           className="btn btn-sm btn-campusloop rounded-3 shadow-sm flex-shrink-0 ms-3 d-flex justify-content-center align-items-center"
                           style={{ width: "38px", height: "38px" }}
                         >
                           <i className="bi bi-eye-fill"></i>
-                        </a>
+                        </button>
                       </div>
                     );
                   })}

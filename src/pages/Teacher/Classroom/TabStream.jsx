@@ -6,7 +6,7 @@ import { Offcanvas, Modal } from "bootstrap";
 import GlobalSpinner from "../../../components/Shared/GlobalSpinner";
 import ClassworkFormDrawer from "./ClassworkFormDrawer";
 import RespondentsModal from "./RespondentsModal";
-import { resolveFileUrl, resolveStoragePath } from '../../../utils/fileUrl';
+import { openStoredFile, resolveStoragePath } from '../../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -1175,16 +1175,15 @@ const TabStream = () => {
                                     {fileDetails.label}
                                   </p>
                                 </div>
-                                <a
-                                  href={`${resolveFileUrl(file.path)}`}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => openStoredFile(file)}
                                   className="btn btn-sm btn-campusloop ms-3 rounded-3 shadow-sm d-flex justify-content-center align-items-center flex-shrink-0"
                                   style={{ width: "35px", height: "35px" }}
                                   title="View File"
                                 >
                                   <i className="bi bi-eye-fill"></i>
-                                </a>
+                                </button>
                               </div>
                             );
                           })}

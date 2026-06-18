@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal } from "bootstrap";
-import { resolveFileUrl, resolveStoragePath } from '../../../utils/fileUrl';
+import { openStoredFile, resolveStoragePath } from '../../../utils/fileUrl';
 
 const StudentWorkModal = ({
   selectedItemForWork,
@@ -412,15 +412,14 @@ const StudentWorkModal = ({
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={`${resolveFileUrl(file.path)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(file)}
                           className="btn btn-sm btn-campusloop rounded-3 shadow-sm flex-shrink-0 ms-3 d-flex justify-content-center align-items-center"
                           style={{ width: "35px", height: "35px" }}
                         >
                           <i className="bi bi-eye-fill"></i>
-                        </a>
+                        </button>
                       </div>
                     );
                   })}
