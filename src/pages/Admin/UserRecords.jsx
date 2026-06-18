@@ -130,7 +130,11 @@ const UserRecords = () => {
   const openDrawer = (mode, user = null) => {
     setDrawerMode(mode);
     if (user) {
-      setFormData({ ...user, password: "" });
+      setFormData({
+        ...user,
+        password: "",
+        strand_id: user.strand_id || user.strand?.id || "",
+      });
     } else {
       setFormData({
         first_name: "",
@@ -176,15 +180,26 @@ const UserRecords = () => {
       drawerMode === "create" ? "Creating Account..." : "Saving Changes...",
     );
 
-    const payload = { ...formData };
+    const payload = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      gender: formData.gender,
+      birthday: formData.birthday,
+      email: formData.email,
+      role: formData.role,
+      status: formData.status,
+      lrn: formData.lrn,
+      strand_id: formData.strand_id,
+    };
 
-    if (!payload.password || payload.password.trim() === "") {
-      delete payload.password;
-      delete payload.password_confirmation;
+    if (formData.password && formData.password.trim() !== "") {
+      payload.password = formData.password;
     }
 
     if (payload.role !== "student") {
       payload.lrn = null;
+      payload.strand_id = null;
+    } else if (!payload.strand_id) {
       payload.strand_id = null;
     }
 
@@ -198,7 +213,7 @@ const UserRecords = () => {
         });
       } else if (drawerMode === "update") {
         await axios.put(
-          `${import.meta.env.VITE_API_BASE_URL}/users/${payload.id}`,
+          `${import.meta.env.VITE_API_BASE_URL}/users/${formData.id}`,
           payload,
         );
         sileo.success({
