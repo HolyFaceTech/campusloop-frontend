@@ -129,9 +129,11 @@ const TabPeople = () => {
       }
       fetchStudents();
     } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || "Action could not be completed.";
       sileo.error({
         title: "Failed",
-        description: "Action could not be completed.",
+        description: errorMsg,
         ...darkToast,
       });
     } finally {
