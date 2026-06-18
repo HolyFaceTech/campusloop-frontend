@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { sileo } from "sileo";
-import { openFileUrl, resolveStoragePath } from '../../utils/fileUrl';
+import { openStoredFile, resolveStoragePath } from '../../utils/fileUrl';
 
 const darkToast = {
   fill: "#242424",
@@ -14,28 +14,9 @@ const AnnouncementViewModal = ({
   fetchAnnouncements,
 }) => {
   const handleViewFile = async (file) => {
-    const openUrl = (url) => {
-      if (url) {
-        window.open(url, "_blank", "noopener,noreferrer");
-        return true;
-      }
+    const opened = await openStoredFile(file);
 
-      return false;
-    };
-
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/files/${file.id}/view-url`,
-      );
-
-      if (openUrl(res.data?.url)) {
-        return;
-      }
-    } catch (error) {
-      console.error("Failed to fetch file view URL.", error);
-    }
-
-    if (openUrl(file.path) || openFileUrl(file.path)) {
+    if (opened) {
       return;
     }
 

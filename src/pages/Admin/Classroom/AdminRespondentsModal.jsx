@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal } from "bootstrap";
-import { resolveFileUrl, resolveStoragePath } from '../../../utils/fileUrl';
+import { openStoredFile, resolveStoragePath } from '../../../utils/fileUrl';
 
 const AdminRespondentsModal = ({ selectedItem }) => {
   const [respondents, setRespondents] = useState([]);
@@ -682,15 +682,14 @@ const AdminRespondentsModal = ({ selectedItem }) => {
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={`${resolveFileUrl(file.path)}`}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => openStoredFile(file)}
                           className="btn btn-sm btn-campusloop rounded-3 shadow-sm flex-shrink-0 ms-3 d-flex justify-content-center align-items-center"
                           style={{ width: "38px", height: "38px" }}
                         >
                           <i className="bi bi-eye-fill"></i>
-                        </a>
+                        </button>
                       </div>
                     );
                   })}
