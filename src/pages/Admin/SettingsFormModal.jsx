@@ -64,19 +64,19 @@ const SettingsFormModal = ({
                 </div>
                 <div className="mb-2">
                   <label className="form-label small fw-bold text-dark">
-                    <i className="bi bi-clock-history me-1 text-muted"></i>{" "}
-                    Semester
+                    <i className="bi bi-clock-history me-1 text-muted"></i> Term
                   </label>
                   <select
                     className="form-select bg-light toolbar-input"
-                    name="semester"
-                    value={formData.semester}
+                    name="term"
+                    value={formData.term}
                     onChange={handleInputChange}
                     required
                   >
-                    <option value="">Select Semester</option>
-                    <option value="1st">1st Semester</option>
-                    <option value="2nd">2nd Semester</option>
+                    <option value="">Select Term</option>
+                    <option value="1st">1st Term</option>
+                    <option value="2nd">2nd Term</option>
+                    <option value="3rd">3rd Term</option>
                   </select>
                 </div>
               </div>
@@ -124,8 +124,8 @@ const SettingsFormModal = ({
             <div className="modal-body text-center p-4">
               <h4 className="fw-bold text-dark">Reset Settings?</h4>
               <p className="text-muted mb-0">
-                Are you sure you want to clear the current School Year and
-                Semester? This might affect data displaying on the dashboard.
+                Are you sure you want to clear the current School Year and Term?
+                This might affect data displaying on the dashboard.
               </p>
             </div>
             <div className="modal-footer border-0 d-flex justify-content-center pb-4 pt-0 gap-2">

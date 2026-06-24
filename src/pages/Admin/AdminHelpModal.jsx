@@ -175,8 +175,8 @@ const AdminHelpModal = () => {
                         <br />
                         <strong>Subjects:</strong> Manage subjects by linking
                         them to specific strands, grade levels (11/12), and
-                        semesters. This ensures teachers select the correct
-                        subjects when setting up their classrooms.
+                        terms. This ensures teachers select the correct subjects
+                        when setting up their classrooms.
                       </div>
                     </div>
                   </div>
@@ -285,9 +285,8 @@ const AdminHelpModal = () => {
                     >
                       <div className="accordion-body text-muted small">
                         <strong>Settings:</strong> Update the active School Year
-                        and Semester. You can also generate system reports or
-                        toggle "Maintenance Mode" to restrict access
-                        temporarily.
+                        and Term. You can also generate system reports or toggle
+                        "Maintenance Mode" to restrict access temporarily.
                         <br />
                         <strong>Recycle Bin:</strong> Due to our safety net
                         feature, deleted items go here. You can either Restore

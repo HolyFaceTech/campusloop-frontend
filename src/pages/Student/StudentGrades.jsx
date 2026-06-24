@@ -20,7 +20,7 @@ const StudentGrades = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterSY, setFilterSY] = useState("all");
-  const [filterSem, setFilterSem] = useState("all");
+  const [filterTerm, setFilterTerm] = useState("all");
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [activeSetting, setActiveSetting] = useState(null);
@@ -30,7 +30,7 @@ const StudentGrades = () => {
   // Reset pagination kapag may binagong filter
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, entriesPerPage, filterSY, filterSem]);
+  }, [searchQuery, entriesPerPage, filterSY, filterTerm]);
 
   // 500ms Server-Side Debounce Effect
   useEffect(() => {
@@ -38,7 +38,7 @@ const StudentGrades = () => {
       fetchGrades();
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, currentPage, entriesPerPage, filterSY, filterSem]);
+  }, [searchQuery, currentPage, entriesPerPage, filterSY, filterTerm]);
 
   const fetchGrades = async () => {
     setIsLoading(true);
@@ -53,7 +53,7 @@ const StudentGrades = () => {
             page: currentPage,
             entries: entriesPerPage,
             sy: filterSY,
-            sem: filterSem,
+            sem: filterTerm,
           },
         },
       );
@@ -69,7 +69,7 @@ const StudentGrades = () => {
       if (!isInitialized && active_setting) {
         setActiveSetting(active_setting);
         setFilterSY(active_setting.school_year || "all");
-        setFilterSem(active_setting.semester || "all");
+        setFilterTerm(active_setting.term || "all");
         setIsInitialized(true);
       }
 
@@ -202,12 +202,13 @@ const StudentGrades = () => {
               </span>
               <select
                 className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3 text-muted small fw-medium"
-                value={filterSem}
-                onChange={(e) => setFilterSem(e.target.value)}
+                value={filterTerm}
+                onChange={(e) => setFilterTerm(e.target.value)}
               >
-                <option value="all">All Semester</option>
-                <option value="1st">1st Semester</option>
-                <option value="2nd">2nd Semester</option>
+                <option value="all">All Terms</option>
+                <option value="1st">1st Term</option>
+                <option value="2nd">2nd Term</option>
+                <option value="3rd">3rd Term</option>
               </select>
             </div>
           </div>
@@ -226,7 +227,7 @@ const StudentGrades = () => {
                   #
                 </th>
                 <th className="text-muted small fw-bold text-uppercase py-3">
-                  School Year & Semester
+                  School Year & Term
                 </th>
                 <th className="text-muted small fw-bold text-uppercase py-3">
                   Subject Code & Description
@@ -275,7 +276,7 @@ const StudentGrades = () => {
                             letterSpacing: "0.5px",
                           }}
                         >
-                          {item.semester} Semester
+                          {item.term} Term
                         </p>
                       </div>
                     </div>
@@ -343,7 +344,7 @@ const StudentGrades = () => {
                       <p className="text-muted small mb-0">
                         {searchQuery ||
                         filterSY !== "all" ||
-                        filterSem !== "all"
+                        filterTerm !== "all"
                           ? "No matching official grades for your search."
                           : "No official grades available yet."}
                       </p>

@@ -19,7 +19,7 @@ const Subjects = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStrand, setFilterStrand] = useState("all");
   const [filterGrade, setFilterGrade] = useState("all");
-  const [filterSemester, setFilterSemester] = useState("all");
+  const [filterTerm, setFilterTerm] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -33,7 +33,7 @@ const Subjects = () => {
     description: "",
     strand_id: "",
     grade_level: "",
-    semester: "",
+    term: "",
   });
 
   const getAuthToken = () => {
@@ -50,7 +50,7 @@ const Subjects = () => {
   // Reset to page 1 kapag nagbago ang mga filters
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterStrand, filterGrade, filterSemester, entriesPerPage]);
+  }, [searchQuery, filterStrand, filterGrade, filterTerm, entriesPerPage]);
 
   // DEBOUNCE EFFECT
   useEffect(() => {
@@ -63,7 +63,7 @@ const Subjects = () => {
     searchQuery,
     filterStrand,
     filterGrade,
-    filterSemester,
+    filterTerm,
     currentPage,
     entriesPerPage,
   ]);
@@ -98,7 +98,7 @@ const Subjects = () => {
             search: searchQuery,
             filterStrand: filterStrand,
             filterGrade: filterGrade,
-            filterSemester: filterSemester,
+            filterTerm: filterTerm,
             page: currentPage,
             entries: entriesPerPage,
           },
@@ -145,7 +145,7 @@ const Subjects = () => {
           description: selectedSubject.description,
           strand_id: selectedSubject.strand_id,
           grade_level: selectedSubject.grade_level,
-          semester: selectedSubject.semester,
+          term: selectedSubject.term,
         });
         const formModalElement = document.getElementById("subjectFormModal");
         const formModal =
@@ -163,7 +163,7 @@ const Subjects = () => {
       description: "",
       strand_id: "",
       grade_level: "",
-      semester: "",
+      term: "",
     });
     const modalElement = document.getElementById("subjectFormModal");
     const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
@@ -357,7 +357,7 @@ const Subjects = () => {
             Subject Management <i className="bi bi-book"></i>
           </h3>
           <p className="text-muted small mb-0">
-            Manage and assign subjects to specific strands and semesters.
+            Manage and assign subjects to specific strands and terms.
           </p>
         </div>
         <div className="flex-shrink-0 d-flex gap-2">
@@ -453,12 +453,13 @@ const Subjects = () => {
               </span>
               <select
                 className="form-select border-start-0 ps-2 toolbar-input py-2 rounded-end-3"
-                value={filterSemester}
-                onChange={(e) => setFilterSemester(e.target.value)}
+                value={filterTerm}
+                onChange={(e) => setFilterTerm(e.target.value)}
               >
-                <option value="all">All Semesters</option>
-                <option value="1st">1st Semester</option>
-                <option value="2nd">2nd Semester</option>
+                <option value="all">All Terms</option>
+                <option value="1st">1st Term</option>
+                <option value="2nd">2nd Term</option>
+                <option value="3rd">3rd Term</option>
               </select>
             </div>
 
@@ -496,7 +497,7 @@ const Subjects = () => {
                 <th>Subject Code</th>
                 <th>Description</th>
                 <th>Strand</th>
-                <th>Grade Level / Semester</th>
+                <th>Grade Level / Term</th>
                 <th className="text-center pe-4">Actions</th>
               </tr>
             </thead>
@@ -554,7 +555,7 @@ const Subjects = () => {
                       <div className="vr"></div>
                       <span className="fw-bold text-muted small">
                         <i className="bi bi-clock me-1 text-secondary"></i>{" "}
-                        {subject.semester} Semester
+                        {subject.term} Term
                       </span>
                     </div>
                   </td>

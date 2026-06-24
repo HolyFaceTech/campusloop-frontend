@@ -45,7 +45,7 @@ const StudentLayout = () => {
 
   const [activeSettings, setActiveSettings] = useState({
     school_year: "Loading...",
-    semester: "...",
+    term: "...",
   });
 
   const toggleSidebarMobile = () => setIsSidebarOpen(!isSidebarOpen);
@@ -64,6 +64,7 @@ const StudentLayout = () => {
       checkTodayAlerts();
       fetchActiveIndicator();
       fetchNotifications();
+      fetchActiveSettings();
     }, 60000);
 
     return () => {
@@ -89,16 +90,16 @@ const StudentLayout = () => {
         settingsData = settingsData.data;
       }
 
-      if (settingsData && settingsData.school_year && settingsData.semester) {
+      if (settingsData && settingsData.school_year && settingsData.term) {
         setActiveSettings({
           school_year: settingsData.school_year,
-          semester: settingsData.semester,
+          term: settingsData.term,
         });
       } else {
-        setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
+        setActiveSettings({ school_year: "Not Set", term: "Not Set" });
       }
     } catch (error) {
-      setActiveSettings({ school_year: "Error", semester: "Error" });
+      setActiveSettings({ school_year: "Error", term: "Error" });
     }
   };
 
@@ -468,9 +469,9 @@ const StudentLayout = () => {
                 <div className="vr"></div>
                 <span className="fw-medium text-dark small">
                   <i className="bi bi-clock-history me-2 text-success"></i>{" "}
-                  {activeSettings.semester !== "Not Set"
-                    ? `${activeSettings.semester} Semester`
-                    : "Semester Not Set"}
+                  {activeSettings.term !== "Not Set"
+                    ? `${activeSettings.term} Term`
+                    : "Term Not Set"}
                 </span>
               </div>
             </div>

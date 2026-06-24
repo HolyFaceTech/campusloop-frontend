@@ -31,8 +31,8 @@ const AdvisoryDetailsModals = ({
   gradesTotalRecords,
   gradesSyFilter,
   setGradesSyFilter,
-  gradesSemFilter,
-  setGradesSemFilter,
+  gradesTermFilter,
+  setGradesTermFilter,
   gradesUniqueSYs = [],
   availableStudents = [],
   isLoadingAvailable,
@@ -68,7 +68,7 @@ const AdvisoryDetailsModals = ({
     setGradeForm({
       id: record.id,
       subject_id: record.subject_id || "",
-      semester: record.semester || "",
+      term: record.term || "",
       grade: record.grade || "",
     });
   };
@@ -81,7 +81,7 @@ const AdvisoryDetailsModals = ({
   const resetForm = () => {
     setIsEditingGrade(false);
     setViewingFeedback(null);
-    setGradeForm({ id: null, subject_id: "", semester: "1st", grade: "" });
+    setGradeForm({ id: null, subject_id: "", term: "1st", grade: "" });
   };
 
   const safeSubjects = Array.isArray(subjects) ? subjects : [];
@@ -597,7 +597,7 @@ const AdvisoryDetailsModals = ({
                                   setGradeForm({
                                     ...gradeForm,
                                     subject_id: "",
-                                    semester: "",
+                                    term: "",
                                   });
                                 }
                               }}
@@ -674,7 +674,7 @@ const AdvisoryDetailsModals = ({
                                         setGradeForm({
                                           ...gradeForm,
                                           subject_id: subj.id,
-                                          semester: subj.semester || "",
+                                          term: subj.term || "",
                                         });
                                         setShowSubjectDropdown(false);
                                         setSubjectSearchQuery("");
@@ -740,14 +740,14 @@ const AdvisoryDetailsModals = ({
                         <div className="col-md-3">
                           <label className="form-label small fw-bold text-dark">
                             <i className="bi bi-calendar-range me-1 text-muted"></i>{" "}
-                            Semester
+                            Term
                           </label>
                           <input
                             type="text"
                             className="form-control bg-light toolbar-input text-center"
                             value={
-                              gradeForm?.semester
-                                ? `${gradeForm.semester} Semester`
+                              gradeForm?.term
+                                ? `${gradeForm.term} Term`
                                 : "Auto-filled"
                             }
                             readOnly
@@ -873,12 +873,13 @@ const AdvisoryDetailsModals = ({
                       </span>
                       <select
                         className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                        value={gradesSemFilter}
-                        onChange={(e) => setGradesSemFilter(e.target.value)}
+                        value={gradesTermFilter}
+                        onChange={(e) => setGradesTermFilter(e.target.value)}
                       >
-                        <option value="all">All Semester</option>
-                        <option value="1st">1st Semester</option>
-                        <option value="2nd">2nd Semester</option>
+                        <option value="all">All Terms</option>
+                        <option value="1st">1st Term</option>
+                        <option value="2nd">2nd Term</option>
+                        <option value="3rd">3rd Term</option>
                       </select>
                     </div>
                   </div>
@@ -902,7 +903,7 @@ const AdvisoryDetailsModals = ({
                         >
                           #
                         </th>
-                        <th style={{ borderTop: "none" }}>SY & Sem</th>
+                        <th style={{ borderTop: "none" }}>SY & Term</th>
                         <th style={{ borderTop: "none" }}>Subject Details</th>
                         <th
                           className="text-center"
@@ -955,7 +956,7 @@ const AdvisoryDetailsModals = ({
                                   letterSpacing: "0.5px",
                                 }}
                               >
-                                {record.semester} Semester
+                                {record.term} Term
                               </span>
                             </td>
                             <td className="py-2">
@@ -1049,7 +1050,7 @@ const AdvisoryDetailsModals = ({
                               <p className="text-muted small mb-0">
                                 {gradesSearch ||
                                 gradesSyFilter !== "all" ||
-                                gradesSemFilter !== "all"
+                                gradesTermFilter !== "all"
                                   ? "Try adjusting your search or filters."
                                   : "No student grade records available."}
                               </p>
