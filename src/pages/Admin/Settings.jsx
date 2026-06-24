@@ -23,7 +23,7 @@ const Settings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Loading...");
   const [currentSetting, setCurrentSetting] = useState(null);
-  const [formData, setFormData] = useState({ school_year: "", semester: "" });
+  const [formData, setFormData] = useState({ school_year: "", term: "" });
   const [pstTime, setPstTime] = useState("");
 
   useEffect(() => {
@@ -73,10 +73,10 @@ const Settings = () => {
     if (currentSetting) {
       setFormData({
         school_year: currentSetting.school_year || "",
-        semester: currentSetting.semester || "",
+        term: currentSetting.term || "",
       });
     } else {
-      setFormData({ school_year: "", semester: "" });
+      setFormData({ school_year: "", term: "" });
     }
     const modalElement = document.getElementById("setSettingsModal");
     const modal = Modal.getInstance(modalElement) || new Modal(modalElement);
@@ -207,7 +207,7 @@ const Settings = () => {
     if (!currentSetting) {
       sileo.error({
         title: "Action Failed",
-        description: "Please set School Year & Semester first.",
+        description: "Please set School Year & Term first.",
         ...darkToast,
       });
       return;
@@ -264,7 +264,7 @@ const Settings = () => {
           System Settings <i className="bi bi-gear"></i>
         </h3>
         <p className="text-muted small mb-0">
-          Configure school year, semester, generate reports, and manage system
+          Configure school year, term, generate reports, and manage system
           status.
         </p>
       </div>
@@ -345,8 +345,8 @@ const Settings = () => {
                   className="text-dark small fw-medium mb-0 lh-base"
                   style={{ minHeight: "45px" }}
                 >
-                  Configure and apply the active School Year and Semester that
-                  will reflect across all modules.
+                  Configure and apply the active School Year and Term that will
+                  reflect across all modules.
                 </p>
               </div>
 
@@ -383,11 +383,11 @@ const Settings = () => {
                     className="d-block text-muted fw-bold text-uppercase mb-1"
                     style={{ fontSize: "0.65rem", letterSpacing: "1px" }}
                   >
-                    Semester
+                    Term
                   </span>
                   <span className="d-block text-dark fw-bolder fs-5">
-                    {currentSetting?.semester
-                      ? `${currentSetting.semester} Sem`
+                    {currentSetting?.term
+                      ? `${currentSetting.term} Term`
                       : "Not Set"}
                   </span>
                 </div>

@@ -229,7 +229,7 @@ const StudentHelpModal = () => {
                     >
                       <div className="accordion-body text-muted small">
                         The Grades module displays your Final Grades per subject
-                        for the current School Year and Semester. Note: You will
+                        for the current School Year and Term. Note: You will
                         only see grades that have been officially{" "}
                         <strong>Approved and Locked</strong> by the Admin.
                         Pending grades from your advisory teacher will remain
