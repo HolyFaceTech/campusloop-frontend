@@ -19,7 +19,7 @@ const AdminStudentGradesModals = ({
   isBulkAction,
 }) => {
   const [syFilter, setSyFilter] = useState("all");
-  const [semFilter, setSemFilter] = useState("all");
+  const [termFilter, setTermFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -37,16 +37,16 @@ const AdminStudentGradesModals = ({
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [syFilter, semFilter, debouncedSearch, entriesPerPage]);
+  }, [syFilter, termFilter, debouncedSearch, entriesPerPage]);
 
   const filteredGrades = studentGrades.filter((grade) => {
     const matchSy = syFilter === "all" || grade.school_year === syFilter;
-    const matchSem = semFilter === "all" || grade.semester === semFilter;
+    const matchTerm = termFilter === "all" || grade.term === termFilter;
     const matchSearch =
       `${grade.subject_code} ${grade.subject_description} ${grade.teacher_name}`
         .toLowerCase()
         .includes(debouncedSearch.toLowerCase());
-    return matchSy && matchSem && matchSearch;
+    return matchSy && matchTerm && matchSearch;
   });
 
   const totalPages = Math.ceil(filteredGrades.length / entriesPerPage);
@@ -89,7 +89,7 @@ const AdminStudentGradesModals = ({
 
   const handleCloseMainModal = () => {
     setSyFilter("all");
-    setSemFilter("all");
+    setTermFilter("all");
     setSearchQuery("");
     setDebouncedSearch("");
     setCurrentPage(1);
@@ -240,12 +240,13 @@ const AdminStudentGradesModals = ({
                       </span>
                       <select
                         className="form-select border-start-0 ps-1 toolbar-input py-2 rounded-end-3"
-                        value={semFilter}
-                        onChange={(e) => setSemFilter(e.target.value)}
+                        value={termFilter}
+                        onChange={(e) => setTermFilter(e.target.value)}
                       >
-                        <option value="all">All Semesters</option>
-                        <option value="1st">1st Semester</option>
-                        <option value="2nd">2nd Semester</option>
+                        <option value="all">All Terms</option>
+                        <option value="1st">1st Term</option>
+                        <option value="2nd">2nd Term</option>
+                        <option value="3rd">3rd Term</option>
                       </select>
                     </div>
 
@@ -302,7 +303,7 @@ const AdminStudentGradesModals = ({
                             onChange={handleSelectAll}
                           />
                         </th>
-                        <th style={{ borderTop: "none" }}>SY & Sem</th>
+                        <th style={{ borderTop: "none" }}>SY & Term</th>
                         <th style={{ borderTop: "none" }}>Subject Details</th>
                         <th style={{ borderTop: "none" }}>Encoded By</th>
                         <th
@@ -362,7 +363,7 @@ const AdminStudentGradesModals = ({
                                   letterSpacing: "0.5px",
                                 }}
                               >
-                                {record.semester} Semester
+                                {record.term} Term
                               </span>
                             </td>
                             <td className="py-2">
@@ -460,7 +461,7 @@ const AdminStudentGradesModals = ({
                               <p className="text-muted small mb-0">
                                 {searchQuery ||
                                 syFilter !== "all" ||
-                                semFilter !== "all"
+                                termFilter !== "all"
                                   ? "Try adjusting your search or filters."
                                   : "No student grade records available."}
                               </p>

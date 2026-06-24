@@ -123,18 +123,19 @@ const SubjectFormModal = ({
                   <div className="col-md-6 mb-3">
                     <label className="form-label small fw-bold text-dark">
                       <i className="bi bi-clock-history me-1 text-muted"></i>{" "}
-                      Semester
+                      Term
                     </label>
                     <select
                       className="form-select bg-light toolbar-input"
-                      name="semester"
-                      value={formData.semester}
+                      name="term"
+                      value={formData.term}
                       onChange={handleInputChange}
                       required
                     >
-                      <option value="">Select Semester</option>
-                      <option value="1st">1st Semester</option>
-                      <option value="2nd">2nd Semester</option>
+                      <option value="">Select Term</option>
+                      <option value="1st">1st Term</option>
+                      <option value="2nd">2nd Term</option>
+                      <option value="3rd">3rd Term</option>
                     </select>
                   </div>
                 </div>

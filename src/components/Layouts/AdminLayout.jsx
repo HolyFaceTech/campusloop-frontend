@@ -36,7 +36,7 @@ const AdminLayout = () => {
 
   const [activeSettings, setActiveSettings] = useState({
     school_year: "Loading...",
-    semester: "...",
+    term: "...",
   });
 
   const toggleSidebarMobile = () => setIsSidebarOpen(!isSidebarOpen);
@@ -55,6 +55,7 @@ const AdminLayout = () => {
       checkTodayAnnouncements();
       fetchActiveIndicator();
       fetchNotifications(); // Real-time notification check
+      fetchActiveSettings();
     }, 60000); // 1 Minute na ang pagitan
 
     return () => {
@@ -81,16 +82,16 @@ const AdminLayout = () => {
         settingsData = settingsData.data;
       }
 
-      if (settingsData && settingsData.school_year && settingsData.semester) {
+      if (settingsData && settingsData.school_year && settingsData.term) {
         setActiveSettings({
           school_year: settingsData.school_year,
-          semester: settingsData.semester,
+          term: settingsData.term,
         });
       } else {
-        setActiveSettings({ school_year: "Not Set", semester: "Not Set" });
+        setActiveSettings({ school_year: "Not Set", term: "Not Set" });
       }
     } catch (error) {
-      setActiveSettings({ school_year: "Error", semester: "Error" });
+      setActiveSettings({ school_year: "Error", term: "Error" });
     }
   };
 
@@ -536,9 +537,9 @@ const AdminLayout = () => {
                 <div className="vr"></div>
                 <span className="fw-medium text-dark small">
                   <i className="bi bi-clock-history me-2 text-success"></i>{" "}
-                  {activeSettings.semester !== "Not Set"
-                    ? `${activeSettings.semester} Semester`
-                    : "Semester Not Set"}
+                  {activeSettings.term !== "Not Set"
+                    ? `${activeSettings.term} Term`
+                    : "Term Not Set"}
                 </span>
               </div>
             </div>

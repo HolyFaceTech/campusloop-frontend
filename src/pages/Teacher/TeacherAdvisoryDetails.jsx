@@ -55,7 +55,7 @@ const TeacherAdvisoryDetails = () => {
   const [gradeForm, setGradeForm] = useState({
     id: null,
     subject_id: "",
-    semester: "1st",
+    term: "1st",
     grade: "",
   });
 
@@ -66,7 +66,7 @@ const TeacherAdvisoryDetails = () => {
   const [gradesTotalPages, setGradesTotalPages] = useState(1);
   const [gradesTotalRecords, setGradesTotalRecords] = useState(0);
   const [gradesSyFilter, setGradesSyFilter] = useState("all");
-  const [gradesSemFilter, setGradesSemFilter] = useState("all");
+  const [gradesTermFilter, setGradesTermFilter] = useState("all");
   const [gradesUniqueSYs, setGradesUniqueSYs] = useState([]);
 
   // DEBOUNCE EFFECTS
@@ -108,12 +108,12 @@ const TeacherAdvisoryDetails = () => {
     gradesEntries,
     gradesPage,
     gradesSyFilter,
-    gradesSemFilter,
+    gradesTermFilter,
   ]);
 
   useEffect(() => {
     setGradesPage(1);
-  }, [gradesSearch, gradesEntries, gradesSyFilter, gradesSemFilter]);
+  }, [gradesSearch, gradesEntries, gradesSyFilter, gradesTermFilter]);
 
   const fetchAdvisoryDetails = async () => {
     setIsLoading(true);
@@ -189,7 +189,7 @@ const TeacherAdvisoryDetails = () => {
             entries: gradesEntries,
             page: gradesPage,
             syFilter: gradesSyFilter,
-            semFilter: gradesSemFilter,
+            termFilter: gradesTermFilter,
           },
         },
       );
@@ -298,12 +298,12 @@ const TeacherAdvisoryDetails = () => {
     setActiveStudent(student);
     setIsEditingGrade(false);
     setViewingFeedback(null);
-    setGradeForm({ id: null, subject_id: "", semester: "1st", grade: "" });
+    setGradeForm({ id: null, subject_id: "", term: "1st", grade: "" });
     setGradesSearch("");
     setGradesEntries(10);
     setGradesPage(1);
     setGradesSyFilter("all");
-    setGradesSemFilter("all");
+    setGradesTermFilter("all");
     fetchStudentGrades(student.id, false);
     const modal = new Modal(document.getElementById("gradesModal"));
     modal.show();
@@ -342,7 +342,7 @@ const TeacherAdvisoryDetails = () => {
       });
       fetchStudentGrades(activeStudent.id, false);
       setIsEditingGrade(false);
-      setGradeForm({ id: null, subject_id: "", semester: "1st", grade: "" });
+      setGradeForm({ id: null, subject_id: "", term: "1st", grade: "" });
     } catch (error) {
       sileo.error({
         title: "Failed",
@@ -745,8 +745,8 @@ const TeacherAdvisoryDetails = () => {
         gradesTotalRecords={gradesTotalRecords}
         gradesSyFilter={gradesSyFilter}
         setGradesSyFilter={setGradesSyFilter}
-        gradesSemFilter={gradesSemFilter}
-        setGradesSemFilter={setGradesSemFilter}
+        gradesTermFilter={gradesTermFilter}
+        setGradesTermFilter={setGradesTermFilter}
         gradesUniqueSYs={gradesUniqueSYs}
         availableStudents={availableStudents}
         isLoadingAvailable={isLoadingAvailable}
